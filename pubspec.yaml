@@ -1,8 +1,8 @@
 # Every Flutter project has one of these. It names your app, sets the Dart
 # version it needs, and lists the packages you depend on.
-# Add a package with: flutter pub add <name>
+
 name: final_project
-description: My 6ADET final project.
+description: Love My Closet - a wardrobe rediscovery app (6ADET final project).
 publish_to: "none"
 version: 1.0.0+1
 
@@ -24,6 +24,20 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  # Put images, fonts and sounds in assets/ and list them here, for example:
-  # assets:
-  #   - assets/images/
+
+  assets:
+    - assets/images/
+
+  # Fonts from the design system: Young Serif (headings), DM Sans (body, caption).
+  fonts:
+    - family: YoungSerif
+      fonts:
+        - asset: assets/fonts/YoungSerif-Regular.ttf
+    - family: DMSans
+      fonts:
+        - asset: assets/fonts/DMSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/DMSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/DMSans-Bold.ttf
+          weight: 700
