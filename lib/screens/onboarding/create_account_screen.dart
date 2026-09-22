@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/primary_button.dart';
+import '../home/home_screen.dart';
 import 'auth_layout.dart';
 import 'log_in_screen.dart';
 
@@ -32,8 +33,11 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Account created! Home is coming soon.')),
+    final firstName = _nameController.text.trim().split(' ').first;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => HomeScreen(userName: firstName),
+      ),
     );
   }
 

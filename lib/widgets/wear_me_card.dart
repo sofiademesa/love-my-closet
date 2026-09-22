@@ -1,0 +1,151 @@
+import 'package:flutter/material.dart';
+
+import '../theme.dart';
+import 'clothing_thumb.dart';
+import 'dot_pattern.dart';
+import 'primary_button.dart';
+import 'tag_chip.dart';
+
+/// The "Hidden Gem of the Day" spotlight card in the Wear Me section:
+/// one suggested item with its tags, an "unworn for" pill, and
+/// Style This / Skip actions.
+class WearMeCard extends StatelessWidget {
+  const WearMeCard({
+    super.key,
+    required this.name,
+    required this.daysUnworn,
+    required this.tags,
+    this.icon = Icons.checkroom_rounded,
+    this.onStyleThis,
+    this.onSkip,
+  });
+
+  final String name;
+  final int daysUnworn;
+  final List<String> tags;
+  final IconData icon;
+  final VoidCallback? onStyleThis;
+  final VoidCallback? onSkip;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    final cardRadius = BorderRadius.circular(AppRadius.card);
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: cardRadius,
+        border: Border.all(color: AppColors.blush, width: 1.5),
+      ),
+      child: ClipRRect(
+        borderRadius: cardRadius,
+        child: DotPattern(
+          backgroundColor: AppColors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(Spacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Hidden Gem of the Day',
+                        style: textTheme.headlineSmall!.copyWith(fontSize: 16),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: Spacing.sm,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.softPink.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Unworn: ${daysUnworn}d',
+                        style: textTheme.labelSmall!.copyWith(
+                          color: AppColors.hotPink,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: Spacing.md),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClothingThumb(icon: icon, size: 68),
+                    const SizedBox(width: Spacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name, style: textTheme.bodyMedium),
+                          const SizedBox(height: Spacing.sm),
+                          Wrap(
+                            spacing: Spacing.xs,
+                            runSpacing: Spacing.xs,
+                            children: [
+                              for (final tag in tags) TagChip(label: tag),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: Spacing.md),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: PrimaryButton(
+                        label: 'Style This',
+                        onPressed: onStyleThis,
+                      ),
+                    ),
+                    const SizedBox(width: Spacing.sm),
+                    Expanded(child: _SkipButton(onPressed: onSkip)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Plain white outline pill, the quieter of the two Wear Me actions.
+class _SkipButton extends StatelessWidget {
+  const _SkipButton({required this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+        backgroundColor: AppColors.white,
+        foregroundColor: AppColors.mutedBrown,
+        side: const BorderSide(color: AppColors.blush, width: 1.5),
+        textStyle: const TextStyle(
+          fontFamily: 'DMSans',
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.button),
+        ),
+      ),
+      child: const Text('Skip'),
+    );
+  }
+}

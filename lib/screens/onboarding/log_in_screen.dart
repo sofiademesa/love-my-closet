@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/primary_button.dart';
+import '../home/home_screen.dart';
 import 'auth_layout.dart';
 import 'create_account_screen.dart';
 import 'forgot_password_screen.dart';
@@ -30,8 +31,8 @@ class _LogInScreenState extends State<LogInScreen> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Welcome back! Home is coming soon.')),
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
     );
   }
 
