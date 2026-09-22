@@ -31,20 +31,53 @@ class LandingPage extends StatelessWidget {
           child: Column(
             children: [
               const Spacer(flex: 3),
-              HeartAvatar(width: avatarWidth),
+              SizedBox(
+                width: avatarWidth * 1.4,
+                height: avatarWidth * 1.4,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: avatarWidth * 1.4,
+                      height: avatarWidth * 1.4,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            AppColors.softPink.withValues(alpha: 0.32),
+                            AppColors.softPink.withValues(alpha: 0.0),
+                          ],
+                        ),
+                      ),
+                    ),
+                    HeartAvatar(width: avatarWidth),
+                  ],
+                ),
+              ),
               const SizedBox(height: Spacing.md),
               Text(
                 'Love My Closet',
                 textAlign: TextAlign.center,
-                style: textTheme.headlineSmall!.copyWith(fontSize: 28),
+                style: textTheme.headlineSmall!.copyWith(fontSize: 30),
               ),
               const SizedBox(height: Spacing.sm),
-              Text(
-                'MADE TO BE LOVED AGAIN',
-                textAlign: TextAlign.center,
-                style: textTheme.labelSmall!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 3,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.md,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.butterYellow.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'MADE TO BE LOVED AGAIN',
+                  textAlign: TextAlign.center,
+                  style: textTheme.labelSmall!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 3,
+                    color: AppColors.hotPink,
+                  ),
                 ),
               ),
               const Spacer(flex: 4),

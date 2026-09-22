@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 
-/// Main call-to-action button
-
+/// Main call-to-action button: a soft pink gradient fill, white bold label,
+/// and a tinted glow that lifts it off the page.
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     super.key,
@@ -17,24 +17,50 @@ class PrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(AppRadius.button);
+    final enabled = onPressed != null;
+
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: radius,
-        boxShadow: onPressed == null
-            ? null
-            : [
-                BoxShadow(
-                  color: Color.lerp(AppColors.buttonPink, Colors.black, 0.18)!,
-                  offset: const Offset(0, 3),
-                ),
-              ],
+        boxShadow: enabled ? AppShadows.glow(AppColors.buttonPink) : null,
       ),
-      child: FilledButton(
-        onPressed: onPressed,
-        style: FilledButton.styleFrom(
-          shape: RoundedRectangleBorder(borderRadius: radius),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: radius,
+        clipBehavior: Clip.antiAlias,
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: enabled
+                  ? const [AppColors.softPink, AppColors.buttonPink]
+                  : [
+                      AppColors.buttonPink.withValues(alpha: 0.4),
+                      AppColors.buttonPink.withValues(alpha: 0.4),
+                    ],
+            ),
+          ),
+          child: InkWell(
+            onTap: onPressed,
+            splashColor: AppColors.white.withValues(alpha: 0.18),
+            highlightColor: Colors.transparent,
+            child: SizedBox(
+              height: 42,
+              child: Center(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontFamily: 'DMSans',
+                    fontSize: 18.7,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
-        child: Text(label),
       ),
     );
   }

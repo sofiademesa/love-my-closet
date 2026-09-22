@@ -37,6 +37,7 @@ class WearMeCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: cardRadius,
         border: Border.all(color: AppColors.blush, width: 1.5),
+        boxShadow: AppShadows.surface,
       ),
       child: ClipRRect(
         borderRadius: cardRadius,
@@ -61,13 +62,13 @@ class WearMeCard extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.softPink.withValues(alpha: 0.25),
+                        color: AppColors.butterYellow.withValues(alpha: 0.55),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         'Unworn: ${daysUnworn}d',
                         style: textTheme.labelSmall!.copyWith(
-                          color: AppColors.hotPink,
+                          color: AppColors.mutedBrown,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -132,7 +133,7 @@ class _SkipButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        minimumSize: const Size.fromHeight(48),
+        minimumSize: const Size.fromHeight(42),
         backgroundColor: AppColors.white,
         foregroundColor: AppColors.mutedBrown,
         side: const BorderSide(color: AppColors.blush, width: 1.5),

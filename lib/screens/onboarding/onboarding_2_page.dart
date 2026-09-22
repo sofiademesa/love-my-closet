@@ -11,7 +11,8 @@ class Onboarding2Page extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return OnboardingSlide(
-      headline: 'Maybe it’s time to love your closet',
+      eyebrow: 'HERE\u2019S THE FIX',
+      headline: 'Maybe it\u2019s time to love your closet',
       illustration: (width, height) =>
           _AvatarCarousel(cardWidth: width, cardHeight: height),
     );
@@ -60,9 +61,20 @@ class _AvatarCarousel extends StatelessWidget {
                 width: cardWidth,
                 height: cardHeight,
                 decoration: BoxDecoration(
-                  color: AppColors.cream,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [AppColors.white, AppColors.cream],
+                  ),
                   borderRadius: BorderRadius.circular(AppRadius.card),
                   border: Border.all(color: AppColors.blush, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.hotPink.withValues(alpha: 0.18),
+                      blurRadius: 22,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
                 ),
                 child: Center(child: HeartAvatar(width: cardWidth * 0.8)),
               ),
@@ -119,7 +131,15 @@ class _PanelPainter extends CustomPainter {
     }
     path.close();
 
-    final fill = Paint()..color = AppColors.buttonPink;
+    final fill = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          AppColors.softPink,
+          AppColors.buttonPink,
+        ],
+        begin: outerOnLeft ? Alignment.centerLeft : Alignment.centerRight,
+        end: outerOnLeft ? Alignment.centerRight : Alignment.centerLeft,
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     final round = Paint()
       ..color = AppColors.buttonPink
       ..style = PaintingStyle.stroke

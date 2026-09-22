@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 
-/// Small pink outline pill used to label an item's type or occasion
-/// (e.g. "Top", "Casual") on item cards throughout the app.
+/// Small neutral pill used to label an item's type or occasion
+/// (e.g. "Top", "Casual") on item cards throughout the app. Kept
+/// low-key (blush stroke, muted-brown text) so pink stays reserved
+/// for headings and primary actions.
 class TagChip extends StatelessWidget {
   const TagChip({super.key, required this.label});
 
@@ -14,9 +16,9 @@ class TagChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.blush.withValues(alpha: 0.5),
+        color: AppColors.blush.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.softPink, width: 1),
+        border: Border.all(color: AppColors.blush, width: 1),
       ),
       child: Text(
         label,
@@ -24,7 +26,7 @@ class TagChip extends StatelessWidget {
           fontFamily: 'DMSans',
           fontSize: 11,
           fontWeight: FontWeight.w500,
-          color: AppColors.hotPink,
+          color: AppColors.mutedBrown,
         ),
       ),
     );

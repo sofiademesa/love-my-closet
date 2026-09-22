@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 
+/// Secondary action button: a warm butter-yellow gradient fill with a
+/// muted-brown label, one step quieter than [PrimaryButton].
 class SecondaryButton extends StatelessWidget {
   const SecondaryButton({
     super.key,
@@ -16,7 +18,7 @@ class SecondaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(AppRadius.button);
     final enabled = onPressed != null;
- 
+
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: radius,
@@ -44,7 +46,7 @@ class SecondaryButton extends StatelessWidget {
             splashColor: AppColors.mutedBrown.withValues(alpha: 0.08),
             highlightColor: Colors.transparent,
             child: SizedBox(
-              height: 48,
+              height: 42,
               child: Center(
                 child: Text(
                   label,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme.dart';
+import '../../widgets/dot_pattern.dart';
 import '../../widgets/page_dots.dart';
 import '../../widgets/primary_button.dart';
 import 'create_account_screen.dart';
@@ -10,8 +11,8 @@ import 'onboarding_1_page.dart';
 import 'onboarding_2_page.dart';
 
 /// Hosts Onboarding 1 -> Onboarding 2 -> Main Landing Page as swipeable pages
-/// with a shared background, dots and "Next" button. From the landing page the
-/// user goes to Create Account or Log In.
+/// with a shared dotted background, dots and "Next" button. From the landing
+/// page the user goes to Create Account or Log In.
 class OnboardingFlow extends StatefulWidget {
   const OnboardingFlow({super.key});
 
@@ -68,65 +69,81 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       },
       child: Scaffold(
         backgroundColor: AppColors.cream,
-        body: AnimatedContainer(
-          duration: const Duration(milliseconds: 400),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              // Cream fading to blush on the two slides; flat cream on landing.
-              colors: _onLanding
-                  ? const [AppColors.cream, AppColors.cream]
-                  : const [AppColors.cream, AppColors.blush],
-            ),
-          ),
-          child: SafeArea(
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: PageView(
-                    controller: _controller,
-                    onPageChanged: (index) => setState(() => _page = index),
-                    children: [
-                      const Onboarding1Page(),
-                      const Onboarding2Page(),
-                      LandingPage(
-                        onSignUp: _openCreateAccount,
-                        onLogIn: _openLogIn,
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: IgnorePointer(
-                    ignoring: _onLanding,
-                    child: AnimatedOpacity(
-                      opacity: _onLanding ? 0 : 1,
-                      duration: const Duration(milliseconds: 250),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          Spacing.md,
-                          0,
-                          Spacing.md,
-                          Spacing.md,
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            PageDots(count: _slideCount, current: _page),
-                            const SizedBox(height: Spacing.md),
-                            PrimaryButton(label: 'Next', onPressed: _next),
-                          ],
+        body: DotPattern(
+          backgroundColor: AppColors.cream,
+          dotColor: AppColors.hotPink.withValues(alpha: 0.06),
+          spacing: 20,
+          dotRadius: 1.6,
+          child: Stack(
+            children: [
+              // Warm blush wash that eases in behind the two intro slides
+              // and fades away on the landing page.
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 400),
+                    opacity: _onLanding ? 0 : 1,
+                    child: const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0x00FAD7E7), AppColors.blush],
                         ),
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+              SafeArea(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: PageView(
+                        controller: _controller,
+                        onPageChanged: (index) => setState(() => _page = index),
+                        children: [
+                          const Onboarding1Page(),
+                          const Onboarding2Page(),
+                          LandingPage(
+                            onSignUp: _openCreateAccount,
+                            onLogIn: _openLogIn,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: IgnorePointer(
+                        ignoring: _onLanding,
+                        child: AnimatedOpacity(
+                          opacity: _onLanding ? 0 : 1,
+                          duration: const Duration(milliseconds: 250),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              Spacing.md,
+                              0,
+                              Spacing.md,
+                              Spacing.md,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                PageDots(count: _slideCount, current: _page),
+                                const SizedBox(height: Spacing.md),
+                                PrimaryButton(label: 'Next', onPressed: _next),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),

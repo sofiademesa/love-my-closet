@@ -4,16 +4,18 @@ import 'package:flutter/material.dart';
 
 import '../../theme.dart';
 
-/// Layout shared by Onboarding 1 and 2: an illustration on top and a centered
-/// serif headline underneath. The bottom is left free for the dots and the
-/// "Next" button, which live in [OnboardingFlow].
+/// Layout shared by Onboarding 1 and 2: a soft halo behind the illustration,
+/// then a centered serif headline underneath. The bottom is left free for
+/// the dots and the "Next" button, which live in [OnboardingFlow].
 class OnboardingSlide extends StatelessWidget {
   const OnboardingSlide({
     super.key,
+    required this.eyebrow,
     required this.headline,
     required this.illustration,
   });
 
+  final String eyebrow;
   final String headline;
 
   /// Builds the artwork for the given size.
@@ -31,7 +33,7 @@ class OnboardingSlide extends StatelessWidget {
 
         // Shrink the artwork on short screens so nothing overflows.
         final maxArtHeight =
-            constraints.maxHeight - _bottomReserve - Spacing.lg - 120;
+            constraints.maxHeight - _bottomReserve - Spacing.lg - 150;
         if (maxArtHeight < artHeight) {
           artHeight = math.max(140.0, maxArtHeight);
           artWidth = artHeight / 1.36;
@@ -43,8 +45,50 @@ class OnboardingSlide extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                illustration(artWidth, artHeight),
-                const SizedBox(height: Spacing.lg),
+                SizedBox(
+                  width: artWidth * 1.5,
+                  height: artHeight * 1.35,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Soft radial halo for depth behind the illustration.
+                      Container(
+                        width: artWidth * 1.5,
+                        height: artWidth * 1.5,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              AppColors.softPink.withValues(alpha: 0.28),
+                              AppColors.softPink.withValues(alpha: 0.0),
+                            ],
+                          ),
+                        ),
+                      ),
+                      illustration(artWidth, artHeight),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: Spacing.md),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Spacing.md,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.butterYellow.withValues(alpha: 0.55),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    eyebrow,
+                    style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                      color: AppColors.hotPink,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: Spacing.sm),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 260),
                   child: Padding(
