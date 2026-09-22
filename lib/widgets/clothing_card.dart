@@ -29,37 +29,42 @@ class ClothingCard extends StatelessWidget {
         color: AppColors.white,
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: AppColors.blush, width: 1.5),
+        boxShadow: AppShadows.surface,
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        child: Padding(
-          padding: const EdgeInsets.all(Spacing.sm),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(child: ClothingThumb(icon: icon, size: 72)),
-              const SizedBox(height: Spacing.sm),
-              Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: textTheme.bodyMedium!.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            child: Padding(
+              padding: const EdgeInsets.all(Spacing.sm),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(child: ClothingThumb(icon: icon, size: 72)),
+                  const SizedBox(height: Spacing.sm),
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodyMedium!.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: Spacing.xs),
+                  Wrap(
+                    spacing: Spacing.xs,
+                    runSpacing: Spacing.xs,
+                    children: [for (final tag in tags) TagChip(label: tag)],
+                  ),
+                ],
               ),
-              const SizedBox(height: Spacing.xs),
-              Wrap(
-                spacing: Spacing.xs,
-                runSpacing: Spacing.xs,
-                children: [for (final tag in tags) TagChip(label: tag)],
-              ),
-            ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    }
   }
-}

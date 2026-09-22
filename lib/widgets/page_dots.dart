@@ -17,12 +17,22 @@ class PageDots extends StatelessWidget {
         for (var i = 0; i < count; i++)
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
             margin: const EdgeInsets.symmetric(horizontal: 3),
-            width: i == current ? 22 : 8,
+            width: i == current ? 24 : 8,
             height: 8,
             decoration: BoxDecoration(
-              color: i == current ? AppColors.buttonPink : AppColors.softPink,
-              borderRadius: BorderRadius.circular(4),
+            color: i == current ? AppColors.buttonPink : AppColors.softPink.withValues(alpha: 0.45),
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: i == current
+             ? [
+                      BoxShadow(
+                        color: AppColors.buttonPink.withValues(alpha: 0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
             ),
           ),
       ],

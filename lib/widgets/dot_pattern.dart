@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 
-/// Faint polka-dot texture behind a card's content, matching the dotted
-/// background in the mockup. Paints a solid [backgroundColor] first, then
-/// the dots, then [child] on top — so wrap the result in a ClipRRect if the
-/// card has rounded corners.
+/// Faint polka-dot texture behind content, matching the dotted background in
+
 class DotPattern extends StatelessWidget {
   const DotPattern({
     super.key,
     required this.child,
-    required this.backgroundColor,
+    this.backgroundColor,
+    this.backgroundGradient,
     this.dotColor = const Color(0x14EE3E91),
     this.spacing = 14,
     this.dotRadius = 1.4,
-  });
+  }) : assert(
+         backgroundColor != null || backgroundGradient != null,
+         'Provide a backgroundColor or a backgroundGradient.',
+       );
 
   final Widget child;
-  final Color backgroundColor;
+  final Color? backgroundColor;
+  final Gradient? backgroundGradient;
   final Color dotColor;
   final double spacing;
   final double dotRadius;
@@ -24,7 +27,13 @@ class DotPattern extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Positioned.fill(child: ColoredBox(color: backgroundColor)),
+        Positioned.fill(
+          child: backgroundGradient != null
+              ? DecoratedBox(
+                  decoration: BoxDecoration(gradient: backgroundGradient),
+                )
+              : ColoredBox(color: backgroundColor!),
+        ),
         Positioned.fill(
           child: CustomPaint(
             painter: _DotPainter(color: dotColor, spacing: spacing, radius: dotRadius),

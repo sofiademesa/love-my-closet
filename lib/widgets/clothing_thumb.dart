@@ -11,17 +11,24 @@ class ClothingThumb extends StatelessWidget {
     this.icon = Icons.checkroom_rounded,
     this.size = 64,
   });
-
+ 
   final IconData icon;
   final double size;
-
+ 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: AppColors.blush.withValues(alpha: 0.6),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.blush.withValues(alpha: 0.75),
+            AppColors.softPink.withValues(alpha: 0.35),
+          ],
+        ),
         borderRadius: BorderRadius.circular(AppRadius.field),
       ),
       child: Icon(icon, color: AppColors.buttonPink, size: size * 0.45),

@@ -29,6 +29,7 @@ class HiddenGemCard extends StatelessWidget {
         color: AppColors.white,
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: AppColors.softPink, width: 1.5),
+        boxShadow: AppShadows.surface,
       ),
       child: Row(
         children: [
@@ -59,36 +60,27 @@ class HiddenGemCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadius.button),
               boxShadow: onWearAgain == null
                   ? null
-                  : [
-                      BoxShadow(
-                        color: Color.lerp(
-                          AppColors.buttonPink,
-                          Colors.black,
-                          0.18,
-                        )!,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-            ),
-            child: FilledButton(
-              onPressed: onWearAgain,
-              style: FilledButton.styleFrom(
-                minimumSize: Size.zero,
-                padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
-                textStyle: const TextStyle(
-                  fontFamily: 'DMSans',
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.button),
-                ),
+                  : AppShadows.glow(AppColors.buttonPink, alpha: 0.3),
               ),
-              child: const Text('Wear Again'),
+              child: FilledButton(
+                onPressed: onWearAgain,
+                style: FilledButton.styleFrom(
+                  minimumSize: Size.zero,
+                  padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
+                  textStyle: const TextStyle(
+                    fontFamily: 'DMSans',
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.button),
+                  ),
+                ),
+                child: const Text('Wear Again'),
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    }
   }
-}

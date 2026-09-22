@@ -67,19 +67,29 @@ class _NavIcon extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: selected ? AppColors.buttonPink : AppColors.mutedBrown,
-              size: 24,
-            ),
-            const SizedBox(height: 3),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: selected ? 16 : 0,
-              height: 3,
-              decoration: BoxDecoration(
-                color: AppColors.buttonPink,
-                borderRadius: BorderRadius.circular(2),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? AppColors.buttonPink.withValues(alpha: 0.12)
+                      : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: selected ? AppColors.buttonPink : AppColors.mutedBrown,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(height: 2),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: selected ? 16 : 0,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: AppColors.buttonPink,
+                  borderRadius: BorderRadius.circular(2),
               ),
             ),
           ],

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 
-/// Main call-to-action button: pink fill, white bold label, soft bottom edge.
+/// Main call-to-action button
+
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     super.key,

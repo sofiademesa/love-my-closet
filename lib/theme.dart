@@ -31,6 +31,28 @@ class AppRadius {
   static const double card = 20;
 }
 
+/// Soft, on-brand shadows used to lift surfaces (cards, buttons, the nav
+/// bar) off the dotted background so the UI reads as layered rather than flat.
+class AppShadows {
+  /// Neutral shadow for white/cream surfaces (cards, tiles, the nav bar).
+  static List<BoxShadow> surface = [
+    BoxShadow(
+      color: AppColors.mutedBrown.withValues(alpha: 0.10),
+      blurRadius: 18,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
+  /// Tinted glow used under colored, tappable elements (primary buttons, FAB).
+  static List<BoxShadow> glow(Color color, {double alpha = 0.35}) => [
+    BoxShadow(
+      color: color.withValues(alpha: alpha),
+      blurRadius: 18,
+      offset: const Offset(0, 8),
+    ),
+  ];
+}
+
 /// 2. Type scale ------------------------------------------------------------
 /// Fonts: Young Serif (headings), DM Sans (body, caption).
 /// Declared under `flutter: fonts:` in pubspec.yaml.
