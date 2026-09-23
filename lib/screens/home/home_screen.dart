@@ -35,6 +35,16 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       return;
     }
+    if (index == 2) {
+      // Home doesn't keep its own item list, so this opens Closet already
+      // filtered to favorites — same grid, same hearts, no separate screen.
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ClosetScreen(userName: widget.userName, initialFavoritesOnly: true),
+        ),
+      );
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Coming soon!')),
     );
@@ -57,7 +67,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   Spacing.md,
                   Spacing.md,
                   Spacing.md,
-                  100, // leave room for the floating nav bar
+                  // Room for the floating nav bar *and* the FAB above it —
+                  // matches the fix in Closet so the FAB never clips over
+                  // the last row of content.
+                  170,
                 ),
                 children: [
                   _Header(userName: widget.userName),

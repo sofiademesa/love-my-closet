@@ -14,10 +14,21 @@ import 'item_detail_screen.dart';
 
 /// Closet: Sofia's full wardrobe grid — searchable, filterable by category
 /// and occasion, with an "Add Clothes" FAB and a tap-through to item detail.
+/// Favoriting happens right on each tile's heart — there's no separate
+/// Favorites screen; tapping the nav bar's heart just filters this same
+/// grid down to hearted items.
 class ClosetScreen extends StatefulWidget {
-  const ClosetScreen({super.key, this.userName = 'Sofia'});
+  const ClosetScreen({
+    super.key,
+    this.userName = 'Sofia',
+    this.initialFavoritesOnly = false,
+  });
 
   final String userName;
+
+  /// Opens straight into the "favorites only" filter — used when Home's
+  /// nav bar links here since Home doesn't keep its own item list.
+  final bool initialFavoritesOnly;
 
   @override
   State<ClosetScreen> createState() => _ClosetScreenState();
@@ -30,6 +41,7 @@ class _ClosetScreenState extends State<ClosetScreen> {
   String? _category;
   String? _occasion;
   String _query = '';
+  late bool _favoritesOnly = widget.initialFavoritesOnly;
 
   @override
   void dispose() {
@@ -43,21 +55,40 @@ class _ClosetScreenState extends State<ClosetScreen> {
       final matchesOccasion = _occasion == null || item.occasion == _occasion;
       final matchesQuery =
           _query.isEmpty || item.name.toLowerCase().contains(_query.toLowerCase());
-      return matchesCategory && matchesOccasion && matchesQuery;
+      final matchesFavorite = !_favoritesOnly || item.isHiddenGem;
+      return matchesCategory && matchesOccasion && matchesQuery && matchesFavorite;
     }).toList();
   }
 
   void _goToTab(int index) {
-    if (index == 1) return;
+    final currentIndex = _favoritesOnly ? 2 : 1;
+    if (index == currentIndex) return;
     if (index == 0) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => HomeScreen(userName: widget.userName)),
       );
       return;
     }
+    if (index == 1) {
+      setState(() => _favoritesOnly = false);
+      return;
+    }
+    if (index == 2) {
+      setState(() => _favoritesOnly = true);
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Coming soon!')),
     );
+  }
+
+  void _toggleFavorite(ClothingItem item) {
+    setState(() {
+      final index = _items.indexWhere((i) => i.id == item.id);
+      if (index != -1) {
+        _items[index] = _items[index].copyWith(isHiddenGem: !_items[index].isHiddenGem);
+      }
+    });
   }
 
   Future<void> _openAddClothes() async {
@@ -71,7 +102,9 @@ class _ClosetScreenState extends State<ClosetScreen> {
 
   Future<void> _openDetail(ClothingItem item) async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ItemDetailScreen(item: item)),
+      MaterialPageRoute(
+        builder: (_) => ItemDetailScreen(item: item, originIndex: _favoritesOnly ? 2 : 1),
+      ),
     );
     if (result == 'deleted') {
       setState(() => _items.removeWhere((i) => i.id == item.id));
@@ -103,11 +136,13 @@ class _ClosetScreenState extends State<ClosetScreen> {
                   Spacing.md,
                   Spacing.md,
                   Spacing.md,
-                  100, // room for the floating nav bar
+                  // Room for the floating nav bar *and* the FAB above it,
+                  // so the FAB never clips over the last grid row.
+                  150,
                 ),
                 children: [
                   Text(
-                    "${widget.userName}'s Digital Closet",
+                    _favoritesOnly ? 'Favorites' : "${widget.userName}'s Digital Closet",
                     style: textTheme.headlineSmall!.copyWith(fontSize: 22),
                   ),
                   const SizedBox(height: Spacing.md),
@@ -134,11 +169,14 @@ class _ClosetScreenState extends State<ClosetScreen> {
                   const SizedBox(height: Spacing.lg),
                   if (filtered.isEmpty)
                     EmptyState(
-                      message:
-                          'No items found.\nTry a different filter or add something new.',
-                      icon: Icons.search_off_rounded,
-                      buttonLabel: 'Add Clothes',
-                      onButtonPressed: _openAddClothes,
+                      message: _favoritesOnly
+                          ? 'No favorites yet.\nTap the heart on any item to add it here.'
+                          : 'No items found.\nTry a different filter or add something new.',
+                      icon: _favoritesOnly
+                          ? Icons.favorite_border_rounded
+                          : Icons.search_off_rounded,
+                      buttonLabel: _favoritesOnly ? null : 'Add Clothes',
+                      onButtonPressed: _favoritesOnly ? null : _openAddClothes,
                     )
                   else
                     GridView.builder(
@@ -149,7 +187,13 @@ class _ClosetScreenState extends State<ClosetScreen> {
                         crossAxisCount: 2,
                         mainAxisSpacing: Spacing.sm,
                         crossAxisSpacing: Spacing.sm,
-                        childAspectRatio: 0.78,
+                        // A fixed height instead of an aspect ratio — the
+                        // card's content (thumb + name + tags) is a set
+                        // height regardless of column width, so an aspect
+                        // ratio was leaving a big empty gap at the bottom
+                        // of every tile and pushing the grid tall enough
+                        // for the FAB to clip over the last row.
+                        mainAxisExtent: 176,
                       ),
                       itemBuilder: (context, i) {
                         final item = filtered[i];
@@ -157,6 +201,8 @@ class _ClosetScreenState extends State<ClosetScreen> {
                           name: item.name,
                           tags: [item.category, item.occasion],
                           icon: item.icon,
+                          isFavorite: item.isHiddenGem,
+                          onFavoriteToggle: () => _toggleFavorite(item),
                           onTap: () => _openDetail(item),
                         );
                       },
@@ -184,7 +230,10 @@ class _ClosetScreenState extends State<ClosetScreen> {
                 left: Spacing.md,
                 right: Spacing.md,
                 bottom: Spacing.sm,
-                child: BottomNavBar(currentIndex: 1, onTap: _goToTab),
+                child: BottomNavBar(
+                  currentIndex: _favoritesOnly ? 2 : 1,
+                  onTap: _goToTab,
+                ),
               ),
             ],
           ),

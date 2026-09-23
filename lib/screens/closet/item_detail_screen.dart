@@ -14,9 +14,13 @@ import 'edit_item_screen.dart';
 /// Clothing Item: a closet item's full detail, reached by tapping a tile
 /// on Closet. Lets Sofia mark it a hidden gem, edit it, or delete it.
 class ItemDetailScreen extends StatefulWidget {
-  const ItemDetailScreen({super.key, required this.item});
+  const ItemDetailScreen({super.key, required this.item, this.originIndex = 1});
 
   final ClothingItem item;
+
+  /// Which nav-bar tab this screen was opened from (Closet = 1,
+  /// Favorites = 2), so the bar highlights the right icon underneath.
+  final int originIndex;
 
   @override
   State<ItemDetailScreen> createState() => _ItemDetailScreenState();
@@ -165,7 +169,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 right: Spacing.md,
                 bottom: Spacing.sm,
                 child: BottomNavBar(
-                  currentIndex: 1,
+                  currentIndex: widget.originIndex,
                   onTap: (_) => Navigator.of(context).pop(_item),
                 ),
               ),

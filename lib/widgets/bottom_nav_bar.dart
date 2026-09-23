@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 
 /// The floating pill nav bar shown on every main screen: Home, Closet,
-/// Outfit Builder, Calendar, Profile.
+/// Favorites, Outfit Builder, Calendar, Profile.
 class BottomNavBar extends StatelessWidget {
   const BottomNavBar({
     super.key,
@@ -17,6 +17,7 @@ class BottomNavBar extends StatelessWidget {
   static const _icons = [
     Icons.home_rounded,
     Icons.checkroom_rounded,
+    Icons.favorite_rounded,
     Icons.dashboard_customize_rounded,
     Icons.calendar_month_rounded,
     Icons.person_rounded,
