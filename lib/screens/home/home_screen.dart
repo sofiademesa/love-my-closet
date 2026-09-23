@@ -35,16 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       return;
     }
-    if (index == 2) {
-      // Home doesn't keep its own item list, so this opens Closet already
-      // filtered to favorites — same grid, same hearts, no separate screen.
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => ClosetScreen(userName: widget.userName, initialFavoritesOnly: true),
-        ),
-      );
-      return;
-    }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Coming soon!')),
     );
@@ -80,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   WearMeCard(
                     name: 'Pink Polkadot Top',
                     daysUnworn: 32,
-                    tags: const ['Top', 'Casual'],
+                    tags: const ['Tops', 'Casual'],
                     onStyleThis: () {},
                     onSkip: () {},
                   ),

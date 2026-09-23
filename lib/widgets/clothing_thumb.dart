@@ -10,13 +10,23 @@ class ClothingThumb extends StatelessWidget {
     super.key,
     this.icon = Icons.checkroom_rounded,
     this.size = 64,
+    this.iconSize,
   });
 
   final IconData icon;
   final double size;
 
+  /// Icon size to use instead of the `size * 0.45` default. Required
+  /// whenever [size] is [double.infinity] (e.g. filling an [AspectRatio]),
+  /// since that default would otherwise itself be infinite.
+  final double? iconSize;
+
   @override
   Widget build(BuildContext context) {
+    assert(
+      size.isFinite || iconSize != null,
+      'ClothingThumb: pass iconSize when size is not finite.',
+    );
     return Container(
       width: size,
       height: size,
@@ -31,7 +41,13 @@ class ClothingThumb extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(AppRadius.field),
       ),
-      child: Icon(icon, color: AppColors.white.withValues(alpha: 0.85), size: size * 0.45),
+      child: Center(
+        child: Icon(
+          icon,
+          color: AppColors.white.withValues(alpha: 0.85),
+          size: iconSize ?? size * 0.45,
+        ),
+      ),
     );
   }
 }

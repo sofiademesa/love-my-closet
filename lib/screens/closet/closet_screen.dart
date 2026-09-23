@@ -10,38 +10,35 @@ import '../../widgets/filter_chips.dart';
 import '../../widgets/search_bar.dart';
 import '../home/home_screen.dart';
 import 'add_clothes_screen.dart';
+import 'edit_item_screen.dart';
 import 'item_detail_screen.dart';
 
 /// Closet: Sofia's full wardrobe grid — searchable, filterable by category
-/// and occasion, with an "Add Clothes" FAB and a tap-through to item detail.
-/// Favoriting happens right on each tile's heart — there's no separate
-/// Favorites screen; tapping the nav bar's heart just filters this same
-/// grid down to hearted items.
+/// and occasion, with an "Add Clothes" FAB and quick Edit/Delete pills right
+/// on each tile. Favoriting happens on each tile's heart — there's no
+/// separate Favorites screen; the "Favorites" chip in the category row just
+/// filters this same grid down to hearted items.
 class ClosetScreen extends StatefulWidget {
-  const ClosetScreen({
-    super.key,
-    this.userName = 'Sofia',
-    this.initialFavoritesOnly = false,
-  });
+  const ClosetScreen({super.key, this.userName = 'Sofia'});
 
   final String userName;
-
-  /// Opens straight into the "favorites only" filter — used when Home's
-  /// nav bar links here since Home doesn't keep its own item list.
-  final bool initialFavoritesOnly;
 
   @override
   State<ClosetScreen> createState() => _ClosetScreenState();
 }
 
 class _ClosetScreenState extends State<ClosetScreen> {
+  static const _kFavorites = 'Favorites';
+  static const _kAllOccasions = 'All Occasions';
+
   final _searchController = TextEditingController();
   final List<ClothingItem> _items = List.of(sampleClosetItems);
 
   String? _category;
   String? _occasion;
   String _query = '';
-  late bool _favoritesOnly = widget.initialFavoritesOnly;
+
+  bool get _favoritesOnly => _category == _kFavorites;
 
   @override
   void dispose() {
@@ -51,7 +48,9 @@ class _ClosetScreenState extends State<ClosetScreen> {
 
   List<ClothingItem> get _filtered {
     return _items.where((item) {
-      final matchesCategory = _category == null || item.category == _category;
+      final matchesCategory = _category == null ||
+          _category == _kFavorites ||
+          item.category == _category;
       final matchesOccasion = _occasion == null || item.occasion == _occasion;
       final matchesQuery =
           _query.isEmpty || item.name.toLowerCase().contains(_query.toLowerCase());
@@ -61,20 +60,12 @@ class _ClosetScreenState extends State<ClosetScreen> {
   }
 
   void _goToTab(int index) {
-    final currentIndex = _favoritesOnly ? 2 : 1;
+    const currentIndex = 1;
     if (index == currentIndex) return;
     if (index == 0) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => HomeScreen(userName: widget.userName)),
       );
-      return;
-    }
-    if (index == 1) {
-      setState(() => _favoritesOnly = false);
-      return;
-    }
-    if (index == 2) {
-      setState(() => _favoritesOnly = true);
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
@@ -103,9 +94,20 @@ class _ClosetScreenState extends State<ClosetScreen> {
   Future<void> _openDetail(ClothingItem item) async {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ItemDetailScreen(item: item, originIndex: _favoritesOnly ? 2 : 1),
+        builder: (_) => ItemDetailScreen(item: item, originIndex: 1),
       ),
     );
+    _applyEditResult(item, result);
+  }
+
+  Future<void> _openEdit(ClothingItem item) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => EditItemScreen(item: item)),
+    );
+    _applyEditResult(item, result);
+  }
+
+  void _applyEditResult(ClothingItem item, Object? result) {
     if (result == 'deleted') {
       setState(() => _items.removeWhere((i) => i.id == item.id));
     } else if (result is ClothingItem) {
@@ -113,6 +115,29 @@ class _ClosetScreenState extends State<ClosetScreen> {
         final index = _items.indexWhere((i) => i.id == result.id);
         if (index != -1) _items[index] = result;
       });
+    }
+  }
+
+  Future<void> _confirmDelete(ClothingItem item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete this item?'),
+        content: Text('"${item.name}" will be removed from your closet.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Delete', style: TextStyle(color: AppColors.errorRed)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      setState(() => _items.removeWhere((i) => i.id == item.id));
     }
   }
 
@@ -142,7 +167,7 @@ class _ClosetScreenState extends State<ClosetScreen> {
                 ),
                 children: [
                   Text(
-                    _favoritesOnly ? 'Favorites' : "${widget.userName}'s Digital Closet",
+                    "${widget.userName}'s Digital Closet",
                     style: textTheme.headlineSmall!.copyWith(fontSize: 22),
                   ),
                   const SizedBox(height: Spacing.md),
@@ -152,18 +177,17 @@ class _ClosetScreenState extends State<ClosetScreen> {
                   ),
                   const SizedBox(height: Spacing.md),
                   FilterChips(
-                    options: const ['All', 'Tops', 'Bottoms', 'Dresses'],
-                    selected: _category ?? 'All',
-                    onSelected: (v) => setState(
-                      () => _category = (v == null || v == 'All') ? null : v,
-                    ),
+                    options: const [_kFavorites, ...clothingCategories],
+                    icons: const {_kFavorites: Icons.favorite_rounded},
+                    selected: _category,
+                    onSelected: (v) => setState(() => _category = v),
                   ),
                   const SizedBox(height: Spacing.sm),
                   FilterChips(
-                    options: const ['All', ...occasionTags],
-                    selected: _occasion ?? 'All',
+                    options: const [_kAllOccasions, ...occasionTags],
+                    selected: _occasion ?? _kAllOccasions,
                     onSelected: (v) => setState(
-                      () => _occasion = (v == null || v == 'All') ? null : v,
+                      () => _occasion = (v == null || v == _kAllOccasions) ? null : v,
                     ),
                   ),
                   const SizedBox(height: Spacing.lg),
@@ -188,12 +212,12 @@ class _ClosetScreenState extends State<ClosetScreen> {
                         mainAxisSpacing: Spacing.sm,
                         crossAxisSpacing: Spacing.sm,
                         // A fixed height instead of an aspect ratio — the
-                        // card's content (thumb + name + tags) is a set
-                        // height regardless of column width, so an aspect
-                        // ratio was leaving a big empty gap at the bottom
-                        // of every tile and pushing the grid tall enough
-                        // for the FAB to clip over the last row.
-                        mainAxisExtent: 176,
+                        // card's content (thumb + name + tags + edit/delete)
+                        // is a set height regardless of column width, so an
+                        // aspect ratio was leaving a big empty gap at the
+                        // bottom of every tile and pushing the grid tall
+                        // enough for the FAB to clip over the last row.
+                        mainAxisExtent: 240,
                       ),
                       itemBuilder: (context, i) {
                         final item = filtered[i];
@@ -204,6 +228,8 @@ class _ClosetScreenState extends State<ClosetScreen> {
                           isFavorite: item.isHiddenGem,
                           onFavoriteToggle: () => _toggleFavorite(item),
                           onTap: () => _openDetail(item),
+                          onEdit: () => _openEdit(item),
+                          onDelete: () => _confirmDelete(item),
                         );
                       },
                     ),
@@ -231,7 +257,7 @@ class _ClosetScreenState extends State<ClosetScreen> {
                 right: Spacing.md,
                 bottom: Spacing.sm,
                 child: BottomNavBar(
-                  currentIndex: _favoritesOnly ? 2 : 1,
+                  currentIndex: 1,
                   onTap: _goToTab,
                 ),
               ),

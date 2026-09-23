@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 
 /// The floating pill nav bar shown on every main screen: Home, Closet,
-/// Favorites, Outfit Builder, Calendar, Profile.
+/// Outfit Builder, Calendar, Profile. Favoriting lives on each item tile
+/// (and the "Favorites" filter chip on Closet) instead of its own tab.
 class BottomNavBar extends StatelessWidget {
   const BottomNavBar({
     super.key,
@@ -17,7 +18,6 @@ class BottomNavBar extends StatelessWidget {
   static const _icons = [
     Icons.home_rounded,
     Icons.checkroom_rounded,
-    Icons.favorite_rounded,
     Icons.dashboard_customize_rounded,
     Icons.calendar_month_rounded,
     Icons.person_rounded,

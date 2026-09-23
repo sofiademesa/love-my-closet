@@ -11,11 +11,16 @@ class FilterChips extends StatelessWidget {
     required this.options,
     required this.selected,
     required this.onSelected,
+    this.icons,
   });
 
   final List<String> options;
   final String? selected;
   final ValueChanged<String?> onSelected;
+
+  /// Optional leading icon per option label — e.g. a heart on "Favorites".
+  /// Options with no entry here get a plain text chip.
+  final Map<String, IconData>? icons;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +31,7 @@ class FilterChips extends StatelessWidget {
           for (final option in options) ...[
             _Chip(
               label: option,
+              icon: icons?[option],
               active: option == selected,
               onTap: () => onSelected(option == selected ? null : option),
             ),
@@ -42,9 +48,11 @@ class _Chip extends StatelessWidget {
     required this.label,
     required this.active,
     required this.onTap,
+    this.icon,
   });
 
   final String label;
+  final IconData? icon;
   final bool active;
   final VoidCallback onTap;
 
@@ -74,14 +82,27 @@ class _Chip extends StatelessWidget {
               width: 1.5,
             ),
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'DMSans',
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: active ? AppColors.white : AppColors.mutedBrown,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(
+                  icon,
+                  size: 14,
+                  color: active ? AppColors.white : AppColors.mutedBrown,
+                ),
+                const SizedBox(width: 4),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'DMSans',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: active ? AppColors.white : AppColors.mutedBrown,
+                ),
+              ),
+            ],
           ),
         ),
       ),

@@ -23,7 +23,7 @@ const clothingColors = [
 
 /// Occasion tags used by the Occasion Tags chip picker, matching the design
 /// system's FilterChips component.
-const occasionTags = ['Everyday', 'Formal', 'Work'];
+const occasionTags = ['Everyday', 'Formal', 'Party'];
 
 /// A single wardrobe item stored in Sofia's Digital Closet.
 class ClothingItem {

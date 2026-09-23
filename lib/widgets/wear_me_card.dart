@@ -66,7 +66,7 @@ class WearMeCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Unworn: ${daysUnworn}d',
+                        'Unworn · ${daysUnworn}d',
                         style: textTheme.labelSmall!.copyWith(
                           color: AppColors.mutedBrown,
                           fontWeight: FontWeight.bold,
@@ -91,7 +91,11 @@ class WearMeCard extends StatelessWidget {
                             spacing: Spacing.xs,
                             runSpacing: Spacing.xs,
                             children: [
-                              for (final tag in tags) TagChip(label: tag),
+                              for (var i = 0; i < tags.length; i++)
+                                TagChip(
+                                  label: tags[i],
+                                  tint: i == 0 ? TagChipTint.pink : TagChipTint.yellow,
+                                ),
                             ],
                           ),
                         ],
