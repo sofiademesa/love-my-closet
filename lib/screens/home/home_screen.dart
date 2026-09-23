@@ -6,6 +6,7 @@ import '../../widgets/clothing_card.dart';
 import '../../widgets/dot_pattern.dart';
 import '../../widgets/stat_tile.dart';
 import '../../widgets/wear_me_card.dart';
+import '../closet/closet_screen.dart';
 import 'hidden_gems_sheet.dart';
 
 /// Home: greeting, today's Wear Me suggestion, wardrobe stats at a glance,
@@ -24,6 +25,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openHiddenGems() {
     showHiddenGemsSheet(context);
+  }
+
+  void _goToTab(int index) {
+    if (index == 0) return;
+    if (index == 1) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => ClosetScreen(userName: widget.userName)),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Coming soon!')),
+    );
   }
 
   @override
@@ -133,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 bottom: Spacing.sm,
                 child: BottomNavBar(
                   currentIndex: _navIndex,
-                  onTap: (i) => setState(() => _navIndex = i),
+                  onTap: _goToTab,
                 ),
               ),
             ],
