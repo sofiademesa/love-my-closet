@@ -77,15 +77,26 @@ class _CalendarScreenState extends State<CalendarScreen> {
     setState(() => _selectedDate = date);
   }
 
-  Future<void> _openLogOutfit() async {
+Future<void> _openLogOutfit() async {
+  if (OutfitStore.instance.all.isEmpty) {
+    // Nothing saved to log yet — skip the "no saved outfits" message in
+    // Log Outfit and go straight to the Builder so there's something to
+    // build first.
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OutfitBuilderScreen(
+          userName: widget.userName,
+          closetItems: widget.closetItems,
+        ),
+      ),
+    );
+  } else {
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => LogOutfitScreen(date: _selectedDate)),
     );
-    // OutfitStore's own listener already triggers a rebuild once an entry
-    // is saved, but this covers the (rare) case the sheet closes without a
-    // notifyListeners in between.
-    if (mounted) setState(() {});
   }
+  if (mounted) setState(() {});
+}
 
   Future<void> _openOutfitDetail(SavedOutfit outfit) async {
     final action = await showOutfitDetailSheet(context, outfitId: outfit.id);
