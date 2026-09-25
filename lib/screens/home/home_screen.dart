@@ -7,6 +7,7 @@ import '../../widgets/dot_pattern.dart';
 import '../../widgets/stat_tile.dart';
 import '../../widgets/wear_me_card.dart';
 import '../closet/closet_screen.dart';
+import '../outfit_builder/outfit_builder_screen.dart';
 import 'hidden_gems_sheet.dart';
 
 /// Home: greeting, today's Wear Me suggestion, wardrobe stats at a glance,
@@ -32,6 +33,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == 1) {
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => ClosetScreen(userName: widget.userName)),
+      );
+      return;
+    }
+    if (index == 2) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => OutfitBuilderScreen(userName: widget.userName)),
       );
       return;
     }

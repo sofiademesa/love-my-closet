@@ -13,11 +13,6 @@ import 'add_clothes_screen.dart';
 import 'edit_item_screen.dart';
 import 'item_detail_screen.dart';
 
-/// Closet: Sofia's full wardrobe grid — searchable, filterable by category
-/// and occasion, with an "Add Clothes" FAB and quick Edit/Delete pills right
-/// on each tile. Favoriting happens on each tile's heart — there's no
-/// separate Favorites screen; the "Favorites" chip in the category row just
-/// filters this same grid down to hearted items.
 class ClosetScreen extends StatefulWidget {
   const ClosetScreen({super.key, this.userName = 'Sofia'});
 
@@ -178,7 +173,13 @@ class _ClosetScreenState extends State<ClosetScreen> {
                   const SizedBox(height: Spacing.md),
                   FilterChips(
                     options: const [_kFavorites, ...clothingCategories],
-                    icons: const {_kFavorites: Icons.favorite_rounded},
+                    icons: const {
+                      _kFavorites: Icons.favorite_rounded,
+                      'Tops': Icons.checkroom_rounded,
+                      'Bottoms': Icons.dry_cleaning_rounded,
+                      'Outerwear': Icons.ac_unit_rounded,
+                      'Accessories': Icons.watch_rounded,
+                    },
                     selected: _category,
                     onSelected: (v) => setState(() => _category = v),
                   ),
@@ -217,7 +218,10 @@ class _ClosetScreenState extends State<ClosetScreen> {
                         // aspect ratio was leaving a big empty gap at the
                         // bottom of every tile and pushing the grid tall
                         // enough for the FAB to clip over the last row.
-                        mainAxisExtent: 240,
+                        // (Kept generous — 268, not 240 — so the card has
+                        // headroom on narrower phones/larger text scales
+                        // instead of overflowing by a hair at the bottom.)
+                        mainAxisExtent: 268,
                       ),
                       itemBuilder: (context, i) {
                         final item = filtered[i];

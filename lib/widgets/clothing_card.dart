@@ -57,7 +57,7 @@ class ClothingCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   AspectRatio(
-                    aspectRatio: 1.15,
+                    aspectRatio: 1.35,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(AppRadius.field),
                       child: ClothingThumb(icon: icon, size: double.infinity, iconSize: 40),

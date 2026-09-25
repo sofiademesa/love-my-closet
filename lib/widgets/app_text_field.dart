@@ -19,6 +19,9 @@ class AppTextField extends StatelessWidget {
     this.textInputAction,
     this.validator,
     this.onFieldSubmitted,
+    this.readOnly = false,
+    this.onTap,
+    this.suffixIcon,
   });
 
   final String label;
@@ -31,6 +34,12 @@ class AppTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final FormFieldValidator<String>? validator;
   final ValueChanged<String>? onFieldSubmitted;
+
+  /// Set with [onTap] to make the field open a picker (e.g. a date picker)
+  /// instead of the keyboard.
+  final bool readOnly;
+  final VoidCallback? onTap;
+  final IconData? suffixIcon;
 
   OutlineInputBorder _border(Color color, [double width = 1.5]) {
     return OutlineInputBorder(
@@ -51,6 +60,8 @@ class AppTextField extends StatelessWidget {
       textInputAction: textInputAction,
       validator: validator,
       onFieldSubmitted: onFieldSubmitted,
+      readOnly: readOnly,
+      onTap: onTap,
       style: body,
       cursorColor: AppColors.buttonPink,
       decoration: InputDecoration(
@@ -61,6 +72,9 @@ class AppTextField extends StatelessWidget {
         prefixIcon: prefixIcon == null
             ? null
             : Icon(prefixIcon, color: AppColors.mutedBrown, size: 20),
+        suffixIcon: suffixIcon == null
+            ? null
+            : Icon(suffixIcon, color: AppColors.mutedBrown, size: 20),
         filled: true,
         fillColor: AppColors.white,
         contentPadding: const EdgeInsets.symmetric(
