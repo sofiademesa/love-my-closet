@@ -13,6 +13,8 @@ This repository contains the final project developed for 6ADET. The repository i
 
 ## Screenshots
 
+To be updated once I finished all my screens.
+
 | Home                                 | Detail                                   | Add                                |
 | ------------------------------------ | ---------------------------------------- | ---------------------------------- |
 | ![Home](docs/assets/screen-home.png) | ![Detail](docs/assets/screen-detail.png) | ![Add](docs/assets/screen-add.png) |

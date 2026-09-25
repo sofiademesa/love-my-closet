@@ -36,15 +36,75 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   void _goTo(int page) {
+    // The closet-opening boundary (Onboarding 1 <-> 2) runs a touch longer
+    // and softer so the door swing + push-in zoom actually reads instead of
+    // being rushed; the rest of the flow keeps a snappier "next" feel.
+    final openingCloset =
+        (_page == 0 && page == 1) || (_page == 1 && page == 0);
     _controller.animateToPage(
       page,
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeOutCubic,
+      duration: Duration(milliseconds: openingCloset ? 620 : 350),
+      curve: openingCloset ? Curves.easeInOutCubic : Curves.easeOutCubic,
     );
   }
 
   void _next() {
     if (_page < _landingIndex) _goTo(_page + 1);
+  }
+
+  /// The default [PageView] slides the whole card sideways, which is what
+  /// made this read as plain "next paging". For the Onboarding1 <-> 2
+  /// boundary specifically, this cancels that built-in slide (both pages
+  /// stay put, dead centre) and replaces it with a cross-fade + push-in
+  /// zoom, so it plays like the camera moving through the closet doors as
+  /// they swing open, rather than two cards passing each other. Every other
+  /// boundary (2 <-> Landing) keeps the normal slide untouched.
+  Widget _transitionChild({
+    required int index,
+    required double page,
+    required double width,
+    required Widget child,
+  }) {
+    final delta = page - index;
+
+    if (index == 0) {
+      // Only the forward half (departing into Onboarding 2) is customized.
+      final t = delta.clamp(0.0, 1.0);
+      if (t <= 0) return child;
+      final eased = Curves.easeIn.transform(t);
+      return IgnorePointer(
+        ignoring: t > 0.02,
+        child: Transform.translate(
+          // Cancels the PageView's own -delta*width slide so this stays
+          // centred instead of sliding off to the left.
+          offset: Offset(delta * width, 0),
+          child: Opacity(
+            opacity: (1 - eased).clamp(0.0, 1.0),
+            child: Transform.scale(scale: 1 + eased * 0.10, child: child),
+          ),
+        ),
+      );
+    }
+
+    if (index == 1) {
+      // Only the backward half (arriving from Onboarding 1) is customized;
+      // moving on toward Landing keeps the default slide.
+      final t = delta.clamp(-1.0, 0.0);
+      if (t >= 0) return child;
+      final eased = Curves.easeOut.transform(1 + t);
+      return IgnorePointer(
+        ignoring: eased < 0.98,
+        child: Transform.translate(
+          offset: Offset(delta * width, 0),
+          child: Opacity(
+            opacity: eased.clamp(0.0, 1.0),
+            child: Transform.scale(scale: 1.14 - eased * 0.14, child: child),
+          ),
+        ),
+      );
+    }
+
+    return child;
   }
 
   void _openCreateAccount() {
@@ -99,17 +159,51 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: PageView(
-                        controller: _controller,
-                        onPageChanged: (index) => setState(() => _page = index),
-                        children: [
-                          const Onboarding1Page(),
-                          const Onboarding2Page(),
-                          LandingPage(
-                            onSignUp: _openCreateAccount,
-                            onLogIn: _openLogIn,
-                          ),
-                        ],
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final width = constraints.maxWidth;
+                          return AnimatedBuilder(
+                            animation: _controller,
+                            builder: (context, _) {
+                              // Raw scroll position across the 3 slides, used
+                              // both to drive the door swing on Onboarding 1
+                              // and to work out each page's own custom
+                              // transition below.
+                              var page = _page.toDouble();
+                              if (_controller.hasClients &&
+                                  _controller.position.haveDimensions) {
+                                page = _controller.page ?? page;
+                              }
+                              final openProgress = page.clamp(0.0, 1.0);
+
+                              return PageView(
+                                controller: _controller,
+                                onPageChanged: (index) =>
+                                    setState(() => _page = index),
+                                children: [
+                                  _transitionChild(
+                                    index: 0,
+                                    page: page,
+                                    width: width,
+                                    child: Onboarding1Page(
+                                      openProgress: openProgress,
+                                    ),
+                                  ),
+                                  _transitionChild(
+                                    index: 1,
+                                    page: page,
+                                    width: width,
+                                    child: const Onboarding2Page(),
+                                  ),
+                                  LandingPage(
+                                    onSignUp: _openCreateAccount,
+                                    onLogIn: _openLogIn,
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
                       ),
                     ),
                     Positioned(

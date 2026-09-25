@@ -50,6 +50,9 @@ class OnboardingSlide extends StatelessWidget {
                   height: artHeight * 1.35,
                   child: Stack(
                     alignment: Alignment.center,
+                    // Let the closet zoom past its slot on Onboarding 1
+                    // without getting hard-clipped mid push-in.
+                    clipBehavior: Clip.none,
                     children: [
                       // Soft radial halo for depth behind the illustration.
                       Container(
@@ -70,22 +73,12 @@ class OnboardingSlide extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: Spacing.md),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: Spacing.md,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.butterYellow.withValues(alpha: 0.55),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    eyebrow,
-                    style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                      color: AppColors.hotPink,
-                    ),
+                Text(
+                  eyebrow,
+                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                    color: AppColors.hotPink,
                   ),
                 ),
                 const SizedBox(height: Spacing.sm),
