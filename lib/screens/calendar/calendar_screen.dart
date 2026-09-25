@@ -7,7 +7,6 @@ import '../../theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/clothing_thumb.dart';
 import '../../widgets/dot_pattern.dart';
-import '../../widgets/secondary_button.dart';
 import '../closet/closet_screen.dart';
 import '../home/home_screen.dart';
 import '../outfit_builder/outfit_builder_screen.dart';
@@ -77,26 +76,29 @@ class _CalendarScreenState extends State<CalendarScreen> {
     setState(() => _selectedDate = date);
   }
 
-Future<void> _openLogOutfit() async {
-  if (OutfitStore.instance.all.isEmpty) {
-    // Nothing saved to log yet — skip the "no saved outfits" message in
-    // Log Outfit and go straight to the Builder so there's something to
-    // build first.
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => OutfitBuilderScreen(
-          userName: widget.userName,
-          closetItems: widget.closetItems,
+  Future<void> _openLogOutfit() async {
+    if (OutfitStore.instance.all.isEmpty) {
+      // Nothing saved to log yet — skip the "no saved outfits" message in
+      // Log Outfit and go straight to the Builder so there's something to
+      // build first.
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => OutfitBuilderScreen(
+            userName: widget.userName,
+            closetItems: widget.closetItems,
+          ),
         ),
-      ),
-    );
-  } else {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => LogOutfitScreen(date: _selectedDate)),
-    );
+      );
+    } else {
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => LogOutfitScreen(date: _selectedDate)),
+      );
+    }
+    // OutfitStore's own listener already triggers a rebuild once an entry
+    // is saved, but this covers the (rare) case the sheet closes without a
+    // notifyListeners in between.
+    if (mounted) setState(() {});
   }
-  if (mounted) setState(() {});
-}
 
   Future<void> _openOutfitDetail(SavedOutfit outfit) async {
     final action = await showOutfitDetailSheet(context, outfitId: outfit.id);
@@ -263,20 +265,13 @@ Future<void> _openLogOutfit() async {
                     ),
                   ),
                   const SizedBox(height: Spacing.lg),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _formatLongDate(_selectedDate),
-                          style: textTheme.headlineSmall!.copyWith(fontSize: 18),
-                        ),
-                      ),
-                      _AddEntryButton(onTap: _openLogOutfit),
-                    ],
+                  Text(
+                    _formatLongDate(_selectedDate),
+                    style: textTheme.headlineSmall!.copyWith(fontSize: 18),
                   ),
                   const SizedBox(height: Spacing.sm),
                   if (selectedOutfits.isEmpty)
-                    _NoOutfitCard(onLog: _openLogOutfit)
+                    const _NoOutfitCard()
                   else
                     for (final outfit in selectedOutfits) ...[
                       _LoggedOutfitCard(
@@ -286,6 +281,23 @@ Future<void> _openLogOutfit() async {
                       const SizedBox(height: Spacing.sm),
                     ],
                 ],
+              ),
+              // Floating "log outfit" action, sitting above the nav bar.
+              Positioned(
+                right: Spacing.md,
+                bottom: 92,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: AppShadows.glow(AppColors.buttonPink),
+                  ),
+                  child: FloatingActionButton(
+                    onPressed: _openLogOutfit,
+                    backgroundColor: AppColors.buttonPink,
+                    foregroundColor: AppColors.white,
+                    child: const Icon(Icons.add_rounded),
+                  ),
+                ),
               ),
               Positioned(
                 left: Spacing.md,
@@ -420,41 +432,15 @@ class _DayCell extends StatelessWidget {
   }
 }
 
-class _AddEntryButton extends StatelessWidget {
-  const _AddEntryButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      customBorder: const CircleBorder(),
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const LinearGradient(colors: [AppColors.softPink, AppColors.buttonPink]),
-          boxShadow: AppShadows.glow(AppColors.buttonPink),
-        ),
-        child: const Icon(Icons.add_rounded, color: AppColors.white, size: 18),
-      ),
-    );
-  }
-}
-
 class _NoOutfitCard extends StatelessWidget {
-  const _NoOutfitCard({required this.onLog});
-
-  final VoidCallback onLog;
+  const _NoOutfitCard();
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(Spacing.md),
+      padding: const EdgeInsets.symmetric(vertical: Spacing.lg, horizontal: Spacing.md),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(AppRadius.card),
@@ -462,14 +448,19 @@ class _NoOutfitCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
-            'No outfit logged for this date.',
-            style: textTheme.bodyMedium!.copyWith(fontSize: 13),
+          Container(
+            padding: const EdgeInsets.all(Spacing.sm),
+            decoration: BoxDecoration(
+              color: AppColors.blush.withValues(alpha: 0.5),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.event_busy_rounded, size: 26, color: AppColors.buttonPink),
           ),
           const SizedBox(height: Spacing.sm),
-          SizedBox(
-            width: 160,
-            child: SecondaryButton(label: 'Log Outfit', onPressed: onLog),
+          Text(
+            'No outfit logged for this date.',
+            textAlign: TextAlign.center,
+            style: textTheme.bodyMedium!.copyWith(fontSize: 13),
           ),
         ],
       ),
