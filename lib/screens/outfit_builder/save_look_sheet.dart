@@ -16,19 +16,21 @@ class SaveLookResult {
 Future<SaveLookResult?> showSaveLookSheet(
   BuildContext context, {
   String initialName = '',
+  DateTime? initialDate,
 }) {
   return showModalBottomSheet<SaveLookResult>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => SaveLookSheet(initialName: initialName),
+    builder: (_) => SaveLookSheet(initialName: initialName, initialDate: initialDate),
   );
 }
 
 class SaveLookSheet extends StatefulWidget {
-  const SaveLookSheet({super.key, this.initialName = ''});
+  const SaveLookSheet({super.key, this.initialName = '', this.initialDate});
 
   final String initialName;
+  final DateTime? initialDate;
 
   @override
   State<SaveLookSheet> createState() => _SaveLookSheetState();
@@ -37,7 +39,7 @@ class SaveLookSheet extends StatefulWidget {
 class _SaveLookSheetState extends State<SaveLookSheet> {
   late final _nameController = TextEditingController(text: widget.initialName);
   late final _dateController = TextEditingController(text: _dateLabel);
-  DateTime _date = DateTime.now();
+  late DateTime _date = widget.initialDate ?? DateTime.now();
 
   @override
   void dispose() {

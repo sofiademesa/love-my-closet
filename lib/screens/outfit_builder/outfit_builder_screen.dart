@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/outfit_store.dart';
 import '../../models/clothing_item.dart';
 import '../../models/outfit.dart';
 import '../../theme.dart';
@@ -10,6 +11,7 @@ import '../../widgets/empty_state.dart';
 import '../../widgets/filter_chips.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/secondary_button.dart';
+import '../calendar/calendar_screen.dart';
 import '../closet/closet_screen.dart';
 import '../home/home_screen.dart';
 import 'save_look_sheet.dart';
@@ -25,10 +27,17 @@ class OutfitBuilderScreen extends StatefulWidget {
     super.key,
     this.userName = 'Sofia',
     this.closetItems = sampleClosetItems,
+    this.editOutfitId,
   });
 
   final String userName;
   final List<ClothingItem> closetItems;
+
+  /// When set, the Builder opens straight into the Builder tab with this
+  /// saved outfit's pieces already on the board, ready to tweak — reached
+  /// from the Calendar's "Edit in Builder" action. Saving updates that same
+  /// [OutfitStore] record in place instead of creating a duplicate.
+  final String? editOutfitId;
 
   @override
   State<OutfitBuilderScreen> createState() => _OutfitBuilderScreenState();
@@ -43,7 +52,38 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   int _pieceSeq = 0;
 
   final List<OutfitPiece> _boardPieces = [];
-  final List<SavedOutfit> _savedOutfits = [];
+
+  /// The saved outfit currently loaded on the board for editing, if any.
+  /// Null means the board holds a brand-new outfit that hasn't been saved.
+  String? _editingOutfitId;
+
+  /// Saved outfits read straight from the shared store — the same list the
+  /// Calendar reads from — so both stay in sync with no separate data.
+  List<SavedOutfit> get _savedOutfits => OutfitStore.instance.all;
+
+  @override
+  void initState() {
+    super.initState();
+    OutfitStore.instance.addListener(_onStoreChanged);
+    final editId = widget.editOutfitId;
+    if (editId != null) {
+      final outfit = OutfitStore.instance.byId(editId);
+      if (outfit != null) {
+        _boardPieces.addAll(outfit.pieces.map((p) => p.copy()));
+        _editingOutfitId = outfit.id;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    OutfitStore.instance.removeListener(_onStoreChanged);
+    super.dispose();
+  }
+
+  void _onStoreChanged() {
+    if (mounted) setState(() {});
+  }
 
   List<ClothingItem> get _palette {
     if (_category == null) return widget.closetItems;
@@ -65,6 +105,17 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     if (index == 1) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => ClosetScreen(userName: widget.userName)),
+      );
+      return;
+    }
+    if (index == 3) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => CalendarScreen(
+            userName: widget.userName,
+            closetItems: widget.closetItems,
+          ),
+        ),
       );
       return;
     }
@@ -127,7 +178,10 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     setState(() => _boardPieces.remove(piece));
   }
 
-  void _clearBoard() => setState(_boardPieces.clear);
+  void _clearBoard() => setState(() {
+    _boardPieces.clear();
+    _editingOutfitId = null;
+  });
 
   Future<void> _openSaveSheet() async {
     if (_boardPieces.isEmpty) {
@@ -136,20 +190,30 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
       );
       return;
     }
-    final result = await showSaveLookSheet(context);
+    final editing =
+        _editingOutfitId == null ? null : OutfitStore.instance.byId(_editingOutfitId!);
+    final result = await showSaveLookSheet(
+      context,
+      initialName: editing?.name ?? '',
+      initialDate: editing?.date,
+    );
     if (result == null || !mounted) return;
-    setState(() {
-      _savedOutfits.insert(
-        0,
-        SavedOutfit(
-          id: 'outfit_${DateTime.now().microsecondsSinceEpoch}',
-          name: result.name,
-          date: result.date,
-          pieces: _boardPieces.map((p) => p.copy()).toList(),
-        ),
+    final pieces = _boardPieces.map((p) => p.copy()).toList();
+    if (editing != null) {
+      OutfitStore.instance.update(
+        editing.copyWith(name: result.name, date: result.date, pieces: pieces),
       );
-      _tab = 1;
-    });
+    } else {
+      final newOutfit = SavedOutfit(
+        id: 'outfit_${DateTime.now().microsecondsSinceEpoch}',
+        name: result.name,
+        date: result.date,
+        pieces: pieces,
+      );
+      OutfitStore.instance.add(newOutfit);
+      _editingOutfitId = newOutfit.id;
+    }
+    setState(() => _tab = 1);
   }
 
   void _loadSavedOutfit(SavedOutfit outfit) {
@@ -157,12 +221,16 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
       _boardPieces
         ..clear()
         ..addAll(outfit.pieces.map((p) => p.copy()));
+      _editingOutfitId = outfit.id;
       _tab = 0;
     });
   }
 
   void _deleteSavedOutfit(SavedOutfit outfit) {
-    setState(() => _savedOutfits.removeWhere((o) => o.id == outfit.id));
+    OutfitStore.instance.remove(outfit.id);
+    if (_editingOutfitId == outfit.id) {
+      setState(() => _editingOutfitId = null);
+    }
   }
 
   @override
@@ -279,7 +347,10 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
             ),
             const SizedBox(width: Spacing.sm),
             Expanded(
-              child: PrimaryButton(label: 'Save Outfit', onPressed: _openSaveSheet),
+              child: PrimaryButton(
+                label: _editingOutfitId == null ? 'Save Outfit' : 'Update Outfit',
+                onPressed: _openSaveSheet,
+              ),
             ),
           ],
         ),

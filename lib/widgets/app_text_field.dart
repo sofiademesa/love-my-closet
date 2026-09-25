@@ -22,6 +22,7 @@ class AppTextField extends StatelessWidget {
     this.readOnly = false,
     this.onTap,
     this.suffixIcon,
+    this.maxLines = 1,
   });
 
   final String label;
@@ -40,6 +41,10 @@ class AppTextField extends StatelessWidget {
   final bool readOnly;
   final VoidCallback? onTap;
   final IconData? suffixIcon;
+
+  /// Line count for multi-line fields (e.g. the "Note" box on Log Outfit).
+  /// Defaults to a single line.
+  final int maxLines;
 
   OutlineInputBorder _border(Color color, [double width = 1.5]) {
     return OutlineInputBorder(
@@ -62,6 +67,8 @@ class AppTextField extends StatelessWidget {
       onFieldSubmitted: onFieldSubmitted,
       readOnly: readOnly,
       onTap: onTap,
+      maxLines: maxLines,
+      textAlignVertical: maxLines > 1 ? TextAlignVertical.top : null,
       style: body,
       cursorColor: AppColors.buttonPink,
       decoration: InputDecoration(

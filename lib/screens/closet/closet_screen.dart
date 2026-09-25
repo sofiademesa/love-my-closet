@@ -8,7 +8,9 @@ import '../../widgets/dot_pattern.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/filter_chips.dart';
 import '../../widgets/search_bar.dart';
+import '../calendar/calendar_screen.dart';
 import '../home/home_screen.dart';
+import '../outfit_builder/outfit_builder_screen.dart';
 import 'add_clothes_screen.dart';
 import 'edit_item_screen.dart';
 import 'item_detail_screen.dart';
@@ -60,6 +62,28 @@ class _ClosetScreenState extends State<ClosetScreen> {
     if (index == 0) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => HomeScreen(userName: widget.userName)),
+      );
+      return;
+    }
+    if (index == 2) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => OutfitBuilderScreen(
+            userName: widget.userName,
+            closetItems: _items,
+          ),
+        ),
+      );
+      return;
+    }
+    if (index == 3) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => CalendarScreen(
+            userName: widget.userName,
+            closetItems: _items,
+          ),
+        ),
       );
       return;
     }
@@ -204,36 +228,48 @@ class _ClosetScreenState extends State<ClosetScreen> {
                       onButtonPressed: _favoritesOnly ? null : _openAddClothes,
                     )
                   else
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: filtered.length,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: Spacing.sm,
-                        crossAxisSpacing: Spacing.sm,
-                        // A fixed height instead of an aspect ratio — the
-                        // card's content (thumb + name + tags + edit/delete)
-                        // is a set height regardless of column width, so an
-                        // aspect ratio was leaving a big empty gap at the
-                        // bottom of every tile and pushing the grid tall
-                        // enough for the FAB to clip over the last row.
-                        // (Kept generous — 268, not 240 — so the card has
-                        // headroom on narrower phones/larger text scales
-                        // instead of overflowing by a hair at the bottom.)
-                        mainAxisExtent: 268,
-                      ),
-                      itemBuilder: (context, i) {
-                        final item = filtered[i];
-                        return ClothingCard(
-                          name: item.name,
-                          tags: [item.category, item.occasion],
-                          icon: item.icon,
-                          isFavorite: item.isHiddenGem,
-                          onFavoriteToggle: () => _toggleFavorite(item),
-                          onTap: () => _openDetail(item),
-                          onEdit: () => _openEdit(item),
-                          onDelete: () => _confirmDelete(item),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Size each tile from the actual column width instead
+                        // of guessing a fixed height — a flat number either
+                        // overflows on some screens or (as here) leaves a big
+                        // dead gap under the edit/delete row on others.
+                        const crossAxisCount = 2;
+                        final cardWidth =
+                            (constraints.maxWidth - Spacing.sm * (crossAxisCount - 1)) /
+                                crossAxisCount;
+                        final imageHeight = cardWidth / 1.35;
+                        const chromeHeight = Spacing.sm * 2 // outer top+bottom padding
+                            + Spacing.sm // gap under image
+                            + 22 // name row (heart icon sets the height)
+                            + Spacing.xs // gap under name
+                            + 18 // tag chips row
+                            + Spacing.xs // gap under tags
+                            + 23 // edit/delete pill row
+                            + 6; // safety margin for larger text scales
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: filtered.length,
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            mainAxisSpacing: Spacing.sm,
+                            crossAxisSpacing: Spacing.sm,
+                            mainAxisExtent: imageHeight + chromeHeight,
+                          ),
+                          itemBuilder: (context, i) {
+                            final item = filtered[i];
+                            return ClothingCard(
+                              name: item.name,
+                              tags: [item.category, item.occasion],
+                              icon: item.icon,
+                              isFavorite: item.isHiddenGem,
+                              onFavoriteToggle: () => _toggleFavorite(item),
+                              onTap: () => _openDetail(item),
+                              onEdit: () => _openEdit(item),
+                              onDelete: () => _confirmDelete(item),
+                            );
+                          },
                         );
                       },
                     ),
