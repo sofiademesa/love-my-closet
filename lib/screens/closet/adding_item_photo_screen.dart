@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/accessibility_store.dart';
 import '../../theme.dart';
 import '../../widgets/back_circle_button.dart';
 import '../../widgets/clothing_thumb.dart';
@@ -97,7 +98,7 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
                 const SizedBox(height: Spacing.sm),
                 Row(
                   children: [
-                    const Icon(Icons.auto_awesome_rounded, size: 16, color: AppColors.buttonPink),
+                    Icon(Icons.auto_awesome_rounded, size: 16, color: AppColors.buttonPink),
                     const SizedBox(width: Spacing.xs),
                     Expanded(
                       child: Text(
@@ -154,11 +155,11 @@ class _SegmentButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: kMotionDuration(const Duration(milliseconds: 150)),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             gradient: active
-                ? const LinearGradient(colors: [AppColors.softPink, AppColors.buttonPink])
+                ? LinearGradient(colors: [AppColors.softPink, AppColors.buttonPink])
                 : null,
             borderRadius: BorderRadius.circular(16),
           ),

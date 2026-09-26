@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/accessibility_store.dart';
 import '../theme.dart';
 
 /// The floating pill nav bar shown on every main screen: Home, Closet,
@@ -69,7 +70,7 @@ class _NavIcon extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
               AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: kMotionDuration(const Duration(milliseconds: 200)),
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: selected
@@ -85,7 +86,7 @@ class _NavIcon extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: kMotionDuration(const Duration(milliseconds: 200)),
                 width: selected ? 16 : 0,
                 height: 3,
                 decoration: BoxDecoration(

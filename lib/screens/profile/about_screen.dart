@@ -65,7 +65,7 @@ class AboutScreen extends StatelessWidget {
                         onPressed: () => Navigator.of(context).pop(),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.chevron_left_rounded,
                           color: AppColors.hotPink,
                           size: 32,
@@ -248,7 +248,7 @@ class _BulletLine extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '\u2022  ',
             style: TextStyle(
               fontFamily: 'DMSans',
@@ -260,7 +260,7 @@ class _BulletLine extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'DMSans',
                 fontSize: 14,
                 height: 1.4,
@@ -311,7 +311,7 @@ class _LinkRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'DMSans',
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -319,7 +319,7 @@ class _LinkRow extends StatelessWidget {
                   ),
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 color: AppColors.mutedBrown,
                 size: 18,

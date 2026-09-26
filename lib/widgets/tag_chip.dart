@@ -42,7 +42,7 @@ class TagChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: 'DMSans',
           fontSize: 11,
           fontWeight: FontWeight.w500,

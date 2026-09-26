@@ -1,19 +1,33 @@
 // lib/theme.dart
 import 'package:flutter/material.dart';
 
+import 'data/accessibility_store.dart';
+
 /// 1. Palette ---------------------------------------------------------------
 class AppColors {
-  static const softPink = Color(0xFFFF8EC0); // Primary Soft Pink: active states, primary UI elements
-  static const hotPink = Color(0xFFEE3E91); // Title Hot Pink: screen titles, headings
+  static bool get _hc => AccessibilityStore.instance.highContrast;
+
+  // Text/accent colors switch to a deeper, calmer shade when High Contrast
+  // is on — never lighter/brighter, so nothing clips to a neon look.
+  // Backgrounds (cream, white, butterYellow) are left alone on purpose: the
+  // goal is more legible text and borders, not a different-looking app.
+  static Color get softPink =>
+      _hc ? const Color(0xFFDD6AA3) : const Color(0xFFFF8EC0); // Primary Soft Pink: active states, primary UI elements
+  static Color get hotPink =>
+      _hc ? const Color(0xFFB8175F) : const Color(0xFFEE3E91); // Title Hot Pink: screen titles, headings
   static const butterYellow = Color(0xFFFFE78C); // Secondary Butter Yellow: highlights, secondary actions
   static const cream = Color(0xFFFFF8F2); // Background Warm Cream: app background
-  static const blush = Color(0xFFFAD7E7); // Stroke Soft Blush: borders, dividers
-  static const mutedBrown = Color(0xFF76596A); // Text Muted Brown: body text, labels
-  static const errorRed = Color(0xFFB3261E); // Error Red: error messages
+  static Color get blush =>
+      _hc ? const Color(0xFFD98FB3) : const Color(0xFFFAD7E7); // Stroke Soft Blush: borders, dividers
+  static Color get mutedBrown =>
+      _hc ? const Color(0xFF3D2B34) : const Color(0xFF76596A); // Text Muted Brown: body text, labels
+  static Color get errorRed =>
+      _hc ? const Color(0xFF7A150F) : const Color(0xFFB3261E); // Error Red: error messages
   static const white = Color(0xFFFFFFFF); // White: text/icons on colored buttons
 
   /// Button fill that passes contrast with white text (3.25:1, bold 18.7px+).
-  static const buttonPink = Color(0xFFE95B9F);
+  static Color get buttonPink =>
+      _hc ? const Color(0xFFC21C74) : const Color(0xFFE95B9F);
 }
 
 /// 3. Spacing (4 px base unit) ------------------------------------------------
@@ -59,11 +73,11 @@ class AppShadows {
 const _headingFont = 'YoungSerif';
 const _bodyFont = 'DMSans';
 
-final appTheme = ThemeData(
+ThemeData buildAppTheme() => ThemeData(
   useMaterial3: true,
   fontFamily: _bodyFont,
   scaffoldBackgroundColor: AppColors.cream,
-  colorScheme: const ColorScheme(
+  colorScheme: ColorScheme(
     brightness: Brightness.light,
     primary: AppColors.buttonPink,
     onPrimary: AppColors.white,
@@ -75,7 +89,7 @@ final appTheme = ThemeData(
     onSurface: AppColors.mutedBrown,
     outline: AppColors.blush,
   ),
-  textTheme: const TextTheme(
+  textTheme: TextTheme(
     // Heading: screen titles and major headings
     headlineSmall: TextStyle(
       fontFamily: _headingFont,
@@ -98,7 +112,7 @@ final appTheme = ThemeData(
       color: AppColors.mutedBrown,
     ),
   ),
-  cardTheme: const CardThemeData(
+  cardTheme: CardThemeData(
     color: AppColors.white,
     margin: EdgeInsets.all(Spacing.sm),
     shape: RoundedRectangleBorder(
@@ -118,7 +132,7 @@ final appTheme = ThemeData(
       ),
     ),
   ),
-  snackBarTheme: const SnackBarThemeData(
+  snackBarTheme: SnackBarThemeData(
     behavior: SnackBarBehavior.floating,
     backgroundColor: AppColors.mutedBrown,
     contentTextStyle: TextStyle(

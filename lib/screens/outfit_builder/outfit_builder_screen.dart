@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/accessibility_store.dart';
 import '../../data/outfit_store.dart';
 import '../../models/clothing_item.dart';
 import '../../models/outfit.dart';
@@ -479,11 +480,11 @@ class _TabToggle extends StatelessWidget {
     return GestureDetector(
       onTap: () => onChanged(i),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: kMotionDuration(const Duration(milliseconds: 150)),
         padding: const EdgeInsets.symmetric(vertical: 9),
         decoration: BoxDecoration(
           gradient: active
-              ? const LinearGradient(colors: [AppColors.softPink, AppColors.buttonPink])
+              ? LinearGradient(colors: [AppColors.softPink, AppColors.buttonPink])
               : null,
           borderRadius: BorderRadius.circular(16),
         ),
@@ -547,7 +548,7 @@ class _RemoveDot extends StatelessWidget {
           border: Border.all(color: AppColors.blush, width: 1.5),
           boxShadow: AppShadows.surface,
         ),
-        child: const Icon(Icons.close_rounded, size: 13, color: AppColors.errorRed),
+        child: Icon(Icons.close_rounded, size: 13, color: AppColors.errorRed),
       ),
     );
   }
@@ -630,7 +631,7 @@ class _SavedOutfitCard extends StatelessWidget {
                 ),
                 GestureDetector(
                   onTap: onDelete,
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.all(4),
                     child: Icon(Icons.close_rounded, size: 18, color: AppColors.mutedBrown),
                   ),

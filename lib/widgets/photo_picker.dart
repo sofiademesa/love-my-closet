@@ -38,11 +38,11 @@ class PhotoPicker extends StatelessWidget {
                       children: [
                         Container(
                           padding: const EdgeInsets.all(Spacing.sm),
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: AppColors.blush,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.add_a_photo_rounded,
                             color: AppColors.buttonPink,
                           ),
@@ -66,7 +66,7 @@ class PhotoPicker extends StatelessWidget {
               right: Spacing.sm,
               child: GestureDetector(
                 onTap: onRemove,
-                child: const CircleAvatar(
+                child: CircleAvatar(
                   radius: 14,
                   backgroundColor: AppColors.errorRed,
                   child: Icon(

@@ -47,7 +47,7 @@ class HelpSupportScreen extends StatelessWidget {
                         onPressed: () => Navigator.of(context).pop(),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.chevron_left_rounded,
                           color: AppColors.hotPink,
                           size: 32,
@@ -215,12 +215,12 @@ class _EmailRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.mail_outline_rounded, color: AppColors.buttonPink, size: 18),
+              Icon(Icons.mail_outline_rounded, color: AppColors.buttonPink, size: 18),
               const SizedBox(width: Spacing.sm),
               Expanded(
                 child: Text(
                   email,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'DMSans',
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -228,7 +228,7 @@ class _EmailRow extends StatelessWidget {
                   ),
                 ),
               ),
-              const Icon(Icons.copy_rounded, color: AppColors.mutedBrown, size: 16),
+              Icon(Icons.copy_rounded, color: AppColors.mutedBrown, size: 16),
             ],
           ),
         ),

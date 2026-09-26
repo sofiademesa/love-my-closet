@@ -1,6 +1,7 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 
+import 'data/accessibility_store.dart';
 import 'screens/onboarding/onboarding_flow.dart';
 import 'theme.dart';
 
@@ -20,20 +21,40 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Love My Closet',
-      debugShowCheckedModeBanner: false,
+    // Rebuilds whenever a setting on the Accessibility screen changes, so
+    // Text Size / Reduce Motion / High Contrast take effect immediately,
+    // app-wide, without needing a restart.
+    return ListenableBuilder(
+      listenable: AccessibilityStore.instance,
+      builder: (context, _) {
+        return MaterialApp(
+          title: 'Love My Closet',
+          debugShowCheckedModeBanner: false,
 
-      // These two lines make the DevicePreview toolbar actually change the
-      // app. Keep them.
-      locale: DevicePreview.locale(context),
-      builder: DevicePreview.appBuilder,
+          // These two lines make the DevicePreview toolbar actually change the
+          // app. Keep them.
+          locale: DevicePreview.locale(context),
+          builder: (context, child) {
+            Widget content = DevicePreview.appBuilder(context, child);
+            // Text Size: scales every Text widget in the app from one place,
+            // instead of touching each screen's TextStyles.
+            final store = AccessibilityStore.instance;
+            content = MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(store.textSize.scale)),
+              child: content,
+            );
+            return content;
+          },
 
-      theme: appTheme,
+          theme: buildAppTheme(),
 
-      // Onboarding 1 -> Onboarding 2 -> Main Landing Page, then
-      // Create Account / Log In / Forgot Password.
-      home: const OnboardingFlow(),
+          // Onboarding 1 -> Onboarding 2 -> Main Landing Page, then
+          // Create Account / Log In / Forgot Password.
+          home: const OnboardingFlow(),
+        );
+      },
     );
   }
 }

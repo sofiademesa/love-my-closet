@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/accessibility_store.dart';
 import '../theme.dart';
 
 /// Onboarding progress indicator: the current step is a pill, the rest are dots.
@@ -16,7 +17,7 @@ class PageDots extends StatelessWidget {
       children: [
         for (var i = 0; i < count; i++)
           AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
+            duration: kMotionDuration(const Duration(milliseconds: 250)),
             curve: Curves.easeOutCubic,
             margin: const EdgeInsets.symmetric(horizontal: 3),
             width: i == current ? 24 : 8,

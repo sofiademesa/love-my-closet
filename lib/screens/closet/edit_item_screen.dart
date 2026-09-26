@@ -64,7 +64,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
+            child: Text(
               'Delete',
               style: TextStyle(color: AppColors.errorRed),
             ),

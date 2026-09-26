@@ -77,7 +77,7 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: AppColors.errorRed)),
+            child: Text('Delete', style: TextStyle(color: AppColors.errorRed)),
           ),
         ],
       ),
@@ -145,7 +145,7 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
                       shape: BoxShape.circle,
                       border: Border.all(color: AppColors.blush, width: 1.5),
                     ),
-                    child: const Icon(Icons.close_rounded, size: 16, color: AppColors.mutedBrown),
+                    child: Icon(Icons.close_rounded, size: 16, color: AppColors.mutedBrown),
                   ),
                 ),
               ],
@@ -196,13 +196,13 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
                     onPressed: () => _confirmDelete(outfit),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(42),
-                      side: const BorderSide(color: AppColors.errorRed, width: 1.5),
+                      side: BorderSide(color: AppColors.errorRed, width: 1.5),
                       backgroundColor: AppColors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadius.button),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Delete',
                       style: TextStyle(
                         fontFamily: 'DMSans',

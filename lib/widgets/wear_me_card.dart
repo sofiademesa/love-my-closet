@@ -140,7 +140,7 @@ class _SkipButton extends StatelessWidget {
         minimumSize: const Size.fromHeight(42),
         backgroundColor: AppColors.white,
         foregroundColor: AppColors.mutedBrown,
-        side: const BorderSide(color: AppColors.blush, width: 1.5),
+        side: BorderSide(color: AppColors.blush, width: 1.5),
         textStyle: const TextStyle(
           fontFamily: 'DMSans',
           fontSize: 15,

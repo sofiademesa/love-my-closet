@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/accessibility_store.dart';
 import '../theme.dart';
 
 /// Horizontally-scrolling row of single-select pills. Used for the category
@@ -64,14 +65,14 @@ class _Chip extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: kMotionDuration(const Duration(milliseconds: 150)),
           padding: const EdgeInsets.symmetric(
             horizontal: Spacing.md,
             vertical: 8,
           ),
           decoration: BoxDecoration(
             gradient: active
-                ? const LinearGradient(
+                ? LinearGradient(
                     colors: [AppColors.softPink, AppColors.buttonPink],
                   )
                 : null,

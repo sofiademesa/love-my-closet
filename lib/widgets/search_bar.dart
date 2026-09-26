@@ -22,7 +22,7 @@ class AppSearchBar extends StatelessWidget {
     return TextField(
       controller: controller,
       onChanged: onChanged,
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: 'DMSans',
         fontSize: 14,
         color: AppColors.mutedBrown,
@@ -35,7 +35,7 @@ class AppSearchBar extends StatelessWidget {
           fontSize: 14,
           color: AppColors.mutedBrown.withValues(alpha: 0.55),
         ),
-        prefixIcon: const Icon(
+        prefixIcon: Icon(
           Icons.search_rounded,
           color: AppColors.mutedBrown,
           size: 20,
@@ -45,15 +45,15 @@ class AppSearchBar extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: AppColors.blush, width: 1.5),
+          borderSide: BorderSide(color: AppColors.blush, width: 1.5),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: AppColors.blush, width: 1.5),
+          borderSide: BorderSide(color: AppColors.blush, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: AppColors.buttonPink, width: 2),
+          borderSide: BorderSide(color: AppColors.buttonPink, width: 2),
         ),
       ),
     );

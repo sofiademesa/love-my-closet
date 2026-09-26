@@ -55,7 +55,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
+            child: Text(
               'Delete',
               style: TextStyle(color: AppColors.errorRed),
             ),

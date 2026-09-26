@@ -376,7 +376,7 @@ class _DayCell extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: selected
-                ? const LinearGradient(colors: [AppColors.softPink, AppColors.buttonPink])
+                ? LinearGradient(colors: [AppColors.softPink, AppColors.buttonPink])
                 : null,
             border: !selected && isToday
                 ? Border.all(color: AppColors.softPink, width: 1.5)
@@ -432,7 +432,7 @@ class _NoOutfitCard extends StatelessWidget {
               color: AppColors.blush.withValues(alpha: 0.5),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.event_busy_rounded, size: 26, color: AppColors.buttonPink),
+            child: Icon(Icons.event_busy_rounded, size: 26, color: AppColors.buttonPink),
           ),
           const SizedBox(height: Spacing.sm),
           Text(

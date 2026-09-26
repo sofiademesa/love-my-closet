@@ -73,7 +73,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         onPressed: () => Navigator.of(context).pop(),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.chevron_left_rounded,
                           color: AppColors.hotPink,
                           size: 32,

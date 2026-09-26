@@ -44,7 +44,7 @@ class AppDropdown extends StatelessWidget {
                   color: AppColors.mutedBrown.withValues(alpha: 0.55),
                 ),
               ),
-              icon: const Icon(
+              icon: Icon(
                 Icons.keyboard_arrow_down_rounded,
                 color: AppColors.mutedBrown,
               ),

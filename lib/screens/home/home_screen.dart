@@ -249,7 +249,7 @@ class _Header extends StatelessWidget {
             border: Border.all(color: AppColors.softPink, width: 1.5),
             boxShadow: AppShadows.surface,
           ),
-          child: const Icon(Icons.person_rounded, color: AppColors.buttonPink),
+          child: Icon(Icons.person_rounded, color: AppColors.buttonPink),
         ),
       ],
     );

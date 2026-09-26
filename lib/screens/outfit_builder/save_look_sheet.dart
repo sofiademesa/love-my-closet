@@ -137,13 +137,13 @@ class _SaveLookSheetState extends State<SaveLookSheet> {
                     onPressed: () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(42),
-                      side: const BorderSide(color: AppColors.blush, width: 1.5),
+                      side: BorderSide(color: AppColors.blush, width: 1.5),
                       backgroundColor: AppColors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadius.button),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Cancel',
                       style: TextStyle(
                         fontFamily: 'DMSans',

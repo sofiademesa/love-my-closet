@@ -120,7 +120,7 @@ class _LogOutfitScreenState extends State<LogOutfitScreen> {
                               color: AppColors.blush.withValues(alpha: 0.5),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.close_rounded,
                               size: 15,
                               color: AppColors.mutedBrown,

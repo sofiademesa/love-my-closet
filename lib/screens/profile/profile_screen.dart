@@ -12,6 +12,7 @@ import '../home/home_screen.dart';
 import '../onboarding/onboarding_flow.dart';
 import '../outfit_builder/outfit_builder_screen.dart';
 import 'about_screen.dart';
+import 'accessibility_screen.dart';
 import 'edit_profile_screen.dart';
 import 'help_support_screen.dart';
 
@@ -73,9 +74,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _comingSoon() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming soon!')),
+  void _openAccessibility() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AccessibilityScreen()),
     );
   }
 
@@ -108,7 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
+            child: Text(
               'Log Out',
               style: TextStyle(color: AppColors.errorRed),
             ),
@@ -164,9 +165,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: Spacing.sm),
                   ProfileMenuRow(
-                    icon: Icons.translate_rounded,
-                    label: 'Language',
-                    onTap: _comingSoon,
+                    icon: Icons.accessibility_new_rounded,
+                    label: 'Accessibility',
+                    onTap: _openAccessibility,
                   ),
                   const SizedBox(height: Spacing.lg),
                   const _SectionLabel('Closet'),
@@ -231,7 +232,7 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: 'DMSans',
         fontSize: 13,
         fontWeight: FontWeight.w700,
@@ -272,7 +273,7 @@ class _ThresholdPicker extends StatelessWidget {
           children: [
             Text(
               store.hiddenGemsThreshold,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'DMSans',
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -280,7 +281,7 @@ class _ThresholdPicker extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 2),
-            const Icon(
+            Icon(
               Icons.keyboard_arrow_down_rounded,
               size: 16,
               color: AppColors.mutedBrown,

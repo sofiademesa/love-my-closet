@@ -34,7 +34,7 @@ class PrimaryButton extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: enabled
-                  ? const [AppColors.softPink, AppColors.buttonPink]
+                  ? [AppColors.softPink, AppColors.buttonPink]
                   : [
                       AppColors.buttonPink.withValues(alpha: 0.4),
                       AppColors.buttonPink.withValues(alpha: 0.4),

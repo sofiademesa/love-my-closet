@@ -272,7 +272,7 @@ class _DoorFace extends StatelessWidget {
       child: ClipRRect(
         borderRadius: borderRadius,
         child: DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,

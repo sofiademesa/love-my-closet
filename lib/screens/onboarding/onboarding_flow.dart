@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/accessibility_store.dart';
 import '../../theme.dart';
 import '../../widgets/dot_pattern.dart';
 import '../../widgets/page_dots.dart';
@@ -43,7 +44,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         (_page == 0 && page == 1) || (_page == 1 && page == 0);
     _controller.animateToPage(
       page,
-      duration: Duration(milliseconds: openingCloset ? 620 : 350),
+      duration: kMotionDuration(
+        Duration(milliseconds: openingCloset ? 620 : 350),
+      ),
       curve: openingCloset ? Curves.easeInOutCubic : Curves.easeOutCubic,
     );
   }
@@ -141,9 +144,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               Positioned.fill(
                 child: IgnorePointer(
                   child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 400),
+                    duration: kMotionDuration(
+                      const Duration(milliseconds: 400),
+                    ),
                     opacity: _onLanding ? 0 : 1,
-                    child: const DecoratedBox(
+                    child: DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
@@ -214,7 +219,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                         ignoring: _onLanding,
                         child: AnimatedOpacity(
                           opacity: _onLanding ? 0 : 1,
-                          duration: const Duration(milliseconds: 250),
+                          duration: kMotionDuration(
+                            const Duration(milliseconds: 250),
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(
                               Spacing.md,

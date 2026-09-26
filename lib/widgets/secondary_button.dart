@@ -50,7 +50,7 @@ class SecondaryButton extends StatelessWidget {
               child: Center(
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'DMSans',
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
