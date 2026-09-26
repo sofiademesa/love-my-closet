@@ -12,6 +12,7 @@ import '../home/home_screen.dart';
 import '../onboarding/onboarding_flow.dart';
 import '../outfit_builder/outfit_builder_screen.dart';
 import 'edit_profile_screen.dart';
+import 'help_support_screen.dart';
 
 /// Profile: account info at a glance (avatar, name, bio) plus access to app
 /// settings — Edit Profile, Language, closet preferences, and Log Out.
@@ -74,6 +75,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _comingSoon() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Coming soon!')),
+    );
+  }
+
+  void _openHelpSupport() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
     );
   }
 
@@ -184,7 +191,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ProfileMenuRow(
                     icon: Icons.help_outline_rounded,
                     label: 'Help & Support',
-                    onTap: _comingSoon,
+                    onTap: _openHelpSupport,
                   ),
                   const SizedBox(height: Spacing.sm),
                   ProfileMenuRow(
