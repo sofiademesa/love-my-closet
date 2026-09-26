@@ -28,6 +28,10 @@ class AppColors {
   /// Button fill that passes contrast with white text (3.25:1, bold 18.7px+).
   static Color get buttonPink =>
       _hc ? const Color(0xFFC21C74) : const Color(0xFFE95B9F);
+
+  /// Deep maroon-pink outline used for the bottom nav bar's border.
+  static Color get navBorder =>
+      _hc ? const Color(0xFF7A1F44) : const Color(0xFFC3356F);
 }
 
 /// 3. Spacing (4 px base unit) ------------------------------------------------
