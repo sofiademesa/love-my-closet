@@ -5,6 +5,7 @@ import '../../models/outfit.dart';
 import '../../theme.dart';
 import '../../widgets/clothing_thumb.dart';
 import '../../widgets/secondary_button.dart';
+import '../outfit_builder/save_look_sheet.dart';
 
 const _kMonthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -15,7 +16,7 @@ String _formatLongDate(DateTime date) =>
     '${_kMonthNames[date.month - 1]} ${date.day}, ${date.year}';
 
 /// What the caller should do after the outfit detail sheet closes.
-enum OutfitDetailAction { edit, deleted, none }
+enum OutfitDetailAction { deleted, none }
 
 /// Shows an outfit's full detail — name, date, note, and every piece — as a
 /// bottom sheet. Reached by tapping a logged outfit on the Calendar (or the
@@ -44,6 +45,19 @@ class OutfitDetailSheet extends StatefulWidget {
 }
 
 class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
+  Future<void> _editDetails(SavedOutfit outfit) async {
+    final result = await showSaveLookSheet(
+      context,
+      initialName: outfit.name,
+      initialDate: outfit.date,
+    );
+    if (result == null || !mounted) return;
+    OutfitStore.instance.update(
+      outfit.copyWith(name: result.name, date: result.date),
+    );
+    setState(() {});
+  }
+
   Future<void> _confirmDelete(SavedOutfit outfit) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -150,7 +164,7 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
               children: [
                 for (final piece in outfit.pieces)
                   SizedBox(
-                    width: 76,
+                    width: 84,
                     child: Column(
                       children: [
                         ClothingThumb(icon: piece.item.icon, size: 76, iconSize: 30),
@@ -158,9 +172,9 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
                         Text(
                           piece.item.name,
                           textAlign: TextAlign.center,
-                          maxLines: 2,
+                          maxLines: 3,
                           overflow: TextOverflow.ellipsis,
-                          style: textTheme.labelSmall,
+                          style: textTheme.labelSmall!.copyWith(fontSize: 11, height: 1.25),
                         ),
                       ],
                     ),
@@ -172,8 +186,8 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
               children: [
                 Expanded(
                   child: SecondaryButton(
-                    label: 'Edit in Builder',
-                    onPressed: () => Navigator.of(context).pop(OutfitDetailAction.edit),
+                    label: 'Edit Details',
+                    onPressed: () => _editDetails(outfit),
                   ),
                 ),
                 const SizedBox(width: Spacing.sm),

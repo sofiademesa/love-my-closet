@@ -35,9 +35,9 @@ class OutfitBuilderScreen extends StatefulWidget {
   final List<ClothingItem> closetItems;
 
   /// When set, the Builder opens straight into the Builder tab with this
-  /// saved outfit's pieces already on the board, ready to tweak — reached
-  /// from the Calendar's "Edit in Builder" action. Saving updates that same
-  /// [OutfitStore] record in place instead of creating a duplicate.
+  /// saved outfit's pieces already on the board, ready to tweak. Saving
+  /// updates that same [OutfitStore] record in place instead of creating
+  /// a duplicate.
   final String? editOutfitId;
 
   @override

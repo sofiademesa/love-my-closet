@@ -11,7 +11,6 @@ import '../closet/closet_screen.dart';
 import '../home/home_screen.dart';
 import '../outfit_builder/outfit_builder_screen.dart';
 import '../profile/profile_screen.dart';
-import 'log_outfit_screen.dart';
 import 'outfit_detail_sheet.dart';
 
 const _kMonthNames = [
@@ -78,44 +77,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Future<void> _openLogOutfit() async {
-    if (OutfitStore.instance.all.isEmpty) {
-      // Nothing saved to log yet — skip the "no saved outfits" message in
-      // Log Outfit and go straight to the Builder so there's something to
-      // build first.
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => OutfitBuilderScreen(
-            userName: widget.userName,
-            closetItems: widget.closetItems,
-          ),
+    // The "+" action always goes straight to the Outfit Builder to build
+    // (or pick and re-save) a look.
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OutfitBuilderScreen(
+          userName: widget.userName,
+          closetItems: widget.closetItems,
         ),
-      );
-    } else {
-      await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => LogOutfitScreen(date: _selectedDate)),
-      );
-    }
+      ),
+    );
     // OutfitStore's own listener already triggers a rebuild once an entry
-    // is saved, but this covers the (rare) case the sheet closes without a
+    // is saved, but this covers the (rare) case the screen closes without a
     // notifyListeners in between.
     if (mounted) setState(() {});
   }
 
   Future<void> _openOutfitDetail(SavedOutfit outfit) async {
-    final action = await showOutfitDetailSheet(context, outfitId: outfit.id);
-    if (!mounted) return;
-    if (action == OutfitDetailAction.edit) {
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => OutfitBuilderScreen(
-            userName: widget.userName,
-            closetItems: widget.closetItems,
-            editOutfitId: outfit.id,
-          ),
-        ),
-      );
-      if (mounted) setState(() {});
-    }
+    await showOutfitDetailSheet(context, outfitId: outfit.id);
+    if (mounted) setState(() {});
   }
 
   void _goToTab(int index) {
@@ -512,13 +492,13 @@ class _LoggedOutfitCard extends StatelessWidget {
                             ClothingThumb(icon: piece.item.icon, size: 64, iconSize: 26),
                             const SizedBox(height: Spacing.xs),
                             SizedBox(
-                              width: 64,
+                              width: 72,
                               child: Text(
                                 piece.item.name,
                                 textAlign: TextAlign.center,
-                                maxLines: 2,
+                                maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
-                                style: textTheme.labelSmall!.copyWith(fontSize: 11),
+                                style: textTheme.labelSmall!.copyWith(fontSize: 10.5, height: 1.25),
                               ),
                             ),
                           ],
