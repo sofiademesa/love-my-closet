@@ -36,6 +36,8 @@ class ClothingItem {
     this.icon = Icons.checkroom_rounded,
     this.color = 'Pink',
     this.isHiddenGem = false,
+    this.timesWorn = 0,
+    this.lastWorn,
   });
 
   final String id;
@@ -47,12 +49,21 @@ class ClothingItem {
   final String color;
   final bool isHiddenGem;
 
+  /// How many times this item has been logged as worn.
+  final int timesWorn;
+
+  /// Display-formatted date (e.g. "09/03/2026") this item was last worn,
+  /// or null if it has never been worn.
+  final String? lastWorn;
+
   ClothingItem copyWith({
     String? name,
     String? category,
     String? occasion,
     String? color,
     bool? isHiddenGem,
+    int? timesWorn,
+    String? lastWorn,
   }) {
     return ClothingItem(
       id: id,
@@ -63,6 +74,8 @@ class ClothingItem {
       icon: icon,
       color: color ?? this.color,
       isHiddenGem: isHiddenGem ?? this.isHiddenGem,
+      timesWorn: timesWorn ?? this.timesWorn,
+      lastWorn: lastWorn ?? this.lastWorn,
     );
   }
 }
@@ -76,6 +89,8 @@ const sampleClosetItems = [
     occasion: 'Everyday',
     daysUnworn: 32,
     color: 'Pink',
+    timesWorn: 5,
+    lastWorn: '09/03/2026',
   ),
   ClothingItem(
     id: '2',
@@ -84,6 +99,8 @@ const sampleClosetItems = [
     occasion: 'Everyday',
     daysUnworn: 12,
     color: 'Yellow',
+    timesWorn: 3,
+    lastWorn: '09/14/2026',
   ),
   ClothingItem(
     id: '3',
@@ -92,6 +109,8 @@ const sampleClosetItems = [
     occasion: 'Everyday',
     daysUnworn: 8,
     color: 'Blue',
+    timesWorn: 7,
+    lastWorn: '09/18/2026',
   ),
   ClothingItem(
     id: '4',
@@ -100,5 +119,7 @@ const sampleClosetItems = [
     occasion: 'Formal',
     daysUnworn: 45,
     color: 'Denim',
+    timesWorn: 1,
+    lastWorn: '08/12/2026',
   ),
 ];

@@ -146,7 +146,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: ClothingCard(
                           name: 'Yellow Bow Top',
-                          tags: ['Tops', 'Casual'],
                           icon: Icons.checkroom_rounded,
                         ),
                       ),
@@ -154,7 +153,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: ClothingCard(
                           name: 'Blue Tiered Skirt',
-                          tags: ['Bottoms', 'Casual'],
                           icon: Icons.checkroom_rounded,
                         ),
                       ),
@@ -182,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Positioned(
                 left: Spacing.md,
                 right: Spacing.md,
-                bottom: Spacing.sm,
+                bottom: Spacing.xs,
                 child: BottomNavBar(
                   currentIndex: _navIndex,
                   onTap: _goToTab,

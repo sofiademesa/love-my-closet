@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 import 'clothing_thumb.dart';
-import 'tag_chip.dart';
 
-/// A single wardrobe item in a grid: a big photo, name + favorite heart,
-/// up to two tinted tags, and — on Closet, where [onEdit]/[onDelete] are
-/// supplied — quick Edit/Delete pills. Used on Home's "More Hidden Gems"
-/// (no heart, no edit/delete) and on the Closet grid (all three).
+/// A single wardrobe item in a grid: a big photo and a name + favorite
+/// heart row. On Closet, where [onEdit]/[onDelete] are supplied, a small
+/// "more" button sits over the top-right corner of the photo, right-
+/// aligned with the heart below, and reveals Edit/Delete in a menu so
+/// those actions stay out of the way until wanted. Used on Home's "More
+/// Hidden Gems" (no heart, no menu) and on the Closet grid (both).
 class ClothingCard extends StatelessWidget {
   const ClothingCard({
     super.key,
     required this.name,
-    required this.tags,
     this.icon = Icons.checkroom_rounded,
     this.onTap,
     this.isFavorite = false,
@@ -22,15 +22,12 @@ class ClothingCard extends StatelessWidget {
   });
 
   final String name;
-  final List<String> tags;
   final IconData icon;
   final VoidCallback? onTap;
   final bool isFavorite;
   final VoidCallback? onFavoriteToggle;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
-
-  static const _tints = [TagChipTint.pink, TagChipTint.yellow];
 
   @override
   Widget build(BuildContext context) {
@@ -51,16 +48,32 @@ class ClothingCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.all(Spacing.sm),
+              padding: const EdgeInsets.fromLTRB(Spacing.sm, Spacing.sm, Spacing.sm, 4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   AspectRatio(
                     aspectRatio: 1.35,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(AppRadius.field),
-                      child: ClothingThumb(icon: icon, size: double.infinity, iconSize: 40),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(AppRadius.field),
+                            child:
+                                ClothingThumb(icon: icon, size: double.infinity, iconSize: 40),
+                          ),
+                        ),
+                        // Right-aligned with the favorite heart below, so
+                        // the two quiet actions read as one column instead
+                        // of the menu floating anywhere on the photo.
+                        if (onEdit != null || onDelete != null)
+                          Positioned(
+                            top: 4,
+                            right: 6,
+                            child: _CardMenuButton(onEdit: onEdit, onDelete: onDelete),
+                          ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: Spacing.sm),
@@ -78,31 +91,18 @@ class ClothingCard extends StatelessWidget {
                         ),
                       ),
                       if (onFavoriteToggle != null)
-                        _FavoriteHeart(active: isFavorite, onTap: onFavoriteToggle!),
+                        // Nudged in from the card's edge, in from the
+                        // same amount as the "more" circle above, so the
+                        // two sit in one column instead of hugging it.
+                        Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: _FavoriteHeart(
+                            active: isFavorite,
+                            onTap: onFavoriteToggle!,
+                          ),
+                        ),
                     ],
                   ),
-                  const SizedBox(height: Spacing.xs),
-                  Wrap(
-                    spacing: Spacing.xs,
-                    runSpacing: Spacing.xs,
-                    children: [
-                      for (var i = 0; i < tags.length; i++)
-                        TagChip(label: tags[i], tint: _tints[i % _tints.length]),
-                    ],
-                  ),
-                  if (onEdit != null || onDelete != null) ...[
-                    const SizedBox(height: Spacing.xs),
-                    Row(
-                      children: [
-                        if (onEdit != null)
-                          Expanded(child: _ActionPill.edit(onTap: onEdit!)),
-                        if (onEdit != null && onDelete != null)
-                          const SizedBox(width: Spacing.xs),
-                        if (onDelete != null)
-                          Expanded(child: _ActionPill.delete(onTap: onDelete!)),
-                      ],
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -142,69 +142,67 @@ class _FavoriteHeart extends StatelessWidget {
   }
 }
 
-/// Tiny pill button used for the Edit/Delete quick actions on a Closet
-/// tile — yellow with a pencil for Edit, blush with a trash can for Delete.
-class _ActionPill extends StatelessWidget {
-  const _ActionPill({
-    required this.label,
-    required this.icon,
-    required this.background,
-    required this.foreground,
-    required this.onTap,
-  });
+/// Small "more" button overlaid on a [ClothingCard]'s photo, right-aligned
+/// with the favorite heart in the row below. Sits on a soft translucent
+/// backdrop so it stays legible over any thumbnail without shouting for
+/// attention, and opens a menu with Edit/Delete instead of showing them
+/// as standing buttons.
+class _CardMenuButton extends StatelessWidget {
+  const _CardMenuButton({this.onEdit, this.onDelete});
 
-  factory _ActionPill.edit({required VoidCallback onTap}) => _ActionPill(
-        label: 'edit',
-        icon: Icons.edit_rounded,
-        background: AppColors.butterYellow.withValues(alpha: 0.65),
-        foreground: AppColors.mutedBrown,
-        onTap: onTap,
-      );
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
-  factory _ActionPill.delete({required VoidCallback onTap}) => _ActionPill(
-        label: 'delete',
-        icon: Icons.delete_rounded,
-        background: AppColors.blush,
-        foreground: AppColors.errorRed,
-        onTap: onTap,
-      );
-
-  final String label;
-  final IconData icon;
-  final Color background;
-  final Color foreground;
-  final VoidCallback onTap;
+  static const _size = 24.0;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 5),
+    return SizedBox(
+      width: _size,
+      height: _size,
+      child: PopupMenuButton<VoidCallback>(
+        tooltip: 'More options',
+        padding: EdgeInsets.zero,
+        splashRadius: _size / 2,
+        offset: const Offset(0, _size),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.field)),
+        color: AppColors.white,
+        icon: Container(
+          width: _size,
+          height: _size,
           decoration: BoxDecoration(
-            color: background,
-            borderRadius: BorderRadius.circular(20),
+            color: AppColors.cream.withValues(alpha: 0.85),
+            shape: BoxShape.circle,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 12, color: foreground),
-              const SizedBox(width: 3),
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'DMSans',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: foreground,
-                ),
-              ),
-            ],
-          ),
+          child: Icon(Icons.more_horiz_rounded, size: 16, color: AppColors.mutedBrown),
         ),
+        onSelected: (action) => action(),
+        itemBuilder: (context) => [
+          if (onEdit != null)
+            PopupMenuItem<VoidCallback>(
+              value: onEdit,
+              height: 40,
+              child: Row(
+                children: [
+                  Icon(Icons.edit_rounded, size: 17, color: AppColors.mutedBrown),
+                  const SizedBox(width: Spacing.sm),
+                  const Text('Edit'),
+                ],
+              ),
+            ),
+          if (onDelete != null)
+            PopupMenuItem<VoidCallback>(
+              value: onDelete,
+              height: 40,
+              child: Row(
+                children: [
+                  Icon(Icons.delete_rounded, size: 17, color: AppColors.errorRed),
+                  const SizedBox(width: Spacing.sm),
+                  Text('Delete', style: TextStyle(color: AppColors.errorRed)),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

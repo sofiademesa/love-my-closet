@@ -277,7 +277,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
               Positioned(
                 left: Spacing.md,
                 right: Spacing.md,
-                bottom: Spacing.sm,
+                bottom: Spacing.xs,
                 child: BottomNavBar(currentIndex: 2, onTap: _goToTab),
               ),
             ],

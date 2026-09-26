@@ -77,32 +77,54 @@ class WearMeCard extends StatelessWidget {
                 ),
                 const SizedBox(height: Spacing.md),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    ClothingThumb(icon: icon, size: 68),
+                    ClothingThumb(icon: icon, size: 88),
                     const SizedBox(width: Spacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(name, style: textTheme.bodyMedium),
+                          Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.bodyMedium!.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
                           const SizedBox(height: Spacing.sm),
-                          Wrap(
-                            spacing: Spacing.xs,
-                            runSpacing: Spacing.xs,
-                            children: [
-                              for (var i = 0; i < tags.length; i++)
-                                TagChip(
-                                  label: tags[i],
-                                  tint: i == 0 ? TagChipTint.pink : TagChipTint.yellow,
-                                ),
-                            ],
+                          SizedBox(
+                            height: 28,
+                            child: Row(
+                              children: [
+                                for (var i = 0; i < tags.length; i++) ...[
+                                  if (i > 0) const SizedBox(width: Spacing.xs),
+                                  Flexible(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerLeft,
+                                      child: TagChip(
+                                        label: tags[i],
+                                        tint: i == 0
+                                            ? TagChipTint.pink
+                                            : TagChipTint.yellow,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: Spacing.md),
+                Divider(color: AppColors.blush, height: 1, thickness: 1),
                 const SizedBox(height: Spacing.md),
                 Row(
                   children: [

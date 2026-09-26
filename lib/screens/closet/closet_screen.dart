@@ -241,20 +241,16 @@ class _ClosetScreenState extends State<ClosetScreen> {
                       builder: (context, constraints) {
                         // Size each tile from the actual column width instead
                         // of guessing a fixed height — a flat number either
-                        // overflows on some screens or (as here) leaves a big
-                        // dead gap under the edit/delete row on others.
+                        // overflows on some screens or leaves a dead gap
+                        // under the name row on others.
                         const crossAxisCount = 2;
                         final cardWidth =
                             (constraints.maxWidth - Spacing.sm * (crossAxisCount - 1)) /
                                 crossAxisCount;
                         final imageHeight = cardWidth / 1.35;
                         const chromeHeight = Spacing.sm * 2 // outer top+bottom padding
-                            + Spacing.sm // gap under image
+                            + Spacing.xs // gap under image
                             + 22 // name row (heart icon sets the height)
-                            + Spacing.xs // gap under name
-                            + 18 // tag chips row
-                            + Spacing.xs // gap under tags
-                            + 23 // edit/delete pill row
                             + 6; // safety margin for larger text scales
                         return GridView.builder(
                           shrinkWrap: true,
@@ -270,7 +266,6 @@ class _ClosetScreenState extends State<ClosetScreen> {
                             final item = filtered[i];
                             return ClothingCard(
                               name: item.name,
-                              tags: [item.category, item.occasion],
                               icon: item.icon,
                               isFavorite: item.isHiddenGem,
                               onFavoriteToggle: () => _toggleFavorite(item),
@@ -304,7 +299,7 @@ class _ClosetScreenState extends State<ClosetScreen> {
               Positioned(
                 left: Spacing.md,
                 right: Spacing.md,
-                bottom: Spacing.sm,
+                bottom: Spacing.xs,
                 child: BottomNavBar(
                   currentIndex: 1,
                   onTap: _goToTab,

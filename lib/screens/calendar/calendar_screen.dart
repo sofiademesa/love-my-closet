@@ -280,7 +280,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               Positioned(
                 left: Spacing.md,
                 right: Spacing.md,
-                bottom: Spacing.sm,
+                bottom: Spacing.xs,
                 child: BottomNavBar(currentIndex: 3, onTap: _goToTab),
               ),
             ],

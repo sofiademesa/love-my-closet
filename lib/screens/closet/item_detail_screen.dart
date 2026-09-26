@@ -8,7 +8,6 @@ import '../../widgets/clothing_thumb.dart';
 import '../../widgets/dot_pattern.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/secondary_button.dart';
-import '../../widgets/tag_chip.dart';
 import 'edit_item_screen.dart';
 
 /// Clothing Item: a closet item's full detail, reached by tapping a tile
@@ -133,19 +132,32 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: Spacing.xs),
-                  Wrap(
-                    spacing: Spacing.xs,
-                    children: [
-                      TagChip(label: _item.category),
-                      TagChip(label: _item.occasion),
-                    ],
+                  Text(
+                    'Category: ${_item.category}',
+                    style: textTheme.bodyMedium,
+                  ),
+                  Text(
+                    'Style: ${_item.occasion}',
+                    style: textTheme.bodyMedium,
                   ),
                   const SizedBox(height: Spacing.md),
-                  Text(
-                    _item.daysUnworn == 0
-                        ? 'Added just now — no wears logged yet.'
-                        : "You haven't worn this in ${_item.daysUnworn} days",
-                    style: textTheme.bodyMedium,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _InfoBox(
+                          label: 'Times Worn',
+                          value:
+                              '${_item.timesWorn} ${_item.timesWorn == 1 ? 'time' : 'times'}',
+                        ),
+                      ),
+                      const SizedBox(width: Spacing.sm),
+                      Expanded(
+                        child: _InfoBox(
+                          label: 'Last Worn',
+                          value: _item.lastWorn ?? '—',
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: Spacing.lg),
                   Row(
@@ -167,7 +179,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               Positioned(
                 left: Spacing.md,
                 right: Spacing.md,
-                bottom: Spacing.sm,
+                bottom: Spacing.xs,
                 child: BottomNavBar(
                   currentIndex: widget.originIndex,
                   onTap: (_) => Navigator.of(context).pop(_item),
@@ -194,15 +206,48 @@ class _HiddenGemToggle extends StatelessWidget {
       onTap: onTap,
       customBorder: const CircleBorder(),
       child: Container(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: active ? AppColors.buttonPink : AppColors.blush.withValues(alpha: 0.5),
           shape: BoxShape.circle,
         ),
         child: Icon(
           active ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-          size: 18,
+          size: 20,
           color: active ? AppColors.white : AppColors.mutedBrown,
+        ),
+      ),
+    );
+  }
+}
+
+/// One of the two equal-width "Times Worn" / "Last Worn" info boxes on the
+/// Clothing Item detail screen, matching the pill-style cards in the mockup.
+class _InfoBox extends StatelessWidget {
+  const _InfoBox({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(AppRadius.field),
+        border: Border.all(color: AppColors.blush, width: 1.5),
+      ),
+      child: Text(
+        '$label: $value',
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontFamily: 'DMSans',
+          fontSize: 12.5,
+          fontWeight: FontWeight.w600,
+          color: AppColors.mutedBrown,
         ),
       ),
     );

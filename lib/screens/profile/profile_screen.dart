@@ -212,7 +212,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Positioned(
                 left: Spacing.md,
                 right: Spacing.md,
-                bottom: Spacing.sm,
+                bottom: Spacing.xs,
                 child: BottomNavBar(currentIndex: 4, onTap: _goToTab),
               ),
             ],

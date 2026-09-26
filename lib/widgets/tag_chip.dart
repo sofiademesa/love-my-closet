@@ -34,19 +34,27 @@ class TagChip extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: 2),
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: border, width: 1),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontFamily: 'DMSans',
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: AppColors.mutedBrown,
+      // FittedBox instead of ellipsis: if the pill gets squeezed narrower
+      // than the label needs, the text shrinks to fit rather than
+      // truncating into "Every...".
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          label,
+          maxLines: 1,
+          style: TextStyle(
+            fontFamily: 'DMSans',
+            fontSize: 13.5,
+            fontWeight: FontWeight.w600,
+            color: AppColors.mutedBrown,
+          ),
         ),
       ),
     );
