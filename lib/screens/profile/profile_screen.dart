@@ -11,6 +11,7 @@ import '../closet/closet_screen.dart';
 import '../home/home_screen.dart';
 import '../onboarding/onboarding_flow.dart';
 import '../outfit_builder/outfit_builder_screen.dart';
+import 'about_screen.dart';
 import 'edit_profile_screen.dart';
 import 'help_support_screen.dart';
 
@@ -81,6 +82,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _openHelpSupport() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
+    );
+  }
+
+  void _openAbout() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AboutScreen()),
     );
   }
 
@@ -185,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ProfileMenuRow(
                     icon: Icons.info_outline_rounded,
                     label: 'About Love My Closet',
-                    onTap: _comingSoon,
+                    onTap: _openAbout,
                   ),
                   const SizedBox(height: Spacing.sm),
                   ProfileMenuRow(

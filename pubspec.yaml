@@ -16,6 +16,8 @@ dependencies:
   # Lets you preview the app inside a phone frame while you develop in a
   # browser. It is switched off automatically in a release build.
   device_preview: ^1.3.1
+  # Opens the email client / browser for the About screen's contact links.
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
