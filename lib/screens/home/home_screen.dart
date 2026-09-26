@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/user_profile_store.dart';
 import '../../theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/clothing_card.dart';
@@ -9,6 +10,7 @@ import '../../widgets/wear_me_card.dart';
 import '../calendar/calendar_screen.dart';
 import '../closet/closet_screen.dart';
 import '../outfit_builder/outfit_builder_screen.dart';
+import '../profile/profile_screen.dart';
 import 'hidden_gems_sheet.dart';
 
 /// Home: greeting, today's Wear Me suggestion, wardrobe stats at a glance,
@@ -25,6 +27,25 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _navIndex = 0;
 
+  // The name shown here always reflects Edit Profile's latest save, not the
+  // value this screen happened to be constructed with — so it listens to
+  // the shared store the same way Calendar/Builder listen to OutfitStore.
+  final _profileStore = UserProfileStore.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileStore.addListener(_onProfileChanged);
+  }
+
+  @override
+  void dispose() {
+    _profileStore.removeListener(_onProfileChanged);
+    super.dispose();
+  }
+
+  void _onProfileChanged() => setState(() {});
+
   void _openHiddenGems() {
     showHiddenGemsSheet(context);
   }
@@ -33,24 +54,24 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == 0) return;
     if (index == 1) {
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => ClosetScreen(userName: widget.userName)),
+        MaterialPageRoute(builder: (_) => const ClosetScreen()),
       );
       return;
     }
     if (index == 2) {
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => OutfitBuilderScreen(userName: widget.userName)),
+        MaterialPageRoute(builder: (_) => const OutfitBuilderScreen()),
       );
       return;
     }
     if (index == 3) {
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => CalendarScreen(userName: widget.userName)),
+        MaterialPageRoute(builder: (_) => const CalendarScreen()),
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming soon!')),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
     );
   }
 
@@ -77,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   170,
                 ),
                 children: [
-                  _Header(userName: widget.userName),
+                  _Header(userName: _profileStore.displayName),
                   const SizedBox(height: Spacing.lg),
                   const _SectionHeader(title: 'Wear Me'),
                   const SizedBox(height: Spacing.sm),

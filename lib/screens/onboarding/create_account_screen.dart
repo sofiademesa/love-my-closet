@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/user_profile_store.dart';
 import '../../theme.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/primary_button.dart';
@@ -34,9 +35,15 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     final firstName = _nameController.text.trim().split(' ').first;
+    // Seed the shared profile with what they just typed, so their real name
+    // (not a placeholder) shows up on Home, Closet, and Profile right away.
+    UserProfileStore.instance.updateProfile(
+      displayName: firstName,
+      email: _emailController.text.trim(),
+    );
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (_) => HomeScreen(userName: firstName),
+        builder: (_) => const HomeScreen(),
       ),
     );
   }

@@ -45,7 +45,7 @@ class ProfileMenuRow extends StatelessWidget {
                   label,
                   style: body.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.hotPink,
+                    color: AppColors.mutedBrown,
                   ),
                 ),
               ),

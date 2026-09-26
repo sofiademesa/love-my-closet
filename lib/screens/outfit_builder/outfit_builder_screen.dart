@@ -14,6 +14,7 @@ import '../../widgets/secondary_button.dart';
 import '../calendar/calendar_screen.dart';
 import '../closet/closet_screen.dart';
 import '../home/home_screen.dart';
+import '../profile/profile_screen.dart';
 import 'save_look_sheet.dart';
 
 /// Diameter of a piece once it's on the board.
@@ -98,29 +99,26 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     if (index == currentIndex) return;
     if (index == 0) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeScreen(userName: widget.userName)),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
       return;
     }
     if (index == 1) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => ClosetScreen(userName: widget.userName)),
+        MaterialPageRoute(builder: (_) => const ClosetScreen()),
       );
       return;
     }
     if (index == 3) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => CalendarScreen(
-            userName: widget.userName,
-            closetItems: widget.closetItems,
-          ),
+          builder: (_) => CalendarScreen(closetItems: widget.closetItems),
         ),
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming soon!')),
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
     );
   }
 

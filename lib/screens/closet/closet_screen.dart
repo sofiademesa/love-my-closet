@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/user_profile_store.dart';
 import '../../models/clothing_item.dart';
 import '../../theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
@@ -11,6 +12,7 @@ import '../../widgets/search_bar.dart';
 import '../calendar/calendar_screen.dart';
 import '../home/home_screen.dart';
 import '../outfit_builder/outfit_builder_screen.dart';
+import '../profile/profile_screen.dart';
 import 'add_clothes_screen.dart';
 import 'edit_item_screen.dart';
 import 'item_detail_screen.dart';
@@ -31,6 +33,10 @@ class _ClosetScreenState extends State<ClosetScreen> {
   final _searchController = TextEditingController();
   final List<ClothingItem> _items = List.of(sampleClosetItems);
 
+  // Read live so the header keeps showing whatever name Edit Profile was
+  // last saved with, not the value this screen happened to be built with.
+  final _profileStore = UserProfileStore.instance;
+
   String? _category;
   String? _occasion;
   String _query = '';
@@ -38,10 +44,19 @@ class _ClosetScreenState extends State<ClosetScreen> {
   bool get _favoritesOnly => _category == _kFavorites;
 
   @override
+  void initState() {
+    super.initState();
+    _profileStore.addListener(_onProfileChanged);
+  }
+
+  @override
   void dispose() {
+    _profileStore.removeListener(_onProfileChanged);
     _searchController.dispose();
     super.dispose();
   }
+
+  void _onProfileChanged() => setState(() {});
 
   List<ClothingItem> get _filtered {
     return _items.where((item) {
@@ -61,17 +76,14 @@ class _ClosetScreenState extends State<ClosetScreen> {
     if (index == currentIndex) return;
     if (index == 0) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeScreen(userName: widget.userName)),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
       return;
     }
     if (index == 2) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => OutfitBuilderScreen(
-            userName: widget.userName,
-            closetItems: _items,
-          ),
+          builder: (_) => OutfitBuilderScreen(closetItems: _items),
         ),
       );
       return;
@@ -79,16 +91,13 @@ class _ClosetScreenState extends State<ClosetScreen> {
     if (index == 3) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => CalendarScreen(
-            userName: widget.userName,
-            closetItems: _items,
-          ),
+          builder: (_) => CalendarScreen(closetItems: _items),
         ),
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming soon!')),
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
     );
   }
 
@@ -186,7 +195,7 @@ class _ClosetScreenState extends State<ClosetScreen> {
                 ),
                 children: [
                   Text(
-                    "${widget.userName}'s Digital Closet",
+                    "${_profileStore.displayName}'s Digital Closet",
                     style: textTheme.headlineSmall!.copyWith(fontSize: 22),
                   ),
                   const SizedBox(height: Spacing.md),

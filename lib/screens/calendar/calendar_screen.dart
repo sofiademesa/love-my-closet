@@ -10,6 +10,7 @@ import '../../widgets/dot_pattern.dart';
 import '../closet/closet_screen.dart';
 import '../home/home_screen.dart';
 import '../outfit_builder/outfit_builder_screen.dart';
+import '../profile/profile_screen.dart';
 import 'log_outfit_screen.dart';
 import 'outfit_detail_sheet.dart';
 
@@ -122,29 +123,26 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (index == currentIndex) return;
     if (index == 0) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeScreen(userName: widget.userName)),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
       return;
     }
     if (index == 1) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => ClosetScreen(userName: widget.userName)),
+        MaterialPageRoute(builder: (_) => const ClosetScreen()),
       );
       return;
     }
     if (index == 2) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => OutfitBuilderScreen(
-            userName: widget.userName,
-            closetItems: widget.closetItems,
-          ),
+          builder: (_) => OutfitBuilderScreen(closetItems: widget.closetItems),
         ),
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming soon!')),
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
     );
   }
 
