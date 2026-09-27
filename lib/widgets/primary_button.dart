@@ -9,10 +9,18 @@ class PrimaryButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
+    this.height = 42,
+    this.fontSize = 18.7,
   });
 
   final String label;
   final VoidCallback? onPressed;
+
+  /// Button height and label size. Defaults match the original full-size
+  /// CTA; pass smaller values for a quieter button next to other actions
+  /// (e.g. the Wear Me card, where "Style This" sits beside "Skip").
+  final double height;
+  final double fontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -46,13 +54,13 @@ class PrimaryButton extends StatelessWidget {
             splashColor: AppColors.white.withValues(alpha: 0.18),
             highlightColor: Colors.transparent,
             child: SizedBox(
-              height: 42,
+              height: height,
               child: Center(
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'DMSans',
-                    fontSize: 18.7,
+                    fontSize: fontSize,
                     fontWeight: FontWeight.bold,
                     color: AppColors.white,
                   ),

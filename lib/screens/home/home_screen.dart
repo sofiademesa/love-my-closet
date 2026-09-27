@@ -8,6 +8,7 @@ import '../../widgets/dot_pattern.dart';
 import '../../widgets/stat_tile.dart';
 import '../../widgets/wear_me_card.dart';
 import '../calendar/calendar_screen.dart';
+import '../closet/add_clothes_screen.dart';
 import '../closet/closet_screen.dart';
 import '../outfit_builder/outfit_builder_screen.dart';
 import '../profile/profile_screen.dart';
@@ -48,6 +49,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openHiddenGems() {
     showHiddenGemsSheet(context);
+  }
+
+  void _openAddClothes() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AddClothesScreen()),
+    );
   }
 
   void _goToTab(int index) {
@@ -105,9 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   WearMeCard(
                     name: 'Pink Polkadot Top',
                     daysUnworn: 32,
-                    tags: const ['Tops', 'Casual'],
                     onStyleThis: () {},
-                    onSkip: () {},
                   ),
                   const SizedBox(height: Spacing.lg),
                   const _SectionHeader(title: 'Wardrobe Stats'),
@@ -147,6 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: ClothingCard(
                           name: 'Yellow Bow Top',
                           icon: Icons.checkroom_rounded,
+                          daysUnworn: 18,
                         ),
                       ),
                       SizedBox(width: Spacing.sm),
@@ -154,6 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: ClothingCard(
                           name: 'Blue Tiered Skirt',
                           icon: Icons.checkroom_rounded,
+                          daysUnworn: 25,
                         ),
                       ),
                     ],
@@ -170,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     boxShadow: AppShadows.glow(AppColors.buttonPink),
                   ),
                   child: FloatingActionButton(
-                    onPressed: () {},
+                    onPressed: _openAddClothes,
                     backgroundColor: AppColors.buttonPink,
                     foregroundColor: AppColors.white,
                     child: const Icon(Icons.add_rounded),

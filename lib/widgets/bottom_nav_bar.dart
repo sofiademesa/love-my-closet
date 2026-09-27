@@ -29,7 +29,7 @@ class BottomNavBar extends StatelessWidget {
     Icons.person_rounded,
   ];
 
-  static const _labels = ['Home', 'Closet', 'Style', 'Diary', 'Profile'];
+  static const _labels = ['Home', 'Closet', 'Outfit Builder', 'Calendar', 'Profile'];
 
   @override
   Widget build(BuildContext context) {
@@ -54,12 +54,26 @@ class BottomNavBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             for (var i = 0; i < _icons.length; i++)
-              _NavIcon(
-                icon: _icons[i],
-                label: _labels[i],
-                selected: i == currentIndex,
-                onTap: () => onTap(i),
-              ),
+              i == currentIndex
+                  // Only the selected tab needs room to grow, so only it
+                  // gets a Flexible slot — sized against the *actual*
+                  // remaining space, not divided evenly with the other
+                  // four small fixed-size icons. Fixes the label
+                  // overflowing on narrow screens.
+                  ? Flexible(
+                      child: _NavIcon(
+                        icon: _icons[i],
+                        label: _labels[i],
+                        selected: true,
+                        onTap: () => onTap(i),
+                      ),
+                    )
+                  : _NavIcon(
+                      icon: _icons[i],
+                      label: _labels[i],
+                      selected: false,
+                      onTap: () => onTap(i),
+                    ),
           ],
         ),
       ),
@@ -91,7 +105,7 @@ class _NavIcon extends StatelessWidget {
         duration: kMotionDuration(const Duration(milliseconds: 220)),
         curve: Curves.easeOut,
         padding: EdgeInsets.symmetric(
-          horizontal: selected ? 16 : 10,
+          horizontal: selected ? 12 : 10,
           vertical: 10,
         ),
         decoration: BoxDecoration(
@@ -109,14 +123,18 @@ class _NavIcon extends StatelessWidget {
                   ? Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const SizedBox(width: 6),
-                        Text(
-                          label,
-                          style: TextStyle(
-                            color: fg,
-                            fontFamily: 'DMSans',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: fg,
+                              fontFamily: 'DMSans',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -130,15 +148,16 @@ class _NavIcon extends StatelessWidget {
   }
 
   Widget _icon(Color fg) {
-    if (icon != null) return Icon(icon, color: fg, size: 22);
+    final size = selected ? 20.0 : 22.0;
+    if (icon != null) return Icon(icon, color: fg, size: size);
     // Diary tab: calendar + small heart composite.
     return SizedBox(
-      width: 22,
-      height: 22,
+      width: size,
+      height: size,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Icon(Icons.calendar_month_rounded, color: fg, size: 22),
+          Icon(Icons.calendar_month_rounded, color: fg, size: size),
           Positioned(
             bottom: 3,
             child: Icon(Icons.favorite_rounded, color: fg, size: 8),

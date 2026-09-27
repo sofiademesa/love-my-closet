@@ -20,6 +20,10 @@ class HiddenGemItem {
 const _defaultHiddenGems = [
   HiddenGemItem(name: 'Snoopy Cream Shirt', daysUnworn: 30),
   HiddenGemItem(name: 'The Beatles Shirt', daysUnworn: 45),
+  HiddenGemItem(name: 'Denim Skirt', daysUnworn: 52, icon: Icons.checkroom_rounded),
+  HiddenGemItem(name: 'Floral Sundress', daysUnworn: 38, icon: Icons.checkroom_rounded),
+  HiddenGemItem(name: 'Grey Knit Cardigan', daysUnworn: 60, icon: Icons.checkroom_rounded),
+  HiddenGemItem(name: 'Red Beret', daysUnworn: 27, icon: Icons.checkroom_rounded),
 ];
 
 /// Opens Hidden Gems as a sheet that slides up over Home, matching the
@@ -47,9 +51,9 @@ class HiddenGemsSheet extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.55,
-      minChildSize: 0.35,
-      maxChildSize: 0.9,
+      initialChildSize: 0.75,
+      minChildSize: 0.4,
+      maxChildSize: 0.92,
       expand: false,
       builder: (context, scrollController) {
         final radius = BorderRadius.vertical(top: Radius.circular(28));
@@ -98,7 +102,7 @@ class HiddenGemsSheet extends StatelessWidget {
                           icon: item.icon,
                           onWearAgain: () {},
                         ),
-                        const SizedBox(height: Spacing.sm),
+                        const SizedBox(height: Spacing.md),
                       ],
                     ],
                   ),

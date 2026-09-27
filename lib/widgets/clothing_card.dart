@@ -19,6 +19,7 @@ class ClothingCard extends StatelessWidget {
     this.onFavoriteToggle,
     this.onEdit,
     this.onDelete,
+    this.daysUnworn,
   });
 
   final String name;
@@ -28,6 +29,11 @@ class ClothingCard extends StatelessWidget {
   final VoidCallback? onFavoriteToggle;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+
+  /// When set, shows "Unworn Nd" under the name — e.g. on Home's "More
+  /// Hidden Gems", where surfacing neglected items is the whole point.
+  /// Omitted (null) leaves the card exactly as it reads on the Closet grid.
+  final int? daysUnworn;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +54,12 @@ class ClothingCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(Spacing.sm, Spacing.sm, Spacing.sm, 4),
+              padding: EdgeInsets.fromLTRB(
+                Spacing.sm,
+                Spacing.sm,
+                Spacing.sm,
+                daysUnworn != null ? Spacing.sm : 4,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -103,6 +114,16 @@ class ClothingCard extends StatelessWidget {
                         ),
                     ],
                   ),
+                  if (daysUnworn != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Unworn ${daysUnworn}d',
+                      style: textTheme.labelSmall!.copyWith(
+                        color: AppColors.mutedBrown.withValues(alpha: 0.6),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
