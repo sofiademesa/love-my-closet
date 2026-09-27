@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/accessibility_store.dart';
+import '../../data/filter_icons.dart';
 import '../../data/outfit_store.dart';
 import '../../models/clothing_item.dart';
 import '../../models/outfit.dart';
@@ -295,13 +296,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
       children: [
         FilterChips(
           options: const [_kFavorites, ...clothingCategories],
-          icons: const {
-            _kFavorites: Icons.favorite_rounded,
-            'Tops': Icons.checkroom_rounded,
-            'Bottoms': Icons.dry_cleaning_rounded,
-            'Outerwear': Icons.ac_unit_rounded,
-            'Accessories': Icons.watch_rounded,
-          },
+          icons: categoryFilterIcons,
           selected: _category,
           onSelected: (v) => setState(() => _category = v),
         ),

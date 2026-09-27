@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/filter_icons.dart';
 import '../../models/clothing_item.dart';
 import '../../theme.dart';
 import '../../widgets/app_dropdown.dart';
@@ -109,6 +110,7 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
               const SizedBox(height: Spacing.sm),
               FilterChips(
                 options: occasionTags,
+                icons: occasionFilterIcons,
                 selected: _occasion,
                 onSelected: (v) => setState(() => _occasion = v),
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/filter_icons.dart';
 import '../../data/user_profile_store.dart';
 import '../../models/clothing_item.dart';
 import '../../theme.dart';
@@ -206,19 +207,14 @@ class _ClosetScreenState extends State<ClosetScreen> {
                   const SizedBox(height: Spacing.md),
                   FilterChips(
                     options: const [_kFavorites, ...clothingCategories],
-                    icons: const {
-                      _kFavorites: Icons.favorite_rounded,
-                      'Tops': Icons.checkroom_rounded,
-                      'Bottoms': Icons.dry_cleaning_rounded,
-                      'Outerwear': Icons.ac_unit_rounded,
-                      'Accessories': Icons.watch_rounded,
-                    },
+                    icons: categoryFilterIcons,
                     selected: _category,
                     onSelected: (v) => setState(() => _category = v),
                   ),
                   const SizedBox(height: Spacing.sm),
                   FilterChips(
                     options: const [_kAllOccasions, ...occasionTags],
+                    icons: occasionFilterIcons,
                     selected: _occasion ?? _kAllOccasions,
                     onSelected: (v) => setState(
                       () => _occasion = (v == null || v == _kAllOccasions) ? null : v,
