@@ -50,7 +50,13 @@ class LandingPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    HeartAvatar(width: avatarWidth),
+                    // Same optical-centering nudge as Onboarding 2: the
+                    // heart's visual weight sits above its geometric
+                    // center, so shift it down slightly to look centered.
+                    Align(
+                      alignment: const Alignment(0, 0.12),
+                      child: HeartAvatar(width: avatarWidth),
+                    ),
                   ],
                 ),
               ),

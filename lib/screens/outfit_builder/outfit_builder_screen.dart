@@ -424,9 +424,11 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
 
   Widget _buildSavedOutfits(TextTheme textTheme) {
     if (_savedOutfits.isEmpty) {
-      return const EmptyState(
-        message: 'No saved outfits yet.\nBuild one on the Builder tab and save it here.',
-        icon: Icons.dashboard_customize_rounded,
+      return const Center(
+        child: EmptyState(
+          message: 'No saved outfits yet.\nBuild one on the Builder tab and save it here.',
+          icon: Icons.dashboard_customize_rounded,
+        ),
       );
     }
     return ListView.separated(

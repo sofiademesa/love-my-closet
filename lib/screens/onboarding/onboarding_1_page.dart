@@ -281,19 +281,6 @@ class _DoorFace extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              // Glossy highlight across the top of the door.
-              Positioned(
-                top: -height * 0.28,
-                left: -height * 0.15,
-                right: -height * 0.15,
-                child: Container(
-                  height: height * 0.55,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.white.withValues(alpha: 0.16),
-                  ),
-                ),
-              ),
               // Seam line on the inner edge (the edge nearest the other
               // door).
               Positioned(

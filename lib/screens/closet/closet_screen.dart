@@ -185,95 +185,102 @@ class _ClosetScreenState extends State<ClosetScreen> {
         child: SafeArea(
           child: Stack(
             children: [
-              ListView(
+              Padding(
                 padding: const EdgeInsets.fromLTRB(
                   Spacing.md,
                   Spacing.md,
                   Spacing.md,
-                  // Room for the floating nav bar *and* the FAB above it,
-                  // so the FAB never clips over the last grid row.
-                  150,
+                  0,
                 ),
-                children: [
-                  Text(
-                    "${_profileStore.displayName}'s Digital Closet",
-                    style: textTheme.headlineSmall!.copyWith(fontSize: 22),
-                  ),
-                  const SizedBox(height: Spacing.md),
-                  AppSearchBar(
-                    controller: _searchController,
-                    onChanged: (v) => setState(() => _query = v),
-                  ),
-                  const SizedBox(height: Spacing.md),
-                  FilterChips(
-                    options: const [_kFavorites, ...clothingCategories],
-                    icons: categoryFilterIcons,
-                    selected: _category,
-                    onSelected: (v) => setState(() => _category = v),
-                  ),
-                  const SizedBox(height: Spacing.sm),
-                  FilterChips(
-                    options: const [_kAllOccasions, ...occasionTags],
-                    icons: occasionFilterIcons,
-                    selected: _occasion ?? _kAllOccasions,
-                    onSelected: (v) => setState(
-                      () => _occasion = (v == null || v == _kAllOccasions) ? null : v,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "${_profileStore.displayName}'s Digital Closet",
+                      style: textTheme.headlineSmall!.copyWith(fontSize: 22),
                     ),
-                  ),
-                  const SizedBox(height: Spacing.lg),
-                  if (filtered.isEmpty)
-                    EmptyState(
-                      message: _favoritesOnly
-                          ? 'No favorites yet.\nTap the heart on any item to add it here.'
-                          : 'No items found.\nTry a different filter or add something new.',
-                      icon: _favoritesOnly
-                          ? Icons.favorite_border_rounded
-                          : Icons.search_off_rounded,
-                      buttonLabel: _favoritesOnly ? null : 'Add Clothes',
-                      onButtonPressed: _favoritesOnly ? null : _openAddClothes,
-                    )
-                  else
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        // Size each tile from the actual column width instead
-                        // of guessing a fixed height — a flat number either
-                        // overflows on some screens or leaves a dead gap
-                        // under the name row on others.
-                        const crossAxisCount = 2;
-                        final cardWidth =
-                            (constraints.maxWidth - Spacing.sm * (crossAxisCount - 1)) /
-                                crossAxisCount;
-                        final imageHeight = cardWidth / 1.35;
-                        const chromeHeight = Spacing.sm * 2 // outer top+bottom padding
-                            + Spacing.xs // gap under image
-                            + 22 // name row (heart icon sets the height)
-                            + 6; // safety margin for larger text scales
-                        return GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: filtered.length,
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            mainAxisSpacing: Spacing.sm,
-                            crossAxisSpacing: Spacing.sm,
-                            mainAxisExtent: imageHeight + chromeHeight,
-                          ),
-                          itemBuilder: (context, i) {
-                            final item = filtered[i];
-                            return ClothingCard(
-                              name: item.name,
-                              icon: item.icon,
-                              isFavorite: item.isHiddenGem,
-                              onFavoriteToggle: () => _toggleFavorite(item),
-                              onTap: () => _openDetail(item),
-                              onEdit: () => _openEdit(item),
-                              onDelete: () => _confirmDelete(item),
-                            );
-                          },
-                        );
-                      },
+                    const SizedBox(height: Spacing.md),
+                    AppSearchBar(
+                      controller: _searchController,
+                      onChanged: (v) => setState(() => _query = v),
                     ),
-                ],
+                    const SizedBox(height: Spacing.md),
+                    FilterChips(
+                      options: const [_kFavorites, ...clothingCategories],
+                      icons: categoryFilterIcons,
+                      selected: _category,
+                      onSelected: (v) => setState(() => _category = v),
+                    ),
+                    const SizedBox(height: Spacing.sm),
+                    FilterChips(
+                      options: const [_kAllOccasions, ...occasionTags],
+                      icons: occasionFilterIcons,
+                      selected: _occasion ?? _kAllOccasions,
+                      onSelected: (v) => setState(
+                        () => _occasion = (v == null || v == _kAllOccasions) ? null : v,
+                      ),
+                    ),
+                    const SizedBox(height: Spacing.lg),
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? Center(
+                              child: EmptyState(
+                                message: _favoritesOnly
+                                    ? 'No favorites yet.\nTap the heart on any item to add it here.'
+                                    : 'No items found.\nTry a different filter or add something new.',
+                                icon: _favoritesOnly
+                                    ? Icons.favorite_border_rounded
+                                    : Icons.search_off_rounded,
+                                buttonLabel: _favoritesOnly ? null : 'Add Clothes',
+                                onButtonPressed: _favoritesOnly ? null : _openAddClothes,
+                              ),
+                            )
+                          : LayoutBuilder(
+                              builder: (context, constraints) {
+                                // Size each tile from the actual column width
+                                // instead of guessing a fixed height — a flat
+                                // number either overflows on some screens or
+                                // leaves a dead gap under the name row on
+                                // others.
+                                const crossAxisCount = 2;
+                                final cardWidth =
+                                    (constraints.maxWidth - Spacing.sm * (crossAxisCount - 1)) /
+                                        crossAxisCount;
+                                final imageHeight = cardWidth / 1.35;
+                                const chromeHeight = Spacing.sm * 2 // outer top+bottom padding
+                                    + Spacing.xs // gap under image
+                                    + 22 // name row (heart icon sets the height)
+                                    + 6; // safety margin for larger text scales
+                                return GridView.builder(
+                                  // Room for the floating nav bar *and* the
+                                  // FAB above it, so the FAB never clips over
+                                  // the last grid row.
+                                  padding: const EdgeInsets.only(bottom: 150),
+                                  itemCount: filtered.length,
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    mainAxisSpacing: Spacing.sm,
+                                    crossAxisSpacing: Spacing.sm,
+                                    mainAxisExtent: imageHeight + chromeHeight,
+                                  ),
+                                  itemBuilder: (context, i) {
+                                    final item = filtered[i];
+                                    return ClothingCard(
+                                      name: item.name,
+                                      icon: item.icon,
+                                      isFavorite: item.isHiddenGem,
+                                      onFavoriteToggle: () => _toggleFavorite(item),
+                                      onTap: () => _openDetail(item),
+                                      onEdit: () => _openEdit(item),
+                                      onDelete: () => _confirmDelete(item),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
               ),
               // Floating "add clothes" action, sitting above the nav bar.
               Positioned(

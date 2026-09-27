@@ -76,7 +76,14 @@ class _AvatarCarousel extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Center(child: HeartAvatar(width: cardWidth * 0.8)),
+                // A heart is visually top-heavy (wide lobes up top,
+                // tapering to a point below), so dead-center math reads as
+                // sitting slightly too high. Nudge it down a touch so it
+                // looks centered in the card.
+                child: Align(
+                  alignment: const Alignment(0, 0.12),
+                  child: HeartAvatar(width: cardWidth * 0.8),
+                ),
               ),
             ],
           );
