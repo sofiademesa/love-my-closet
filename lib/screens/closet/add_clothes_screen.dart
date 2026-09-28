@@ -7,6 +7,7 @@ import '../../theme.dart';
 import '../../widgets/app_dropdown.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/back_circle_button.dart';
+import '../../widgets/clothing_color_dot.dart';
 import '../../widgets/dot_pattern.dart';
 import '../../widgets/filter_chips.dart';
 import '../../widgets/photo_picker.dart';
@@ -28,7 +29,7 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
   final _nameController = TextEditingController();
   String? _category;
   String? _occasion;
-  String? _color;
+  String? _color = 'Transparent';
   bool _hasPhoto = false;
 
   @override
@@ -60,7 +61,7 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
         category: _category!,
         occasion: _occasion ?? 'Everyday',
         daysUnworn: 0,
-        color: _color ?? 'Pink',
+        color: _color ?? 'Transparent',
       ),
     );
   }
@@ -121,6 +122,7 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
                 value: _color,
                 items: clothingColors,
                 onChanged: (v) => setState(() => _color = v),
+                itemLeadingBuilder: (name) => ClothingColorDot(name: name),
               ),
               const SizedBox(height: Spacing.lg),
               Row(

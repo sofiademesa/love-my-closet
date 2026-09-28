@@ -7,6 +7,7 @@ import '../../theme.dart';
 import '../../widgets/app_dropdown.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/back_circle_button.dart';
+import '../../widgets/clothing_color_dot.dart';
 import '../../widgets/dot_pattern.dart';
 import '../../widgets/filter_chips.dart';
 import '../../widgets/photo_picker.dart';
@@ -145,6 +146,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                 value: _color,
                 items: clothingColors,
                 onChanged: (v) => setState(() => _color = v ?? _color),
+                itemLeadingBuilder: (name) => ClothingColorDot(name: name),
               ),
               const SizedBox(height: Spacing.lg),
               Row(

@@ -19,6 +19,7 @@ const clothingColors = [
   'White',
   'Black',
   'Multicolor',
+  'Transparent',
 ];
 
 /// Occasion tags used by the Occasion Tags chip picker, matching the design
@@ -34,7 +35,7 @@ class ClothingItem {
     required this.occasion,
     required this.daysUnworn,
     this.icon = Icons.checkroom_rounded,
-    this.color = 'Pink',
+    this.color = 'Transparent',
     this.isHiddenGem = false,
     this.timesWorn = 0,
     this.lastWorn,
