@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import '../../animations/app_motion.dart';
 
@@ -16,7 +18,8 @@ import '../../widgets/secondary_button.dart';
 import 'adding_item_photo_screen.dart';
 
 /// Add Clothes: the "new item" form reached from the Closet FAB. Takes a
-/// photo (via [AddingItemPhotoScreen]), a name, category, occasion tag, and
+/// photo (via [AddingItemPhotoScreen], which returns a background-removed
+/// PNG), a name, category, occasion tag, and
 /// color, then hands a new [ClothingItem] back to Closet.
 class AddClothesScreen extends StatefulWidget {
   const AddClothesScreen({super.key});
@@ -30,7 +33,9 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
   String? _category;
   String? _occasion;
   String? _color = 'Transparent';
-  bool _hasPhoto = false;
+  /// Transparent PNG cutout from the photo flow. Held in memory only for now;
+  /// nothing is saved permanently yet.
+  Uint8List? _photoBytes;
 
   @override
   void dispose() {
@@ -39,11 +44,17 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
   }
 
   Future<void> _pickPhoto() async {
-    final confirmed = await Navigator.of(context).push<bool>(
-      AppPageRoute(builder: (_) => const AddingItemPhotoScreen()),
+    final photo = await Navigator.of(context).push<ProcessedPhoto>(
+      AppPageRoute(
+        builder: (_) => AddingItemPhotoScreen(initialBackground: _color ?? 'Transparent'),
+      ),
     );
-    if (confirmed == true) {
-      setState(() => _hasPhoto = true);
+    if (photo != null) {
+      setState(() {
+        _photoBytes = photo.bytes;
+        // The Color options double as the photo's preview backdrop.
+        _color = photo.backgroundColorName;
+      });
     }
   }
 
@@ -90,9 +101,10 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
               ),
               const SizedBox(height: Spacing.md),
               PhotoPicker(
-                imagePath: _hasPhoto ? 'placeholder' : null,
+                imageBytes: _photoBytes,
+                backgroundColorName: _color ?? 'Transparent',
                 onPick: _pickPhoto,
-                onRemove: () => setState(() => _hasPhoto = false),
+                onRemove: () => setState(() => _photoBytes = null),
               ),
               const SizedBox(height: Spacing.md),
               AppTextField(

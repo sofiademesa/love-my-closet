@@ -1,28 +1,42 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
 import 'clothing_thumb.dart';
+import 'photo_preview_background.dart';
 
 /// Dashed-outline photo box used on Add Clothes, Edit Item, and Edit
 /// Profile. Shows an upload prompt when empty, or the picked photo with a
-/// small remove (x) badge.
+/// small remove (x) badge. Pass [imageBytes] to show a real photo (e.g. a
+/// transparent PNG cutout) on top of a preview backdrop.
 class PhotoPicker extends StatelessWidget {
   const PhotoPicker({
     super.key,
     this.imagePath,
+    this.imageBytes,
+    this.backgroundColorName = 'Transparent',
     required this.onPick,
     this.onRemove,
     this.icon = Icons.checkroom_rounded,
   });
 
   final String? imagePath;
+
+  /// A real photo to display. Takes priority over [imagePath].
+  final Uint8List? imageBytes;
+
+  /// Preview-only backdrop behind [imageBytes] ('Transparent' shows a
+  /// checkerboard). Never merged into the image itself.
+  final String backgroundColorName;
   final VoidCallback onPick;
   final VoidCallback? onRemove;
   final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    final hasPhoto = imagePath != null;
+    final bytes = imageBytes;
+    final hasPhoto = imagePath != null || bytes != null;
 
     return AspectRatio(
       aspectRatio: 1.4,
@@ -31,7 +45,24 @@ class PhotoPicker extends StatelessWidget {
           Positioned.fill(
             child: _DottedBorderBox(
               onTap: hasPhoto ? null : onPick,
-              child: hasPhoto
+              child: bytes != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(AppRadius.field),
+                      child: SizedBox.expand(
+                        child: PhotoPreviewBackground(
+                          colorName: backgroundColorName,
+                          child: Padding(
+                            padding: const EdgeInsets.all(Spacing.sm),
+                            child: Image.memory(
+                              bytes,
+                              fit: BoxFit.contain,
+                              gaplessPlayback: true,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : hasPhoto
                   ? Center(child: ClothingThumb(icon: icon, size: 96))
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,

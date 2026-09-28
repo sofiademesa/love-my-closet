@@ -32,6 +32,14 @@ class ClothingColorDot extends StatelessWidget {
     ],
   );
 
+  /// Solid swatch color for [name], or null for 'Transparent' / 'Multicolor'
+  /// / unknown names. Lets other widgets (e.g. the photo preview background)
+  /// reuse this palette instead of duplicating it.
+  static Color? swatchFor(String name) => _swatches[name];
+
+  /// The soft rainbow gradient used for 'Multicolor'.
+  static const SweepGradient multicolorGradient = _multicolor;
+
   @override
   Widget build(BuildContext context) {
     if (name == 'Transparent') return _buildTransparent();
