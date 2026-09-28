@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../animations/app_motion.dart';
 import '../theme.dart';
 
 /// Main call-to-action button: a soft pink gradient fill, white bold label,
@@ -27,7 +28,9 @@ class PrimaryButton extends StatelessWidget {
     final radius = BorderRadius.circular(AppRadius.button);
     final enabled = onPressed != null;
 
-    return DecoratedBox(
+    return PressableScale(
+      enabled: enabled,
+      child: DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: radius,
         boxShadow: enabled ? AppShadows.glow(AppColors.buttonPink) : null,
@@ -69,6 +72,7 @@ class PrimaryButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

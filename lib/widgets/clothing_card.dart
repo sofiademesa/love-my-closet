@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../animations/app_motion.dart';
 import '../theme.dart';
 import 'clothing_thumb.dart';
 
@@ -40,7 +41,10 @@ class ClothingCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final cardRadius = BorderRadius.circular(AppRadius.card);
 
-    return DecoratedBox(
+    return PressableScale(
+      enabled: onTap != null,
+      scale: 0.97,
+      child: DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: cardRadius,
@@ -130,6 +134,7 @@ class ClothingCard extends StatelessWidget {
           ),
         ),
       ),
+      ),
     );
   }
 }
@@ -152,10 +157,11 @@ class _FavoriteHeart extends StatelessWidget {
         customBorder: const CircleBorder(),
         child: Padding(
           padding: const EdgeInsets.all(2),
-          child: Icon(
-            active ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+          child: AnimatedHeartIcon(
+            active: active,
             size: 18,
-            color: active ? AppColors.buttonPink : AppColors.mutedBrown,
+            activeColor: AppColors.buttonPink,
+            inactiveColor: AppColors.mutedBrown,
           ),
         ),
       ),

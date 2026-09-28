@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../animations/app_motion.dart';
 import '../theme.dart';
 
 /// One row inside a Profile settings section: a rounded, blush-bordered
@@ -24,7 +25,10 @@ class ProfileMenuRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final body = Theme.of(context).textTheme.bodyMedium!;
 
-    return Material(
+    return PressableScale(
+      enabled: onTap != null,
+      scale: 0.98,
+      child: Material(
       color: AppColors.white,
       borderRadius: BorderRadius.circular(AppRadius.field),
       child: InkWell(
@@ -57,6 +61,7 @@ class ProfileMenuRow extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

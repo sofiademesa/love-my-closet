@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../animations/app_motion.dart';
 import '../../data/user_profile_store.dart';
 import '../../theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
@@ -53,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openAddClothes() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AddClothesScreen()),
+      AppPageRoute(builder: (_) => const AddClothesScreen()),
     );
   }
 
@@ -61,24 +62,24 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == 0) return;
     if (index == 1) {
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const ClosetScreen()),
+        AppPageRoute(builder: (_) => const ClosetScreen()),
       );
       return;
     }
     if (index == 2) {
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const OutfitBuilderScreen()),
+        AppPageRoute(builder: (_) => const OutfitBuilderScreen()),
       );
       return;
     }
     if (index == 3) {
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const CalendarScreen()),
+        AppPageRoute(builder: (_) => const CalendarScreen()),
       );
       return;
     }
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+      AppPageRoute(builder: (_) => const ProfileScreen()),
     );
   }
 
@@ -105,65 +106,88 @@ class _HomeScreenState extends State<HomeScreen> {
                   170,
                 ),
                 children: [
-                  _Header(userName: _profileStore.displayName),
-                  const SizedBox(height: Spacing.lg),
-                  const _SectionHeader(title: 'Wear Me'),
-                  const SizedBox(height: Spacing.sm),
-                  WearMeCard(
-                    name: 'Pink Polkadot Top',
-                    daysUnworn: 32,
-                    onStyleThis: () {},
+                  FadeSlideIn(
+                    delay: staggerDelay(0),
+                    child: _Header(userName: _profileStore.displayName),
                   ),
                   const SizedBox(height: Spacing.lg),
-                  const _SectionHeader(title: 'Wardrobe Stats'),
+                  FadeSlideIn(
+                    delay: staggerDelay(1),
+                    child: const _SectionHeader(title: 'Wear Me'),
+                  ),
                   const SizedBox(height: Spacing.sm),
-                  const Row(
-                    children: [
-                      Expanded(child: StatTile(value: '47', label: 'Total Items')),
-                      SizedBox(width: Spacing.sm),
-                      Expanded(child: StatTile(value: '12', label: 'Outfits')),
-                      SizedBox(width: Spacing.sm),
-                      Expanded(child: StatTile(value: '23', label: 'Worn This Mo.')),
-                    ],
+                  FadeSlideIn(
+                    delay: staggerDelay(1),
+                    child: WearMeCard(
+                      name: 'Pink Polkadot Top',
+                      daysUnworn: 32,
+                      onStyleThis: () {},
+                    ),
                   ),
                   const SizedBox(height: Spacing.lg),
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: _SectionHeader(title: 'More Hidden Gems'),
-                      ),
-                      TextButton(
-                        onPressed: _openHiddenGems,
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.mutedBrown,
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: const Text('See More >'),
-                      ),
-                    ],
+                  FadeSlideIn(
+                    delay: staggerDelay(2),
+                    child: const _SectionHeader(title: 'Wardrobe Stats'),
                   ),
                   const SizedBox(height: Spacing.sm),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Expanded(
-                        child: ClothingCard(
-                          name: 'Yellow Bow Top',
-                          icon: Icons.checkroom_rounded,
-                          daysUnworn: 18,
+                  FadeSlideIn(
+                    delay: staggerDelay(2),
+                    child: const Row(
+                      children: [
+                        Expanded(child: StatTile(value: '47', label: 'Total Items')),
+                        SizedBox(width: Spacing.sm),
+                        Expanded(child: StatTile(value: '12', label: 'Outfits')),
+                        SizedBox(width: Spacing.sm),
+                        Expanded(child: StatTile(value: '23', label: 'Worn This Mo.')),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: Spacing.lg),
+                  FadeSlideIn(
+                    delay: staggerDelay(3),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: _SectionHeader(title: 'More Hidden Gems'),
                         ),
-                      ),
-                      SizedBox(width: Spacing.sm),
-                      Expanded(
-                        child: ClothingCard(
-                          name: 'Blue Tiered Skirt',
-                          icon: Icons.checkroom_rounded,
-                          daysUnworn: 25,
+                        PressableScale(
+                          child: TextButton(
+                            onPressed: _openHiddenGems,
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.mutedBrown,
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text('See More >'),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: Spacing.sm),
+                  FadeSlideIn(
+                    delay: staggerDelay(3),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Expanded(
+                          child: ClothingCard(
+                            name: 'Yellow Bow Top',
+                            icon: Icons.checkroom_rounded,
+                            daysUnworn: 18,
+                          ),
+                        ),
+                        SizedBox(width: Spacing.sm),
+                        Expanded(
+                          child: ClothingCard(
+                            name: 'Blue Tiered Skirt',
+                            icon: Icons.checkroom_rounded,
+                            daysUnworn: 25,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -171,16 +195,18 @@ class _HomeScreenState extends State<HomeScreen> {
               Positioned(
                 right: Spacing.md,
                 bottom: 92,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: AppShadows.glow(AppColors.buttonPink),
-                  ),
-                  child: FloatingActionButton(
-                    onPressed: _openAddClothes,
-                    backgroundColor: AppColors.buttonPink,
-                    foregroundColor: AppColors.white,
-                    child: const Icon(Icons.add_rounded),
+                child: PressableScale(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: AppShadows.glow(AppColors.buttonPink),
+                    ),
+                    child: FloatingActionButton(
+                      onPressed: _openAddClothes,
+                      backgroundColor: AppColors.buttonPink,
+                      foregroundColor: AppColors.white,
+                      child: const Icon(Icons.add_rounded),
+                    ),
                   ),
                 ),
               ),

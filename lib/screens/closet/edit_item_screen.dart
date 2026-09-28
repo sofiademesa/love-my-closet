@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../animations/app_motion.dart';
 
 import '../../data/filter_icons.dart';
 import '../../models/clothing_item.dart';
@@ -49,7 +50,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
   }
 
   Future<void> _confirmDelete() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.white,

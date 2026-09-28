@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../animations/app_motion.dart';
 
 import '../../theme.dart';
 import '../../widgets/app_text_field.dart';
@@ -32,19 +33,19 @@ class _LogInScreenState extends State<LogInScreen> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+      AppPageRoute<void>(builder: (_) => const HomeScreen()),
     );
   }
 
   void _goToForgotPassword() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const ForgotPasswordScreen()),
+      AppPageRoute<void>(builder: (_) => const ForgotPasswordScreen()),
     );
   }
 
   void _goToSignUp() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const CreateAccountScreen()),
+      AppPageRoute<void>(builder: (_) => const CreateAccountScreen()),
     );
   }
 

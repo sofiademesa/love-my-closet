@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../animations/app_motion.dart';
 import '../../theme.dart';
 import '../../widgets/dot_pattern.dart';
 import '../../widgets/hidden_gem_card.dart';
@@ -95,12 +96,15 @@ class HiddenGemsSheet extends StatelessWidget {
                         style: textTheme.bodyMedium!.copyWith(fontSize: 14),
                       ),
                       const SizedBox(height: Spacing.md),
-                      for (final item in items) ...[
-                        HiddenGemCard(
-                          name: item.name,
-                          daysUnworn: item.daysUnworn,
-                          icon: item.icon,
-                          onWearAgain: () {},
+                      for (var i = 0; i < items.length; i++) ...[
+                        FadeSlideIn(
+                          delay: staggerDelay(i + 1, stepMs: 50, maxMs: 300),
+                          child: HiddenGemCard(
+                            name: items[i].name,
+                            daysUnworn: items[i].daysUnworn,
+                            icon: items[i].icon,
+                            onWearAgain: () {},
+                          ),
                         ),
                         const SizedBox(height: Spacing.md),
                       ],

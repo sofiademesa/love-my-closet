@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../animations/app_motion.dart';
 
 import '../../data/user_profile_store.dart';
 import '../../theme.dart';
@@ -47,53 +48,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (index == currentIndex) return;
     if (index == 0) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        AppPageRoute(builder: (_) => const HomeScreen()),
       );
       return;
     }
     if (index == 1) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const ClosetScreen()),
+        AppPageRoute(builder: (_) => const ClosetScreen()),
       );
       return;
     }
     if (index == 2) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const OutfitBuilderScreen()),
+        AppPageRoute(builder: (_) => const OutfitBuilderScreen()),
       );
       return;
     }
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const CalendarScreen()),
+      AppPageRoute(builder: (_) => const CalendarScreen()),
     );
   }
 
   void _editProfile() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+      AppPageRoute(builder: (_) => const EditProfileScreen()),
     );
   }
 
   void _openAccessibility() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AccessibilityScreen()),
+      AppPageRoute(builder: (_) => const AccessibilityScreen()),
     );
   }
 
   void _openHelpSupport() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
+      AppPageRoute(builder: (_) => const HelpSupportScreen()),
     );
   }
 
   void _openAbout() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AboutScreen()),
+      AppPageRoute(builder: (_) => const AboutScreen()),
     );
   }
 
   Future<void> _logOut() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.white,
@@ -119,7 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     if (confirmed == true && mounted) {
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const OnboardingFlow()),
+        AppPageRoute(builder: (_) => const OnboardingFlow()),
         (route) => false,
       );
     }

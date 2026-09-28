@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../animations/app_motion.dart';
 
 import '../../data/accessibility_store.dart';
 import '../../data/filter_icons.dart';
@@ -60,6 +61,11 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   /// Null means the board holds a brand-new outfit that hasn't been saved.
   String? _editingOutfitId;
 
+  /// Ids mid soft-delete: still rendered while their exit fade plays, then
+  /// actually removed once it finishes.
+  final Set<String> _removingPieceIds = {};
+  final Set<String> _removingOutfitIds = {};
+
   /// Saved outfits read straight from the shared store — the same list the
   /// Calendar reads from — so both stay in sync with no separate data.
   List<SavedOutfit> get _savedOutfits => OutfitStore.instance.all;
@@ -101,26 +107,26 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     if (index == currentIndex) return;
     if (index == 0) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        AppPageRoute(builder: (_) => const HomeScreen()),
       );
       return;
     }
     if (index == 1) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const ClosetScreen()),
+        AppPageRoute(builder: (_) => const ClosetScreen()),
       );
       return;
     }
     if (index == 3) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
+        AppPageRoute(
           builder: (_) => CalendarScreen(closetItems: widget.closetItems),
         ),
       );
       return;
     }
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+      AppPageRoute(builder: (_) => const ProfileScreen()),
     );
   }
 
@@ -175,10 +181,19 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   }
 
   void _removePiece(OutfitPiece piece) {
-    setState(() => _boardPieces.remove(piece));
+    setState(() => _removingPieceIds.add(piece.id));
+  }
+
+  void _finishRemovePiece(OutfitPiece piece) {
+    if (!mounted) return;
+    setState(() {
+      _boardPieces.remove(piece);
+      _removingPieceIds.remove(piece.id);
+    });
   }
 
   void _clearBoard() => setState(() {
+    _removingPieceIds.clear();
     _boardPieces.clear();
     _editingOutfitId = null;
   });
@@ -218,6 +233,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
 
   void _loadSavedOutfit(SavedOutfit outfit) {
     setState(() {
+      _removingPieceIds.clear();
       _boardPieces
         ..clear()
         ..addAll(outfit.pieces.map((p) => p.copy()));
@@ -227,8 +243,13 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   }
 
   void _deleteSavedOutfit(SavedOutfit outfit) {
+    setState(() => _removingOutfitIds.add(outfit.id));
+  }
+
+  void _finishDeleteSavedOutfit(SavedOutfit outfit) {
+    _removingOutfitIds.remove(outfit.id);
     OutfitStore.instance.remove(outfit.id);
-    if (_editingOutfitId == outfit.id) {
+    if (mounted && _editingOutfitId == outfit.id) {
       setState(() => _editingOutfitId = null);
     }
   }
@@ -270,7 +291,14 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
                     ),
                     const SizedBox(height: Spacing.md),
                     Expanded(
-                      child: _tab == 0 ? _buildBuilder(textTheme) : _buildSavedOutfits(textTheme),
+                      child: AppSectionSwitcher(
+                        child: KeyedSubtree(
+                          key: ValueKey(_tab),
+                          child: _tab == 0
+                              ? _buildBuilder(textTheme)
+                              : _buildSavedOutfits(textTheme),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -398,25 +426,31 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
       key: ValueKey(piece.id),
       left: piece.offset.dx,
       top: piece.offset.dy,
-      child: GestureDetector(
-        onPanStart: (_) => _bringToFront(piece),
-        onPanUpdate: (details) => _movePiece(piece, details.delta),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadius.field),
-                boxShadow: AppShadows.surface,
-              ),
-              child: ClothingThumb(icon: piece.item.icon, size: _kPieceSize, iconSize: 32),
+      child: PopIn(
+        child: FadeScaleOut(
+          removing: _removingPieceIds.contains(piece.id),
+          onExited: () => _finishRemovePiece(piece),
+          child: GestureDetector(
+            onPanStart: (_) => _bringToFront(piece),
+            onPanUpdate: (details) => _movePiece(piece, details.delta),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.field),
+                    boxShadow: AppShadows.surface,
+                  ),
+                  child: ClothingThumb(icon: piece.item.icon, size: _kPieceSize, iconSize: 32),
+                ),
+                Positioned(
+                  top: -6,
+                  right: -6,
+                  child: _RemoveDot(onTap: () => _removePiece(piece)),
+                ),
+              ],
             ),
-            Positioned(
-              top: -6,
-              right: -6,
-              child: _RemoveDot(onTap: () => _removePiece(piece)),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -436,10 +470,21 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
       separatorBuilder: (_, __) => const SizedBox(height: Spacing.sm),
       itemBuilder: (context, i) {
         final outfit = _savedOutfits[i];
-        return _SavedOutfitCard(
-          outfit: outfit,
-          onTap: () => _loadSavedOutfit(outfit),
-          onDelete: () => _deleteSavedOutfit(outfit),
+        return FadeScaleOut(
+          key: ValueKey(outfit.id),
+          removing: _removingOutfitIds.contains(outfit.id),
+          onExited: () => _finishDeleteSavedOutfit(outfit),
+          child: FadeSlideIn(
+            delay: staggerDelay(i, stepMs: 40, maxMs: 200),
+            child: PressableScale(
+              scale: 0.98,
+              child: _SavedOutfitCard(
+                outfit: outfit,
+                onTap: () => _loadSavedOutfit(outfit),
+                onDelete: () => _deleteSavedOutfit(outfit),
+              ),
+            ),
+          ),
         );
       },
     );
@@ -512,16 +557,19 @@ class _PaletteThumb extends StatelessWidget {
   Widget build(BuildContext context) {
     final thumb = ClothingThumb(icon: item.icon, size: 64, iconSize: 28);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Draggable<ClothingItem>(
-        data: item,
-        feedback: Material(
-          color: Colors.transparent,
-          child: ClothingThumb(icon: item.icon, size: 64, iconSize: 28),
+    return PressableScale(
+      scale: 0.94,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Draggable<ClothingItem>(
+          data: item,
+          feedback: Material(
+            color: Colors.transparent,
+            child: ClothingThumb(icon: item.icon, size: 64, iconSize: 28),
+          ),
+          childWhenDragging: Opacity(opacity: 0.35, child: thumb),
+          child: thumb,
         ),
-        childWhenDragging: Opacity(opacity: 0.35, child: thumb),
-        child: thumb,
       ),
     );
   }

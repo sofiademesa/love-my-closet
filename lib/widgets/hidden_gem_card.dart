@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../animations/app_motion.dart';
 import '../theme.dart';
 import 'clothing_thumb.dart';
 
@@ -69,7 +70,9 @@ class HiddenGemCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: Spacing.md),
-          DecoratedBox(
+          PressableScale(
+            enabled: onWearAgain != null,
+            child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.button),
               boxShadow: onWearAgain == null
@@ -98,6 +101,7 @@ class HiddenGemCard extends StatelessWidget {
                 icon: const Icon(Icons.replay_rounded, size: 17),
                 label: const Text('Wear Again'),
               ),
+            ),
             ),
           ),
         ],

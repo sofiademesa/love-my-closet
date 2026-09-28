@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../animations/app_motion.dart';
 
 import '../../data/accessibility_store.dart';
 import '../../theme.dart';
@@ -112,13 +113,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   void _openCreateAccount() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const CreateAccountScreen()),
+      AppPageRoute<void>(builder: (_) => const CreateAccountScreen()),
     );
   }
 
   void _openLogIn() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const LogInScreen()),
+      AppPageRoute<void>(builder: (_) => const LogInScreen()),
     );
   }
 

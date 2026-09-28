@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../animations/app_motion.dart';
 import '../data/accessibility_store.dart';
 import '../theme.dart';
 
@@ -126,7 +127,9 @@ class _Chip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return PressableScale(
+      scale: 0.95,
+      child: Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -173,6 +176,7 @@ class _Chip extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

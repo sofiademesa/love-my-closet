@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../animations/app_motion.dart';
 
 import '../../data/user_profile_store.dart';
 import '../../theme.dart';
@@ -42,7 +43,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       email: _emailController.text.trim(),
     );
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
+      AppPageRoute<void>(
         builder: (_) => const HomeScreen(),
       ),
     );
@@ -50,7 +51,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
   void _goToLogIn() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const LogInScreen()),
+      AppPageRoute<void>(builder: (_) => const LogInScreen()),
     );
   }
 

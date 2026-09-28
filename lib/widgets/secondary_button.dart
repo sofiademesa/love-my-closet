@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../animations/app_motion.dart';
 import '../theme.dart';
 
 /// Secondary action button: a warm butter-yellow gradient fill with a
@@ -19,7 +20,9 @@ class SecondaryButton extends StatelessWidget {
     final radius = BorderRadius.circular(AppRadius.button);
     final enabled = onPressed != null;
 
-    return DecoratedBox(
+    return PressableScale(
+      enabled: enabled,
+      child: DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: radius,
         boxShadow: enabled
@@ -61,6 +64,7 @@ class SecondaryButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

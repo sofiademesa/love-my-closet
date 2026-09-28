@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../animations/app_motion.dart';
 import '../../theme.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/primary_button.dart';
@@ -76,6 +77,14 @@ class _SaveLookSheetState extends State<SaveLookSheet> {
 
   @override
   Widget build(BuildContext context) {
+    return FadeSlideIn(
+      duration: const Duration(milliseconds: 300),
+      offset: const Offset(0, 0.03),
+      child: _buildContent(context),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
     return Padding(
@@ -133,7 +142,8 @@ class _SaveLookSheetState extends State<SaveLookSheet> {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: PressableScale(
+                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(42),
@@ -151,6 +161,7 @@ class _SaveLookSheetState extends State<SaveLookSheet> {
                         color: AppColors.mutedBrown,
                       ),
                     ),
+                   ),
                   ),
                 ),
                 const SizedBox(width: Spacing.sm),

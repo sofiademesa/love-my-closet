@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../animations/app_motion.dart';
 import '../../data/filter_icons.dart';
 import '../../data/user_profile_store.dart';
 import '../../models/clothing_item.dart';
@@ -42,6 +43,11 @@ class _ClosetScreenState extends State<ClosetScreen> {
   String? _occasion;
   String _query = '';
 
+  /// Item ids currently mid soft-delete animation: still in [_items] (so
+  /// they keep rendering) but flagged so their tile plays its exit fade
+  /// before actually being dropped from the list — see [_actuallyRemove].
+  final Set<String> _removingIds = {};
+
   bool get _favoritesOnly => _category == _kFavorites;
 
   @override
@@ -77,13 +83,13 @@ class _ClosetScreenState extends State<ClosetScreen> {
     if (index == currentIndex) return;
     if (index == 0) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        AppPageRoute(builder: (_) => const HomeScreen()),
       );
       return;
     }
     if (index == 2) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
+        AppPageRoute(
           builder: (_) => OutfitBuilderScreen(closetItems: _items),
         ),
       );
@@ -91,14 +97,14 @@ class _ClosetScreenState extends State<ClosetScreen> {
     }
     if (index == 3) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
+        AppPageRoute(
           builder: (_) => CalendarScreen(closetItems: _items),
         ),
       );
       return;
     }
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+      AppPageRoute(builder: (_) => const ProfileScreen()),
     );
   }
 
@@ -113,7 +119,7 @@ class _ClosetScreenState extends State<ClosetScreen> {
 
   Future<void> _openAddClothes() async {
     final added = await Navigator.of(context).push<ClothingItem>(
-      MaterialPageRoute(builder: (_) => const AddClothesScreen()),
+      AppPageRoute(builder: (_) => const AddClothesScreen()),
     );
     if (added != null) {
       setState(() => _items.insert(0, added));
@@ -122,7 +128,7 @@ class _ClosetScreenState extends State<ClosetScreen> {
 
   Future<void> _openDetail(ClothingItem item) async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(
+      AppPageRoute(
         builder: (_) => ItemDetailScreen(item: item, originIndex: 1),
       ),
     );
@@ -131,14 +137,14 @@ class _ClosetScreenState extends State<ClosetScreen> {
 
   Future<void> _openEdit(ClothingItem item) async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => EditItemScreen(item: item)),
+      AppPageRoute(builder: (_) => EditItemScreen(item: item)),
     );
     _applyEditResult(item, result);
   }
 
   void _applyEditResult(ClothingItem item, Object? result) {
     if (result == 'deleted') {
-      setState(() => _items.removeWhere((i) => i.id == item.id));
+      setState(() => _removingIds.add(item.id));
     } else if (result is ClothingItem) {
       setState(() {
         final index = _items.indexWhere((i) => i.id == result.id);
@@ -148,7 +154,7 @@ class _ClosetScreenState extends State<ClosetScreen> {
   }
 
   Future<void> _confirmDelete(ClothingItem item) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete this item?'),
@@ -166,8 +172,18 @@ class _ClosetScreenState extends State<ClosetScreen> {
       ),
     );
     if (confirmed == true) {
-      setState(() => _items.removeWhere((i) => i.id == item.id));
+      setState(() => _removingIds.add(item.id));
     }
+  }
+
+  /// Called once a tile's exit animation has finished: only now is the
+  /// item really dropped from the list.
+  void _actuallyRemove(String id) {
+    if (!mounted) return;
+    setState(() {
+      _items.removeWhere((i) => i.id == id);
+      _removingIds.remove(id);
+    });
   }
 
   @override
@@ -265,14 +281,22 @@ class _ClosetScreenState extends State<ClosetScreen> {
                                   ),
                                   itemBuilder: (context, i) {
                                     final item = filtered[i];
-                                    return ClothingCard(
-                                      name: item.name,
-                                      icon: item.icon,
-                                      isFavorite: item.isHiddenGem,
-                                      onFavoriteToggle: () => _toggleFavorite(item),
-                                      onTap: () => _openDetail(item),
-                                      onEdit: () => _openEdit(item),
-                                      onDelete: () => _confirmDelete(item),
+                                    return FadeScaleOut(
+                                      key: ValueKey(item.id),
+                                      removing: _removingIds.contains(item.id),
+                                      onExited: () => _actuallyRemove(item.id),
+                                      child: FadeSlideIn(
+                                        delay: staggerDelay(i, stepMs: 30, maxMs: 180),
+                                        child: ClothingCard(
+                                          name: item.name,
+                                          icon: item.icon,
+                                          isFavorite: item.isHiddenGem,
+                                          onFavoriteToggle: () => _toggleFavorite(item),
+                                          onTap: () => _openDetail(item),
+                                          onEdit: () => _openEdit(item),
+                                          onDelete: () => _confirmDelete(item),
+                                        ),
+                                      ),
                                     );
                                   },
                                 );
@@ -286,16 +310,18 @@ class _ClosetScreenState extends State<ClosetScreen> {
               Positioned(
                 right: Spacing.md,
                 bottom: 92,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: AppShadows.glow(AppColors.buttonPink),
-                  ),
-                  child: FloatingActionButton(
-                    onPressed: _openAddClothes,
-                    backgroundColor: AppColors.buttonPink,
-                    foregroundColor: AppColors.white,
-                    child: const Icon(Icons.add_rounded),
+                child: PressableScale(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: AppShadows.glow(AppColors.buttonPink),
+                    ),
+                    child: FloatingActionButton(
+                      onPressed: _openAddClothes,
+                      backgroundColor: AppColors.buttonPink,
+                      foregroundColor: AppColors.white,
+                      child: const Icon(Icons.add_rounded),
+                    ),
                   ),
                 ),
               ),

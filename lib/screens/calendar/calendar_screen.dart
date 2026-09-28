@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../animations/app_motion.dart';
 
 import '../../data/outfit_store.dart';
 import '../../models/clothing_item.dart';
@@ -66,10 +67,37 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (mounted) setState(() {});
   }
 
+  /// +1 when the last month change went forward, -1 when backward — lets
+  /// the month grid slide in from the matching side.
+  int _monthDirection = 1;
+
   void _changeMonth(int delta) {
+    _monthDirection = delta >= 0 ? 1 : -1;
     setState(() {
       _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month + delta, 1);
     });
+  }
+
+  /// Slides + fades whatever month-specific content is passed in when the
+  /// visible month changes, entering from the side matching the arrow tapped.
+  Widget _monthSwitcher(Widget child) {
+    return AnimatedSwitcher(
+      duration: kMotionDuration(const Duration(milliseconds: 280)),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) {
+        final incoming = child.key == ValueKey(_visibleMonth);
+        final dx = (incoming ? 1 : -1) * _monthDirection * 0.12;
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(begin: Offset(dx, 0), end: Offset.zero).animate(animation),
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
   }
 
   void _selectDate(DateTime date) {
@@ -80,7 +108,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     // The "+" action always goes straight to the Outfit Builder to build
     // (or pick and re-save) a look.
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      AppPageRoute(
         builder: (_) => OutfitBuilderScreen(
           userName: widget.userName,
           closetItems: widget.closetItems,
@@ -103,26 +131,26 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (index == currentIndex) return;
     if (index == 0) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        AppPageRoute(builder: (_) => const HomeScreen()),
       );
       return;
     }
     if (index == 1) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const ClosetScreen()),
+        AppPageRoute(builder: (_) => const ClosetScreen()),
       );
       return;
     }
     if (index == 2) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
+        AppPageRoute(
           builder: (_) => OutfitBuilderScreen(closetItems: widget.closetItems),
         ),
       );
       return;
     }
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+      AppPageRoute(builder: (_) => const ProfileScreen()),
     );
   }
 
@@ -181,24 +209,41 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       children: [
                         Row(
                           children: [
-                            _MonthArrow(
-                              icon: Icons.chevron_left_rounded,
-                              onTap: () => _changeMonth(-1),
-                            ),
-                            Expanded(
-                              child: Text(
-                                '${_kMonthNames[_visibleMonth.month - 1]} ${_visibleMonth.year}',
-                                textAlign: TextAlign.center,
-                                style: textTheme.headlineSmall!.copyWith(fontSize: 17),
+                            PressableScale(
+                              scale: 0.88,
+                              child: _MonthArrow(
+                                icon: Icons.chevron_left_rounded,
+                                onTap: () => _changeMonth(-1),
                               ),
                             ),
-                            _MonthArrow(
-                              icon: Icons.chevron_right_rounded,
-                              onTap: () => _changeMonth(1),
+                            Expanded(
+                              child: _monthSwitcher(
+                                Text(
+                                  '${_kMonthNames[_visibleMonth.month - 1]} ${_visibleMonth.year}',
+                                  key: ValueKey(_visibleMonth),
+                                  textAlign: TextAlign.center,
+                                  style: textTheme.headlineSmall!.copyWith(fontSize: 17),
+                                ),
+                              ),
+                            ),
+                            PressableScale(
+                              scale: 0.88,
+                              child: _MonthArrow(
+                                icon: Icons.chevron_right_rounded,
+                                onTap: () => _changeMonth(1),
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: Spacing.sm),
+                        AnimatedSize(
+                          duration: kMotionDuration(const Duration(milliseconds: 250)),
+                          curve: Curves.easeOutCubic,
+                          alignment: Alignment.topCenter,
+                          child: _monthSwitcher(
+                            Column(
+                              key: ValueKey(_visibleMonth),
+                              children: [
                         Row(
                           children: [
                             for (final letter in _kWeekdayLetters)
@@ -239,41 +284,60 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             );
                           },
                         ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: Spacing.lg),
-                  Text(
-                    _formatLongDate(_selectedDate),
-                    style: textTheme.headlineSmall!.copyWith(fontSize: 18),
-                  ),
-                  const SizedBox(height: Spacing.sm),
-                  if (selectedOutfits.isEmpty)
-                    const _NoOutfitCard()
-                  else
-                    for (final outfit in selectedOutfits) ...[
-                      _LoggedOutfitCard(
-                        outfit: outfit,
-                        onTap: () => _openOutfitDetail(outfit),
+                  AppSectionSwitcher(
+                    child: Column(
+                      key: ValueKey(
+                        '$_selectedDate|${selectedOutfits.map((o) => o.id).join(',')}',
                       ),
-                      const SizedBox(height: Spacing.sm),
-                    ],
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          _formatLongDate(_selectedDate),
+                          style: textTheme.headlineSmall!.copyWith(fontSize: 18),
+                        ),
+                        const SizedBox(height: Spacing.sm),
+                        if (selectedOutfits.isEmpty)
+                          const _NoOutfitCard()
+                        else
+                          for (final outfit in selectedOutfits) ...[
+                            PressableScale(
+                              scale: 0.98,
+                              child: _LoggedOutfitCard(
+                                outfit: outfit,
+                                onTap: () => _openOutfitDetail(outfit),
+                              ),
+                            ),
+                            const SizedBox(height: Spacing.sm),
+                          ],
+                      ],
+                    ),
+                  ),
                 ],
               ),
               // Floating "log outfit" action, sitting above the nav bar.
               Positioned(
                 right: Spacing.md,
                 bottom: 92,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: AppShadows.glow(AppColors.buttonPink),
-                  ),
-                  child: FloatingActionButton(
-                    onPressed: _openLogOutfit,
-                    backgroundColor: AppColors.buttonPink,
-                    foregroundColor: AppColors.white,
-                    child: const Icon(Icons.add_rounded),
+                child: PressableScale(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: AppShadows.glow(AppColors.buttonPink),
+                    ),
+                    child: FloatingActionButton(
+                      onPressed: _openLogOutfit,
+                      backgroundColor: AppColors.buttonPink,
+                      foregroundColor: AppColors.white,
+                      child: const Icon(Icons.add_rounded),
+                    ),
                   ),
                 ),
               ),
@@ -369,7 +433,9 @@ class _DayCell extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Center(
-        child: Container(
+        child: AnimatedContainer(
+          duration: kMotionDuration(const Duration(milliseconds: 220)),
+          curve: Curves.easeOut,
           width: 34,
           height: 34,
           alignment: Alignment.center,
@@ -386,22 +452,32 @@ class _DayCell extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                '$day',
+              AnimatedDefaultTextStyle(
+                duration: kMotionDuration(const Duration(milliseconds: 220)),
                 style: TextStyle(
                   fontFamily: 'DMSans',
                   fontSize: 13,
                   fontWeight: selected ? FontWeight.bold : FontWeight.w500,
                   color: numberColor,
                 ),
+                child: Text('$day'),
               ),
-              if (hasOutfit)
-                Container(
-                  margin: const EdgeInsets.only(top: 2),
-                  width: 4,
-                  height: 4,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: dotColor),
+              AnimatedSwitcher(
+                duration: kMotionDuration(const Duration(milliseconds: 260)),
+                transitionBuilder: (child, animation) => ScaleTransition(
+                  scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+                  child: child,
                 ),
+                child: hasOutfit
+                    ? Container(
+                        key: const ValueKey('dot'),
+                        margin: const EdgeInsets.only(top: 2),
+                        width: 4,
+                        height: 4,
+                        decoration: BoxDecoration(shape: BoxShape.circle, color: dotColor),
+                      )
+                    : const SizedBox.shrink(key: ValueKey('nodot')),
+              ),
             ],
           ),
         ),

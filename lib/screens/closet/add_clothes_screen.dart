@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../animations/app_motion.dart';
 
 import '../../data/filter_icons.dart';
 import '../../models/clothing_item.dart';
@@ -38,7 +39,7 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
 
   Future<void> _pickPhoto() async {
     final confirmed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const AddingItemPhotoScreen()),
+      AppPageRoute(builder: (_) => const AddingItemPhotoScreen()),
     );
     if (confirmed == true) {
       setState(() => _hasPhoto = true);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../animations/app_motion.dart';
 
 import '../../data/outfit_store.dart';
 import '../../models/outfit.dart';
@@ -59,7 +60,7 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
   }
 
   Future<void> _confirmDelete(SavedOutfit outfit) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.white,
@@ -90,6 +91,14 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
+    return FadeSlideIn(
+      duration: const Duration(milliseconds: 300),
+      offset: const Offset(0, 0.03),
+      child: _buildContent(context),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final outfit = OutfitStore.instance.byId(widget.outfitId);
 
@@ -135,7 +144,9 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
                     ],
                   ),
                 ),
-                GestureDetector(
+                PressableScale(
+                 scale: 0.88,
+                 child: GestureDetector(
                   onTap: () => Navigator.of(context).pop(OutfitDetailAction.none),
                   child: Container(
                     width: 28,
@@ -147,6 +158,7 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
                     ),
                     child: Icon(Icons.close_rounded, size: 16, color: AppColors.mutedBrown),
                   ),
+                 ),
                 ),
               ],
             ),
@@ -192,7 +204,8 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
                 ),
                 const SizedBox(width: Spacing.sm),
                 Expanded(
-                  child: OutlinedButton(
+                  child: PressableScale(
+                   child: OutlinedButton(
                     onPressed: () => _confirmDelete(outfit),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(42),
@@ -210,6 +223,7 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
                         color: AppColors.errorRed,
                       ),
                     ),
+                   ),
                   ),
                 ),
               ],

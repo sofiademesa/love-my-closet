@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../animations/app_motion.dart';
 
 import '../../models/clothing_item.dart';
 import '../../theme.dart';
@@ -30,7 +31,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
 
   Future<void> _edit() async {
     final updated = await Navigator.of(context).push<ClothingItem>(
-      MaterialPageRoute(builder: (_) => EditItemScreen(item: _item)),
+      AppPageRoute(builder: (_) => EditItemScreen(item: _item)),
     );
     if (updated != null) {
       setState(() => _item = updated);
@@ -38,7 +39,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   }
 
   Future<void> _confirmDelete() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.white,
@@ -202,19 +203,25 @@ class _HiddenGemToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      customBorder: const CircleBorder(),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: active ? AppColors.buttonPink : AppColors.blush.withValues(alpha: 0.5),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          active ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-          size: 20,
-          color: active ? AppColors.white : AppColors.mutedBrown,
+    return PressableScale(
+      scale: 0.9,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: AnimatedContainer(
+          duration: kMotionDuration(const Duration(milliseconds: 220)),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: active ? AppColors.buttonPink : AppColors.blush.withValues(alpha: 0.5),
+            shape: BoxShape.circle,
+          ),
+          child: AnimatedHeartIcon(
+            active: active,
+            size: 20,
+            activeColor: AppColors.white,
+            inactiveColor: AppColors.mutedBrown,
+          ),
         ),
       ),
     );
