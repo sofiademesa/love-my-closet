@@ -1,8 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import '../../animations/app_motion.dart';
 
+import '../../data/closet_store.dart';
 import '../../data/filter_icons.dart';
 import '../../models/clothing_item.dart';
+import '../../services/backend_errors.dart';
 import '../../theme.dart';
 import '../../widgets/app_dropdown.dart';
 import '../../widgets/app_text_field.dart';
@@ -13,9 +17,11 @@ import '../../widgets/filter_chips.dart';
 import '../../widgets/photo_picker.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/secondary_button.dart';
+import 'adding_item_photo_screen.dart';
 
 /// Edit Item: update a closet item's name, category, occasion tag, color,
-/// or photo — or delete it outright.
+/// or photo — or delete it outright. Saves to Supabase, then pops the
+/// updated [ClothingItem] (or 'deleted').
 class EditItemScreen extends StatefulWidget {
   const EditItemScreen({super.key, required this.item});
 
@@ -30,7 +36,16 @@ class _EditItemScreenState extends State<EditItemScreen> {
   late String _category = widget.item.category;
   late String _occasion = widget.item.occasion;
   late String _color = widget.item.color;
-  bool _hasPhoto = true;
+
+  /// A new transparent cutout picked via Change Photo (same flow as Add
+  /// Clothes), not uploaded until Save Changes.
+  Uint8List? _newPhoto;
+
+  /// The existing photo was removed with the (x) badge.
+  bool _removePhoto = false;
+  bool _saving = false;
+
+  String? get _existingPhotoUrl => _removePhoto ? null : widget.item.imageUrl;
 
   @override
   void dispose() {
@@ -38,16 +53,50 @@ class _EditItemScreenState extends State<EditItemScreen> {
     super.dispose();
   }
 
-  void _save() {
-    final name = _nameController.text.trim();
-    Navigator.of(context).pop(
-      widget.item.copyWith(
-        name: name.isEmpty ? widget.item.name : name,
-        category: _category,
-        occasion: _occasion,
-        color: _color,
-      ),
+  Future<void> _changePhoto() async {
+    final photo = await Navigator.of(context).push<ProcessedPhoto>(
+      AppPageRoute(builder: (_) => AddingItemPhotoScreen(initialBackground: _color)),
     );
+    if (photo != null && mounted) {
+      setState(() {
+        _newPhoto = photo.bytes;
+        _color = photo.backgroundColorName;
+      });
+    }
+  }
+
+  void _clearPhoto() {
+    setState(() {
+      if (_newPhoto != null) {
+        _newPhoto = null;
+      } else {
+        _removePhoto = true;
+      }
+    });
+  }
+
+  Future<void> _save() async {
+    if (_saving) return;
+    final name = _nameController.text.trim();
+    setState(() => _saving = true);
+    try {
+      final saved = await ClosetStore.instance.update(
+        widget.item.copyWith(
+          name: name.isEmpty ? widget.item.name : name,
+          category: _category,
+          occasion: _occasion,
+          color: _color,
+        ),
+        newPhotoPng: _newPhoto,
+        removePhoto: _removePhoto && _newPhoto == null,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(saved);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendlyError(e))));
+    }
   }
 
   Future<void> _confirmDelete() async {
@@ -76,9 +125,9 @@ class _EditItemScreenState extends State<EditItemScreen> {
       ),
     );
     if (confirmed == true && mounted) {
-      // Close Edit Item, then tell Clothing Item detail it was deleted so it
-      // can pop back to Closet and remove it from the grid.
-      Navigator.of(context).pop();
+      // Tell whoever opened Edit Item (Closet, or Clothing Item detail which
+      // passes it on) that it was deleted; Closet plays the exit animation
+      // and removes it from Supabase.
       Navigator.of(context).pop('deleted');
     }
   }
@@ -107,10 +156,12 @@ class _EditItemScreenState extends State<EditItemScreen> {
               ),
               const SizedBox(height: Spacing.md),
               PhotoPicker(
-                imagePath: _hasPhoto ? 'placeholder' : null,
+                imageBytes: _newPhoto,
+                imageUrl: _existingPhotoUrl,
+                backgroundColorName: _color,
                 icon: widget.item.icon,
-                onPick: () => setState(() => _hasPhoto = true),
-                onRemove: () => setState(() => _hasPhoto = false),
+                onPick: _changePhoto,
+                onRemove: _clearPhoto,
               ),
               const SizedBox(height: Spacing.sm),
               Center(
@@ -118,7 +169,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                   width: 170,
                   child: SecondaryButton(
                     label: 'Change Photo',
-                    onPressed: () => setState(() => _hasPhoto = true),
+                    onPressed: _changePhoto,
                   ),
                 ),
               ),
@@ -152,7 +203,10 @@ class _EditItemScreenState extends State<EditItemScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: PrimaryButton(label: 'Save Changes', onPressed: _save),
+                    child: PrimaryButton(
+                      label: _saving ? 'Saving…' : 'Save Changes',
+                      onPressed: _saving ? null : _save,
+                    ),
                   ),
                   const SizedBox(width: Spacing.sm),
                   Expanded(

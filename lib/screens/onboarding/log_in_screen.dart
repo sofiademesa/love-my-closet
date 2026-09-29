@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../animations/app_motion.dart';
 
+import '../../services/auth_flow.dart';
+import '../../services/auth_service.dart';
+import '../../services/backend_errors.dart';
 import '../../theme.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/primary_button.dart';
-import '../home/home_screen.dart';
 import 'auth_layout.dart';
 import 'create_account_screen.dart';
 import 'forgot_password_screen.dart';
@@ -22,6 +24,7 @@ class _LogInScreenState extends State<LogInScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -30,11 +33,22 @@ class _LogInScreenState extends State<LogInScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
-    Navigator.of(context).pushReplacement(
-      AppPageRoute<void>(builder: (_) => const HomeScreen()),
-    );
+  Future<void> _submit() async {
+    if (_submitting || !_formKey.currentState!.validate()) return;
+    setState(() => _submitting = true);
+    try {
+      await AuthService.signIn(
+        email: _emailController.text,
+        password: _passwordController.text,
+        rememberMe: _rememberMe,
+      );
+      // Pull this account's closet, outfits and profile, then show Home.
+      await AuthFlow.enterApp();
+    } on BackendException catch (e) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    }
   }
 
   void _goToForgotPassword() {
@@ -132,7 +146,10 @@ class _LogInScreenState extends State<LogInScreen> {
               ],
             ),
             const SizedBox(height: Spacing.md),
-            PrimaryButton(label: 'Log In', onPressed: _submit),
+            PrimaryButton(
+              label: _submitting ? 'Logging In…' : 'Log In',
+              onPressed: _submitting ? null : _submit,
+            ),
           ],
         ),
       ),

@@ -26,19 +26,24 @@ const clothingColors = [
 /// system's FilterChips component.
 const occasionTags = ['Everyday', 'Formal', 'Party'];
 
-/// A single wardrobe item stored in Sofia's Digital Closet.
+/// A single wardrobe item in the user's Digital Closet, as stored in the
+/// `clothing_items` table. [timesWorn], [lastWorn] and [daysUnworn] are not
+/// stored: they are worked out from the Calendar (see ClosetStore), so they
+/// can never drift out of sync with what was actually logged.
 class ClothingItem {
   const ClothingItem({
     required this.id,
     required this.name,
     required this.category,
     required this.occasion,
-    required this.daysUnworn,
+    this.daysUnworn = 0,
     this.icon = Icons.checkroom_rounded,
     this.color = 'Transparent',
-    this.isHiddenGem = false,
+    this.isFavorite = false,
     this.timesWorn = 0,
     this.lastWorn,
+    this.imagePath,
+    this.imageUrl,
   });
 
   final String id;
@@ -48,7 +53,10 @@ class ClothingItem {
   final int daysUnworn;
   final IconData icon;
   final String color;
-  final bool isHiddenGem;
+
+  /// The heart on the item tile / detail screen; drives the "Favorites"
+  /// filter chip on Closet and Outfit Builder.
+  final bool isFavorite;
 
   /// How many times this item has been logged as worn.
   final int timesWorn;
@@ -57,70 +65,37 @@ class ClothingItem {
   /// or null if it has never been worn.
   final String? lastWorn;
 
+  /// Path of the transparent PNG in the private `clothing-images` bucket.
+  final String? imagePath;
+
+  /// Short-lived signed URL for [imagePath], ready for Image.network.
+  final String? imageUrl;
+
   ClothingItem copyWith({
     String? name,
     String? category,
     String? occasion,
     String? color,
-    bool? isHiddenGem,
+    bool? isFavorite,
+    int? daysUnworn,
     int? timesWorn,
     String? lastWorn,
+    String? imagePath,
+    String? imageUrl,
   }) {
     return ClothingItem(
       id: id,
       name: name ?? this.name,
       category: category ?? this.category,
       occasion: occasion ?? this.occasion,
-      daysUnworn: daysUnworn,
+      daysUnworn: daysUnworn ?? this.daysUnworn,
       icon: icon,
       color: color ?? this.color,
-      isHiddenGem: isHiddenGem ?? this.isHiddenGem,
+      isFavorite: isFavorite ?? this.isFavorite,
       timesWorn: timesWorn ?? this.timesWorn,
       lastWorn: lastWorn ?? this.lastWorn,
+      imagePath: imagePath ?? this.imagePath,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 }
-
-/// Starter items so the Closet grid isn't empty on first run.
-const sampleClosetItems = [
-  ClothingItem(
-    id: '1',
-    name: 'Pink Polkadot Top',
-    category: 'Tops',
-    occasion: 'Everyday',
-    daysUnworn: 32,
-    color: 'Pink',
-    timesWorn: 5,
-    lastWorn: '09/03/2026',
-  ),
-  ClothingItem(
-    id: '2',
-    name: 'Yellow Bow Top',
-    category: 'Tops',
-    occasion: 'Everyday',
-    daysUnworn: 12,
-    color: 'Yellow',
-    timesWorn: 3,
-    lastWorn: '09/14/2026',
-  ),
-  ClothingItem(
-    id: '3',
-    name: 'Blue Tiered Skirt',
-    category: 'Bottoms',
-    occasion: 'Everyday',
-    daysUnworn: 8,
-    color: 'Blue',
-    timesWorn: 7,
-    lastWorn: '09/18/2026',
-  ),
-  ClothingItem(
-    id: '4',
-    name: 'Denim Skirt',
-    category: 'Bottoms',
-    occasion: 'Formal',
-    daysUnworn: 45,
-    color: 'Denim',
-    timesWorn: 1,
-    lastWorn: '08/12/2026',
-  ),
-];

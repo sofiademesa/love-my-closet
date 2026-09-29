@@ -3,6 +3,7 @@ import '../../animations/app_motion.dart';
 
 import '../../data/outfit_store.dart';
 import '../../models/outfit.dart';
+import '../../services/backend_errors.dart';
 import '../../theme.dart';
 import '../../widgets/clothing_thumb.dart';
 import '../../widgets/secondary_button.dart';
@@ -22,7 +23,7 @@ enum OutfitDetailAction { deleted, none }
 /// Shows an outfit's full detail — name, date, note, and every piece — as a
 /// bottom sheet. Reached by tapping a logged outfit on the Calendar (or the
 /// "View Outfits" tab in the Builder), so it always reads live from
-/// [OutfitStore] rather than a snapshot passed in.
+/// [OutfitStore] (Supabase) rather than a snapshot passed in.
 Future<OutfitDetailAction> showOutfitDetailSheet(
   BuildContext context, {
   required String outfitId,
@@ -46,17 +47,36 @@ class OutfitDetailSheet extends StatefulWidget {
 }
 
 class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
+  bool _busy = false;
+
+  void _showError(Object e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendlyError(e))));
+  }
+
+  /// Rename the look, move it to another date, and edit the diary note.
   Future<void> _editDetails(SavedOutfit outfit) async {
+    if (_busy) return;
     final result = await showSaveLookSheet(
       context,
       initialName: outfit.name,
       initialDate: outfit.date,
+      showNote: true,
+      initialNote: outfit.note,
     );
     if (result == null || !mounted) return;
-    OutfitStore.instance.update(
-      outfit.copyWith(name: result.name, date: result.date),
-    );
-    setState(() {});
+    setState(() => _busy = true);
+    try {
+      await OutfitStore.instance.updateEntryDetails(
+        outfit,
+        name: result.name,
+        date: result.date,
+        note: result.note,
+      );
+    } catch (e) {
+      _showError(e);
+    }
+    if (mounted) setState(() => _busy = false);
   }
 
   Future<void> _confirmDelete(SavedOutfit outfit) async {
@@ -84,8 +104,14 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
       ),
     );
     if (confirmed == true && mounted) {
-      OutfitStore.instance.remove(outfit.id);
-      Navigator.of(context).pop(OutfitDetailAction.deleted);
+      setState(() => _busy = true);
+      try {
+        await OutfitStore.instance.removeEntry(outfit);
+        if (mounted) Navigator.of(context).pop(OutfitDetailAction.deleted);
+      } catch (e) {
+        if (mounted) setState(() => _busy = false);
+        _showError(e);
+      }
     }
   }
 
@@ -176,10 +202,16 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
               children: [
                 for (final piece in outfit.pieces)
                   SizedBox(
-                    width: 84,
+                    width: 104,
                     child: Column(
                       children: [
-                        ClothingThumb(icon: piece.item.icon, size: 76, iconSize: 30),
+                        ClothingThumb(
+                          icon: piece.item.icon,
+                          size: 100,
+                          iconSize: 38,
+                          imageUrl: piece.item.imageUrl,
+                          backgroundColorName: piece.item.color,
+                        ),
                         const SizedBox(height: Spacing.xs),
                         Text(
                           piece.item.name,

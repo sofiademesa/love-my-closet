@@ -2,7 +2,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../animations/app_motion.dart';
-import '../data/accessibility_store.dart';
 import '../theme.dart';
 
 /// Builds a chip's leading icon at the given [size], tinted [color] —
@@ -32,7 +31,8 @@ class _MouseDragScrollBehavior extends MaterialScrollBehavior {
 /// picker on Add Clothes / Edit Item.
 ///
 /// Scrollable with a mouse click-drag or a mouse/trackpad wheel, not just a
-/// touch swipe.
+/// touch swipe. Whichever edge has more chips beyond it fades out, so a
+/// cut-off chip reads as "swipe for more" rather than a layout bug.
 class FilterChips extends StatefulWidget {
   const FilterChips({
     super.key,
@@ -60,6 +60,31 @@ class FilterChips extends StatefulWidget {
 class _FilterChipsState extends State<FilterChips> {
   final _scrollController = ScrollController();
 
+  // Whether there are more chips hidden past the start / end edge.
+  bool _moreBefore = false;
+  bool _moreAfter = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_updateEdgeFades);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateEdgeFades());
+  }
+
+  void _updateEdgeFades() {
+    if (!mounted || !_scrollController.hasClients) return;
+    final p = _scrollController.position;
+    if (!p.hasContentDimensions) return;
+    final before = p.pixels > p.minScrollExtent + 1;
+    final after = p.pixels < p.maxScrollExtent - 1;
+    if (before != _moreBefore || after != _moreAfter) {
+      setState(() {
+        _moreBefore = before;
+        _moreAfter = after;
+      });
+    }
+  }
+
   // Lets a plain vertical mouse-wheel scroll this row sideways, since a
   // wheel has no horizontal axis of its own on most mice.
   void _handlePointerSignal(PointerSignalEvent event) {
@@ -78,33 +103,58 @@ class _FilterChipsState extends State<FilterChips> {
 
   @override
   void dispose() {
+    _scrollController.removeListener(_updateEdgeFades);
     _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    const fade = Colors.transparent;
+    const solid = Colors.black;
+
+    final row = SingleChildScrollView(
+      controller: _scrollController,
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final option in widget.options) ...[
+            _Chip(
+              label: option,
+              icon: widget.icons?[option],
+              active: option == widget.selected,
+              onTap: () => widget.onSelected(
+                option == widget.selected ? null : option,
+              ),
+            ),
+            const SizedBox(width: Spacing.sm),
+          ],
+        ],
+      ),
+    );
+
     return Listener(
       onPointerSignal: _handlePointerSignal,
-      child: ScrollConfiguration(
-        behavior: _MouseDragScrollBehavior(),
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              for (final option in widget.options) ...[
-                _Chip(
-                  label: option,
-                  icon: widget.icons?[option],
-                  active: option == widget.selected,
-                  onTap: () => widget.onSelected(
-                    option == widget.selected ? null : option,
-                  ),
-                ),
-                const SizedBox(width: Spacing.sm),
-              ],
+      // Re-checks the fades when the row is first laid out or resized.
+      child: NotificationListener<ScrollMetricsNotification>(
+        onNotification: (_) {
+          _updateEdgeFades();
+          return false;
+        },
+        child: ShaderMask(
+          blendMode: BlendMode.dstIn,
+          shaderCallback: (rect) => LinearGradient(
+            colors: [
+              _moreBefore ? fade : solid,
+              solid,
+              solid,
+              _moreAfter ? fade : solid,
             ],
+            stops: const [0, 0.08, 0.88, 1],
+          ).createShader(rect),
+          child: ScrollConfiguration(
+            behavior: _MouseDragScrollBehavior(),
+            child: row,
           ),
         ),
       ),

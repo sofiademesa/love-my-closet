@@ -102,7 +102,7 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                 subtitle: 'Cuts down slide, fade, and swipe animations.',
                 child: Switch(
                   value: _store.reduceMotion,
-                  activeColor: AppColors.buttonPink,
+                  activeThumbColor: AppColors.buttonPink,
                   onChanged: _store.setReduceMotion,
                 ),
               ),
@@ -113,7 +113,7 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                 subtitle: 'Deepens colors to make text easier to read.',
                 child: Switch(
                   value: _store.highContrast,
-                  activeColor: AppColors.buttonPink,
+                  activeThumbColor: AppColors.buttonPink,
                   onChanged: _store.setHighContrast,
                 ),
               ),

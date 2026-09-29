@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../animations/app_motion.dart';
 
+import '../../data/app_data.dart';
 import '../../data/user_profile_store.dart';
 import '../../theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
@@ -41,7 +42,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  void _onStoreChanged() => setState(() {});
+  void _onStoreChanged() {
+    if (mounted) setState(() {});
+  }
 
   void _goToTab(int index) {
     const currentIndex = 4;
@@ -119,6 +122,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     if (confirmed == true && mounted) {
+      // Ends the Supabase session and clears every store, so the next
+      // person to log in on this device sees only their own closet.
+      await AppData.signOut();
+      if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         AppPageRoute(builder: (_) => const OnboardingFlow()),
         (route) => false,

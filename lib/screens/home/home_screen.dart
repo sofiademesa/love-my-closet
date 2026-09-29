@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../animations/app_motion.dart';
+import '../../data/closet_store.dart';
+import '../../data/outfit_store.dart';
 import '../../data/user_profile_store.dart';
+import '../../models/clothing_item.dart';
 import '../../theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/clothing_card.dart';
 import '../../widgets/dot_pattern.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/stat_tile.dart';
 import '../../widgets/wear_me_card.dart';
 import '../calendar/calendar_screen.dart';
@@ -16,7 +20,8 @@ import '../profile/profile_screen.dart';
 import 'hidden_gems_sheet.dart';
 
 /// Home: greeting, today's Wear Me suggestion, wardrobe stats at a glance,
-/// and a peek at more items worth rediscovering.
+/// and a peek at more items worth rediscovering — all worked out from the
+/// user's real closet and calendar in Supabase.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.userName = 'Sofia'});
 
@@ -34,22 +39,78 @@ class _HomeScreenState extends State<HomeScreen> {
   // the shared store the same way Calendar/Builder listen to OutfitStore.
   final _profileStore = UserProfileStore.instance;
 
+  final _closet = ClosetStore.instance;
+  final _outfits = OutfitStore.instance;
+
   @override
   void initState() {
     super.initState();
     _profileStore.addListener(_onProfileChanged);
+    _closet.addListener(_onProfileChanged);
+    _outfits.addListener(_onProfileChanged);
   }
 
   @override
   void dispose() {
     _profileStore.removeListener(_onProfileChanged);
+    _closet.removeListener(_onProfileChanged);
+    _outfits.removeListener(_onProfileChanged);
     super.dispose();
   }
 
-  void _onProfileChanged() => setState(() {});
+  void _onProfileChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// Every item, longest-unworn first.
+  List<ClothingItem> get _byUnworn =>
+      List.of(_closet.items)..sort((a, b) => b.daysUnworn.compareTo(a.daysUnworn));
+
+  /// Items unworn for at least the Hidden Gems Threshold set on Profile.
+  List<ClothingItem> get _hiddenGems {
+    final threshold = _profileStore.hiddenGemsThresholdDays;
+    return _byUnworn.where((i) => i.daysUnworn >= threshold).toList();
+  }
+
+  /// Distinct items worn so far this month (the "Worn This Mo." stat).
+  int get _wornThisMonth {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final ids = <String>{};
+    for (final entry in _outfits.all) {
+      if (entry.date.year == now.year && entry.date.month == now.month && !entry.date.isAfter(today)) {
+        ids.addAll(entry.pieces.map((p) => p.item.id));
+      }
+    }
+    return ids.length;
+  }
 
   void _openHiddenGems() {
-    showHiddenGemsSheet(context);
+    showHiddenGemsSheet(
+      context,
+      items: [
+        for (final item in _hiddenGems)
+          HiddenGemItem(
+            id: item.id,
+            name: item.name,
+            daysUnworn: item.daysUnworn,
+            icon: item.icon,
+            imageUrl: item.imageUrl,
+            backgroundColorName: item.color,
+          ),
+      ],
+      onWearAgain: (gem) {
+        if (gem.id != null) _styleItem(gem.id!);
+      },
+    );
+  }
+
+  /// "Style Me" / "Wear Again": open the Outfit Builder with this piece
+  /// already on the board, ready to build a look around it.
+  void _styleItem(String itemId) {
+    Navigator.of(context).push(
+      AppPageRoute(builder: (_) => OutfitBuilderScreen(startWithItemId: itemId)),
+    );
   }
 
   void _openAddClothes() {
@@ -85,6 +146,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Wear Me = the top hidden gem (or, if nothing has passed the threshold
+    // yet, the longest-unworn piece); "More Hidden Gems" = the next two.
+    final gems = _hiddenGems;
+    final ranked = gems.isNotEmpty ? gems : _byUnworn;
+    final wearMe = ranked.isEmpty ? null : ranked.first;
+    final moreGems = gems.where((i) => i.id != wearMe?.id).take(2).toList();
+
     return Scaffold(
       backgroundColor: AppColors.cream,
       body: DotPattern(
@@ -118,11 +186,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: Spacing.sm),
                   FadeSlideIn(
                     delay: staggerDelay(1),
-                    child: WearMeCard(
-                      name: 'Pink Polkadot Top',
-                      daysUnworn: 32,
-                      onStyleThis: () {},
-                    ),
+                    child: wearMe == null
+                        ? EmptyState(
+                            message: _closet.isLoading
+                                ? 'Opening your closet…'
+                                : 'Your closet is empty.\nAdd your first piece to get suggestions.',
+                            buttonLabel: _closet.isLoading ? null : 'Add Clothes',
+                            onButtonPressed: _closet.isLoading ? null : _openAddClothes,
+                          )
+                        : WearMeCard(
+                            name: wearMe.name,
+                            daysUnworn: wearMe.daysUnworn,
+                            icon: wearMe.icon,
+                            imageUrl: wearMe.imageUrl,
+                            backgroundColorName: wearMe.color,
+                            onStyleThis: () => _styleItem(wearMe.id),
+                          ),
                   ),
                   const SizedBox(height: Spacing.lg),
                   FadeSlideIn(
@@ -132,13 +211,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: Spacing.sm),
                   FadeSlideIn(
                     delay: staggerDelay(2),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Expanded(child: StatTile(value: '47', label: 'Total Items')),
-                        SizedBox(width: Spacing.sm),
-                        Expanded(child: StatTile(value: '12', label: 'Outfits')),
-                        SizedBox(width: Spacing.sm),
-                        Expanded(child: StatTile(value: '23', label: 'Worn This Mo.')),
+                        Expanded(
+                          child: StatTile(value: '${_closet.items.length}', label: 'Total Items'),
+                        ),
+                        const SizedBox(width: Spacing.sm),
+                        Expanded(
+                          child: StatTile(value: '${_outfits.outfitCount}', label: 'Outfits'),
+                        ),
+                        const SizedBox(width: Spacing.sm),
+                        Expanded(
+                          child: StatTile(value: '$_wornThisMonth', label: 'Worn This Mo.'),
+                        ),
                       ],
                     ),
                   ),
@@ -168,26 +253,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: Spacing.sm),
                   FadeSlideIn(
                     delay: staggerDelay(3),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Expanded(
-                          child: ClothingCard(
-                            name: 'Yellow Bow Top',
-                            icon: Icons.checkroom_rounded,
-                            daysUnworn: 18,
+                    child: moreGems.isEmpty
+                        ? Text(
+                            'No more hidden gems right now.',
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 13),
+                          )
+                        : Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (var i = 0; i < 2; i++) ...[
+                                if (i > 0) const SizedBox(width: Spacing.sm),
+                                Expanded(
+                                  child: i < moreGems.length
+                                      ? ClothingCard(
+                                          name: moreGems[i].name,
+                                          icon: moreGems[i].icon,
+                                          imageUrl: moreGems[i].imageUrl,
+                                          backgroundColorName: moreGems[i].color,
+                                          daysUnworn: moreGems[i].daysUnworn,
+                                        )
+                                      : const SizedBox.shrink(),
+                                ),
+                              ],
+                            ],
                           ),
-                        ),
-                        SizedBox(width: Spacing.sm),
-                        Expanded(
-                          child: ClothingCard(
-                            name: 'Blue Tiered Skirt',
-                            icon: Icons.checkroom_rounded,
-                            daysUnworn: 25,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ],
               ),

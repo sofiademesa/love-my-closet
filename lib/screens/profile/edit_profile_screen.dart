@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/user_profile_store.dart';
+import '../../services/backend_errors.dart';
 import '../../theme.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/dot_pattern.dart';
@@ -8,8 +9,10 @@ import '../../widgets/heart_avatar.dart';
 import '../../widgets/primary_button.dart';
 
 /// Edit Profile: update display name, email, bio, and photo. Saving writes
-/// straight to [UserProfileStore], so Profile, Home's greeting, and
-/// Closet's header all pick up the change immediately.
+/// to the Supabase `profiles` table through [UserProfileStore], so Profile,
+/// Home's greeting, and Closet's header all pick up the change immediately
+/// and it persists between sessions. A new email goes through Supabase
+/// Auth's confirmation email.
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -23,6 +26,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late final _nameController = TextEditingController(text: _store.displayName);
   late final _emailController = TextEditingController(text: _store.email);
   late final _bioController = TextEditingController(text: _store.bio);
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -32,13 +36,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  void _save() {
-    _store.updateProfile(
-      displayName: _nameController.text,
-      email: _emailController.text,
-      bio: _bioController.text,
-    );
-    Navigator.of(context).pop();
+  Future<void> _save() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final emailChangeRequested = await _store.updateProfile(
+        displayName: _nameController.text,
+        email: _emailController.text,
+        bio: _bioController.text,
+      );
+      if (emailChangeRequested) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Check your inbox to confirm your new email address.'),
+          ),
+        );
+      }
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      messenger.showSnackBar(SnackBar(content: Text(friendlyError(e))));
+    }
   }
 
   void _photoComingSoon() {
@@ -138,7 +158,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 maxLines: 3,
               ),
               const SizedBox(height: Spacing.lg),
-              PrimaryButton(label: 'Save Profile', onPressed: _save),
+              PrimaryButton(
+                label: _saving ? 'Saving…' : 'Save Profile',
+                onPressed: _saving ? null : _save,
+              ),
               const SizedBox(height: Spacing.sm),
               Center(
                 child: TextButton(

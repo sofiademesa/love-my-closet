@@ -21,6 +21,8 @@ class ClothingCard extends StatelessWidget {
     this.onEdit,
     this.onDelete,
     this.daysUnworn,
+    this.imageUrl,
+    this.backgroundColorName,
   });
 
   final String name;
@@ -35,6 +37,12 @@ class ClothingCard extends StatelessWidget {
   /// Hidden Gems", where surfacing neglected items is the whole point.
   /// Omitted (null) leaves the card exactly as it reads on the Closet grid.
   final int? daysUnworn;
+
+  /// Signed URL of the item's transparent PNG, if it has one.
+  final String? imageUrl;
+
+  /// The item's Color, shown behind the photo.
+  final String? backgroundColorName;
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +84,13 @@ class ClothingCard extends StatelessWidget {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(AppRadius.field),
                             child:
-                                ClothingThumb(icon: icon, size: double.infinity, iconSize: 40),
+                                ClothingThumb(
+                                  icon: icon,
+                                  size: double.infinity,
+                                  iconSize: 40,
+                                  imageUrl: imageUrl,
+                                  backgroundColorName: backgroundColorName,
+                                ),
                           ),
                         ),
                         // Right-aligned with the favorite heart below, so

@@ -70,14 +70,32 @@ To run the web version:
 
 ### Environment variables
 
-This project reads its configuration from a `.env` file that is **not** in the
-repository. Copy `.env.example`, fill in your own values, and never commit the
-result.
+The app talks to a Supabase project for accounts, the closet, outfits, the
+calendar/diary and photos. First set up the backend once by following
+[`supabase/README.md`](supabase/README.md) (run the SQL migration, set the
+redirect URLs).
 
-| Variable            | What it is                         | Where to get one                            |
-| ------------------- | ---------------------------------- | ------------------------------------------- |
-| `SUPABASE_URL`      | The URL of your Supabase project   | Supabase dashboard → Project Settings → API |
-| `SUPABASE_ANON_KEY` | Public (anon) key for your project | Supabase dashboard → Project Settings → API |
+The two values below are passed to Flutter at build time. For local runs, put
+them in an `env.json` file in the project root (it is git-ignored, never commit
+it):
+
+```json
+{
+  "SUPABASE_URL": "https://xxxx.supabase.co",
+  "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_..."
+}
+```
+
+and run `flutter run -d chrome --web-port 5000 --dart-define-from-file=env.json`.
+The deploy workflow reads the same names from repository secrets.
+
+| Variable                   | What it is                                   | Where to get one                                 |
+| -------------------------- | -------------------------------------------- | ------------------------------------------------ |
+| `SUPABASE_URL`             | The URL of your Supabase project             | Supabase dashboard → Project Settings → API      |
+| `SUPABASE_PUBLISHABLE_KEY` | Public publishable (anon) key, safe with RLS | Supabase dashboard → Project Settings → API Keys |
+
+Never use the secret / `service_role` key in the app; it is not needed and
+the app refuses to start with one.
 
 ## Privacy and secrets
 

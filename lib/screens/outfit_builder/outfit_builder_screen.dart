@@ -1,11 +1,15 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import '../../animations/app_motion.dart';
 
 import '../../data/accessibility_store.dart';
+import '../../data/closet_store.dart';
 import '../../data/filter_icons.dart';
 import '../../data/outfit_store.dart';
 import '../../models/clothing_item.dart';
 import '../../models/outfit.dart';
+import '../../services/backend_errors.dart';
 import '../../theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/clothing_thumb.dart';
@@ -20,8 +24,12 @@ import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
 import 'save_look_sheet.dart';
 
-/// Diameter of a piece once it's on the board.
-const double _kPieceSize = 76;
+/// Default size of a piece on the board (scale 1). Pieces can be resized
+/// from [OutfitPiece.minScale] to [OutfitPiece.maxScale] times this.
+const double _kPieceSize = 124;
+
+/// Size of a piece in the closet palette on the left.
+const double _kPaletteSize = 88;
 
 /// Outfit Builder: drag pieces from the closet palette onto the board to
 /// build a look (Builder tab), or browse previously saved combos and reopen
@@ -30,17 +38,21 @@ class OutfitBuilderScreen extends StatefulWidget {
   const OutfitBuilderScreen({
     super.key,
     this.userName = 'Sofia',
-    this.closetItems = sampleClosetItems,
     this.editOutfitId,
+    this.startWithItemId,
   });
 
   final String userName;
-  final List<ClothingItem> closetItems;
 
-  /// When set, the Builder opens straight into the Builder tab with this
-  /// saved outfit's pieces already on the board, ready to tweak. Saving
-  /// updates that same [OutfitStore] record in place instead of creating
-  /// a duplicate.
+  /// When set (a closet item id), the Builder opens on the Builder tab with
+  /// that piece already placed in the middle of the board, e.g. from
+  /// Home's "Style Me" or Hidden Gems' "Wear Again".
+  final String? startWithItemId;
+
+  /// When set (a calendar entry id), the Builder opens straight into the
+  /// Builder tab with this saved outfit's pieces already on the board, ready
+  /// to tweak. Saving updates that same outfit in Supabase instead of
+  /// creating a duplicate.
   final String? editOutfitId;
 
   @override
@@ -57,37 +69,78 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
 
   final List<OutfitPiece> _boardPieces = [];
 
-  /// The saved outfit currently loaded on the board for editing, if any.
-  /// Null means the board holds a brand-new outfit that hasn't been saved.
+  /// The piece showing its remove (x) and resize handles. Tapping empty
+  /// board space clears it.
+  String? _selectedPieceId;
+
+  // Where a pinch / resize started, so the size follows the fingers.
+  double _gestureStartScale = 1;
+  Offset _gestureCenter = Offset.zero;
+
+  /// The saved outfit currently loaded on the board for editing, if any
+  /// (its calendar entry id). Null means the board holds a brand-new outfit
+  /// that hasn't been saved.
   String? _editingOutfitId;
+
+  /// The look being edited (outfits.id), alongside [_editingOutfitId].
+  String? _editingLookId;
+
+  bool _saving = false;
+
+  /// The user's real closet items from Supabase.
+  List<ClothingItem> get _closetItems => ClosetStore.instance.items;
 
   /// Ids mid soft-delete: still rendered while their exit fade plays, then
   /// actually removed once it finishes.
   final Set<String> _removingPieceIds = {};
   final Set<String> _removingOutfitIds = {};
 
-  /// Saved outfits read straight from the shared store — the same list the
-  /// Calendar reads from — so both stay in sync with no separate data.
-  List<SavedOutfit> get _savedOutfits => OutfitStore.instance.all;
+  /// Saved outfits read straight from the shared store — the same data the
+  /// Calendar reads from — so both stay in sync with no separate data. One
+  /// card per look.
+  List<SavedOutfit> get _savedOutfits => OutfitStore.instance.builderOutfits;
 
   @override
   void initState() {
     super.initState();
     OutfitStore.instance.addListener(_onStoreChanged);
+    ClosetStore.instance.addListener(_onStoreChanged);
     final editId = widget.editOutfitId;
     if (editId != null) {
       final outfit = OutfitStore.instance.byId(editId);
       if (outfit != null) {
         _boardPieces.addAll(outfit.pieces.map((p) => p.copy()));
         _editingOutfitId = outfit.id;
+        _editingLookId = outfit.outfitId;
       }
+    }
+    final startId = widget.startWithItemId;
+    if (startId != null && editId == null) {
+      // After the first frame, once the board has its real size, so the
+      // piece can be centered on it.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final item = ClosetStore.instance.byId(startId);
+        if (item == null) return;
+        final board = _boardSize;
+        _addPiece(
+          item,
+          at: Offset((board.width - _kPieceSize) / 2, (board.height - _kPieceSize) / 2),
+        );
+      });
     }
   }
 
   @override
   void dispose() {
     OutfitStore.instance.removeListener(_onStoreChanged);
+    ClosetStore.instance.removeListener(_onStoreChanged);
     super.dispose();
+  }
+
+  void _showError(Object e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendlyError(e))));
   }
 
   void _onStoreChanged() {
@@ -95,11 +148,11 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   }
 
   List<ClothingItem> get _palette {
-    if (_category == null) return widget.closetItems;
+    if (_category == null) return _closetItems;
     if (_category == _kFavorites) {
-      return widget.closetItems.where((i) => i.isHiddenGem).toList();
+      return _closetItems.where((i) => i.isFavorite).toList();
     }
-    return widget.closetItems.where((i) => i.category == _category).toList();
+    return _closetItems.where((i) => i.category == _category).toList();
   }
 
   void _goToTab(int index) {
@@ -120,7 +173,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     if (index == 3) {
       Navigator.of(context).pushReplacement(
         AppPageRoute(
-          builder: (_) => CalendarScreen(closetItems: widget.closetItems),
+          builder: (_) => const CalendarScreen(),
         ),
       );
       return;
@@ -130,29 +183,53 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     );
   }
 
-  Offset _clamp(Offset raw, Size boardSize) {
-    final maxX = (boardSize.width - _kPieceSize).clamp(0.0, double.infinity).toDouble();
-    final maxY = (boardSize.height - _kPieceSize).clamp(0.0, double.infinity).toDouble();
+  Size get _boardSize {
+    final box = _boardKey.currentContext?.findRenderObject() as RenderBox?;
+    return box?.size ?? const Size(240, 340);
+  }
+
+  static double _sizeOf(OutfitPiece piece) => _kPieceSize * piece.scale;
+
+  /// Keeps a piece of the given [size] fully on the board.
+  Offset _clamp(Offset raw, Size boardSize, {double size = _kPieceSize}) {
+    final maxX = (boardSize.width - size).clamp(0.0, double.infinity).toDouble();
+    final maxY = (boardSize.height - size).clamp(0.0, double.infinity).toDouble();
     final dx = raw.dx.clamp(0.0, maxX).toDouble();
     final dy = raw.dy.clamp(0.0, maxY).toDouble();
     return Offset(dx, dy);
   }
 
+  /// Largest scale that still fits on the board.
+  double _maxScaleFor(Size boardSize) {
+    final fit = boardSize.shortestSide / _kPieceSize;
+    return fit.clamp(OutfitPiece.minScale, OutfitPiece.maxScale).toDouble();
+  }
+
+  /// Resizes [piece] to [scale] keeping [center] where it is (as far as the
+  /// board edges allow).
+  void _applyScale(OutfitPiece piece, double scale, Offset center) {
+    final boardSize = _boardSize;
+    final s = scale.clamp(OutfitPiece.minScale, _maxScaleFor(boardSize)).toDouble();
+    final size = _kPieceSize * s;
+    piece
+      ..scale = s
+      ..offset = _clamp(center - Offset(size / 2, size / 2), boardSize, size: size);
+  }
+
   void _addPiece(ClothingItem item, {Offset? at}) {
-    final box = _boardKey.currentContext?.findRenderObject() as RenderBox?;
-    final boardSize = box?.size ?? const Size(240, 340);
+    final boardSize = _boardSize;
     final fallback = Offset(
       16.0 + (_boardPieces.length % 4) * 22,
       16.0 + (_boardPieces.length % 4) * 22,
     );
+    final piece = OutfitPiece(
+      id: 'piece_${_pieceSeq++}',
+      item: item,
+      offset: _clamp(at ?? fallback, boardSize),
+    );
     setState(() {
-      _boardPieces.add(
-        OutfitPiece(
-          id: 'piece_${_pieceSeq++}',
-          item: item,
-          offset: _clamp(at ?? fallback, boardSize),
-        ),
-      );
+      _boardPieces.add(piece);
+      _selectedPieceId = piece.id;
     });
   }
 
@@ -167,21 +244,57 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     _addPiece(item, at: local);
   }
 
-  void _movePiece(OutfitPiece piece, Offset delta) {
-    final box = _boardKey.currentContext?.findRenderObject() as RenderBox?;
-    final boardSize = box?.size ?? const Size(240, 340);
-    setState(() => piece.offset = _clamp(piece.offset + delta, boardSize));
-  }
-
+  /// Selects [piece] and draws it on top of the others.
   void _bringToFront(OutfitPiece piece) {
     setState(() {
       _boardPieces.remove(piece);
       _boardPieces.add(piece);
+      _selectedPieceId = piece.id;
     });
   }
 
+  // One finger moves the piece; two fingers (pinch) also resize it.
+  void _onPieceGestureStart(OutfitPiece piece) {
+    _bringToFront(piece);
+    _gestureStartScale = piece.scale;
+    final size = _sizeOf(piece);
+    _gestureCenter = piece.offset + Offset(size / 2, size / 2);
+  }
+
+  void _onPieceGestureUpdate(OutfitPiece piece, ScaleUpdateDetails d) {
+    _gestureCenter += d.focalPointDelta;
+    setState(() {
+      _applyScale(
+        piece,
+        d.pointerCount > 1 ? _gestureStartScale * d.scale : piece.scale,
+        _gestureCenter,
+      );
+    });
+    // Stay in step with where the piece actually ended up at an edge.
+    final size = _sizeOf(piece);
+    _gestureCenter = piece.offset + Offset(size / 2, size / 2);
+  }
+
+  // The corner handle resizes with one finger or a mouse; the top-left
+  // corner stays put.
+  void _onHandleDrag(OutfitPiece piece, DragUpdateDetails d) {
+    final boardSize = _boardSize;
+    final grow = (d.delta.dx + d.delta.dy) / 2;
+    final maxByRoom = [
+      boardSize.width - piece.offset.dx,
+      boardSize.height - piece.offset.dy,
+    ].reduce((a, b) => a < b ? a : b) / _kPieceSize;
+    final s = ((_sizeOf(piece) + grow) / _kPieceSize)
+        .clamp(OutfitPiece.minScale, maxByRoom.clamp(OutfitPiece.minScale, OutfitPiece.maxScale))
+        .toDouble();
+    setState(() => piece.scale = s);
+  }
+
   void _removePiece(OutfitPiece piece) {
-    setState(() => _removingPieceIds.add(piece.id));
+    setState(() {
+      _removingPieceIds.add(piece.id);
+      if (_selectedPieceId == piece.id) _selectedPieceId = null;
+    });
   }
 
   void _finishRemovePiece(OutfitPiece piece) {
@@ -192,43 +305,90 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     });
   }
 
-  void _clearBoard() => setState(() {
-    _removingPieceIds.clear();
-    _boardPieces.clear();
-    _editingOutfitId = null;
-  });
+  /// Clears the board, with a few seconds to undo it.
+  void _clearBoard() {
+    final previous = [
+      for (final p in _boardPieces)
+        if (!_removingPieceIds.contains(p.id)) p.copy(),
+    ];
+    final previousEntryId = _editingOutfitId;
+    final previousLookId = _editingLookId;
+    setState(() {
+      _removingPieceIds.clear();
+      _boardPieces.clear();
+      _selectedPieceId = null;
+      _editingOutfitId = null;
+      _editingLookId = null;
+    });
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: const Text('Outfit cleared'),
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () {
+              if (!mounted) return;
+              setState(() {
+                _removingPieceIds.clear();
+                _boardPieces
+                  ..clear()
+                  ..addAll(previous);
+                _editingOutfitId = previousEntryId;
+                _editingLookId = previousLookId;
+              });
+            },
+          ),
+        ),
+      );
+  }
 
   Future<void> _openSaveSheet() async {
+    if (_saving) return;
     if (_boardPieces.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Drag a few pieces onto the board first.')),
+        const SnackBar(content: Text('Add a few pieces to the board first.')),
       );
       return;
     }
-    final editing =
-        _editingOutfitId == null ? null : OutfitStore.instance.byId(_editingOutfitId!);
+    final editing = _editingOutfitId == null && _editingLookId == null
+        ? null
+        : (OutfitStore.instance.byId(_editingOutfitId ?? '') ??
+            OutfitStore.instance.builderOutfits
+                .where((o) => o.outfitId == _editingLookId)
+                .firstOrNull);
     final result = await showSaveLookSheet(
       context,
       initialName: editing?.name ?? '',
       initialDate: editing?.date,
     );
     if (result == null || !mounted) return;
-    final pieces = _boardPieces.map((p) => p.copy()).toList();
-    if (editing != null) {
-      OutfitStore.instance.update(
-        editing.copyWith(name: result.name, date: result.date, pieces: pieces),
-      );
-    } else {
-      final newOutfit = SavedOutfit(
-        id: 'outfit_${DateTime.now().microsecondsSinceEpoch}',
+    final pieces = _boardPieces
+        .where((p) => !_removingPieceIds.contains(p.id))
+        .map((p) => p.copy())
+        .toList();
+    setState(() => _saving = true);
+    try {
+      // Outfit + pieces + calendar date saved together in Supabase.
+      final saved = await OutfitStore.instance.saveFromBuilder(
+        editingEntryId: editing?.id,
+        editingOutfitId: editing?.outfitId,
         name: result.name,
         date: result.date,
         pieces: pieces,
       );
-      OutfitStore.instance.add(newOutfit);
-      _editingOutfitId = newOutfit.id;
+      if (!mounted) return;
+      setState(() {
+        _editingOutfitId = saved.id;
+        _editingLookId = saved.outfitId;
+        _saving = false;
+        _tab = 1;
+      });
+    } catch (e) {
+      if (mounted) setState(() => _saving = false);
+      _showError(e);
     }
-    setState(() => _tab = 1);
   }
 
   void _loadSavedOutfit(SavedOutfit outfit) {
@@ -237,21 +397,30 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
       _boardPieces
         ..clear()
         ..addAll(outfit.pieces.map((p) => p.copy()));
+      _selectedPieceId = null;
       _editingOutfitId = outfit.id;
+      _editingLookId = outfit.outfitId;
       _tab = 0;
     });
   }
 
   void _deleteSavedOutfit(SavedOutfit outfit) {
-    setState(() => _removingOutfitIds.add(outfit.id));
+    setState(() => _removingOutfitIds.add(outfit.outfitId));
   }
 
-  void _finishDeleteSavedOutfit(SavedOutfit outfit) {
-    _removingOutfitIds.remove(outfit.id);
-    OutfitStore.instance.remove(outfit.id);
-    if (mounted && _editingOutfitId == outfit.id) {
-      setState(() => _editingOutfitId = null);
+  Future<void> _finishDeleteSavedOutfit(SavedOutfit outfit) async {
+    try {
+      await OutfitStore.instance.removeOutfit(outfit.outfitId);
+      if (mounted && _editingLookId == outfit.outfitId) {
+        setState(() {
+          _editingOutfitId = null;
+          _editingLookId = null;
+        });
+      }
+    } catch (e) {
+      _showError(e);
     }
+    if (mounted) setState(() => _removingOutfitIds.remove(outfit.outfitId));
   }
 
   @override
@@ -281,7 +450,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
                     Text('Outfit Builder', style: textTheme.headlineSmall!.copyWith(fontSize: 22)),
                     const SizedBox(height: Spacing.xs),
                     Text(
-                      'Drag pieces onto the board to see them together',
+                      'Tap or drag pieces onto the board to see them together',
                       style: textTheme.bodyMedium!.copyWith(fontSize: 13),
                     ),
                     const SizedBox(height: Spacing.md),
@@ -318,6 +487,10 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
 
   Widget _buildBuilder(TextTheme textTheme) {
     final palette = _palette;
+    final onBoard = {
+      for (final p in _boardPieces)
+        if (!_removingPieceIds.contains(p.id)) p.item.id,
+    };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,7 +507,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                width: 76,
+                width: _kPaletteSize,
                 child: palette.isEmpty
                     ? Padding(
                         padding: const EdgeInsets.only(top: Spacing.lg),
@@ -349,6 +522,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
                         separatorBuilder: (_, __) => const SizedBox(height: Spacing.sm),
                         itemBuilder: (context, i) => _PaletteThumb(
                           item: palette[i],
+                          onBoard: onBoard.contains(palette[i].id),
                           onTap: () => _addPiece(palette[i]),
                         ),
                       ),
@@ -370,8 +544,12 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
             const SizedBox(width: Spacing.sm),
             Expanded(
               child: PrimaryButton(
-                label: _editingOutfitId == null ? 'Save Outfit' : 'Update Outfit',
-                onPressed: _openSaveSheet,
+                label: _saving
+                    ? 'Saving…'
+                    : (_editingOutfitId == null && _editingLookId == null
+                        ? 'Save Outfit'
+                        : 'Update Outfit'),
+                onPressed: _saving ? null : _openSaveSheet,
               ),
             ),
           ],
@@ -398,56 +576,127 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
             ),
             boxShadow: AppShadows.surface,
           ),
-          child: _boardPieces.isEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(Spacing.lg),
-                    child: Text(
-                      highlighted ? 'Drop it!' : 'Drag pieces here\nto build your outfit',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'DMSans',
-                        fontSize: 13,
-                        color: AppColors.mutedBrown.withValues(alpha: 0.55),
+          // Faint dots make the board read as a canvas to arrange on.
+          child: DotPattern(
+            backgroundColor: AppColors.white,
+            dotColor: AppColors.softPink.withValues(alpha: 0.18),
+            spacing: 16,
+            dotRadius: 1.2,
+            child: _boardPieces.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(Spacing.lg),
+                      child: Text(
+                        highlighted ? 'Drop it!' : 'Tap or drag pieces here\nto build your outfit',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'DMSans',
+                          fontSize: 13,
+                          color: AppColors.mutedBrown.withValues(alpha: 0.55),
+                        ),
                       ),
                     ),
+                  )
+                : Stack(
+                    children: [
+                      // Tapping empty board space deselects.
+                      Positioned.fill(
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => setState(() => _selectedPieceId = null),
+                        ),
+                      ),
+                      Positioned(
+                        left: Spacing.sm,
+                        right: Spacing.sm,
+                        bottom: Spacing.sm,
+                        child: IgnorePointer(
+                          child: Text(
+                            _selectedPieceId == null
+                                ? 'Tap a piece to move, resize or remove it'
+                                : 'Pinch or drag the corner to resize',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'DMSans',
+                              fontSize: 11,
+                              color: AppColors.mutedBrown.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ),
+                      ),
+                      for (final piece in _boardPieces) _boardPieceView(piece),
+                    ],
                   ),
-                )
-              : Stack(
-                  children: [for (final piece in _boardPieces) _boardPieceView(piece)],
-                ),
+          ),
         );
       },
     );
   }
 
+  /// Room around each piece for its remove (x) and resize handles, so they
+  /// sit inside the piece's bounds and stay fully tappable.
+  static const double _kHandleRoom = 18;
+
   Widget _boardPieceView(OutfitPiece piece) {
+    final size = _sizeOf(piece);
+    final selected = piece.id == _selectedPieceId;
+    const room = _kHandleRoom;
     return Positioned(
       key: ValueKey(piece.id),
-      left: piece.offset.dx,
-      top: piece.offset.dy,
+      left: piece.offset.dx - room,
+      top: piece.offset.dy - room,
       child: PopIn(
         child: FadeScaleOut(
           removing: _removingPieceIds.contains(piece.id),
           onExited: () => _finishRemovePiece(piece),
-          child: GestureDetector(
-            onPanStart: (_) => _bringToFront(piece),
-            onPanUpdate: (details) => _movePiece(piece, details.delta),
+          child: SizedBox(
+            width: size + room * 2,
+            height: size + room * 2,
             child: Stack(
-              clipBehavior: Clip.none,
               children: [
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppRadius.field),
-                    boxShadow: AppShadows.surface,
-                  ),
-                  child: ClothingThumb(icon: piece.item.icon, size: _kPieceSize, iconSize: 32),
-                ),
                 Positioned(
-                  top: -6,
-                  right: -6,
-                  child: _RemoveDot(onTap: () => _removePiece(piece)),
+                  left: room,
+                  top: room,
+                  child: GestureDetector(
+                    onTap: () => _bringToFront(piece),
+                    // One finger moves it; a pinch also resizes it.
+                    onScaleStart: (_) => _onPieceGestureStart(piece),
+                    onScaleUpdate: (d) => _onPieceGestureUpdate(piece, d),
+                    // Just the garment, no tile, so pieces overlap like a
+                    // flat lay. A thin outline shows which one is selected.
+                    child: Container(
+                      width: size,
+                      height: size,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppRadius.field),
+                        border: Border.all(
+                          color: selected
+                              ? AppColors.buttonPink.withValues(alpha: 0.7)
+                              : Colors.transparent,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: _BoardPieceImage(item: piece.item, size: size),
+                    ),
+                  ),
                 ),
+                if (selected) ...[
+                  // Centered on the top-right corner.
+                  Positioned(
+                    top: room - 11,
+                    right: room - 11,
+                    child: _RemoveDot(onTap: () => _removePiece(piece)),
+                  ),
+                  // Centered on the bottom-right corner.
+                  Positioned(
+                    right: room - 18,
+                    bottom: room - 18,
+                    child: GestureDetector(
+                      onPanUpdate: (d) => _onHandleDrag(piece, d),
+                      child: const _ResizeHandle(),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -471,8 +720,8 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
       itemBuilder: (context, i) {
         final outfit = _savedOutfits[i];
         return FadeScaleOut(
-          key: ValueKey(outfit.id),
-          removing: _removingOutfitIds.contains(outfit.id),
+          key: ValueKey(outfit.outfitId),
+          removing: _removingOutfitIds.contains(outfit.outfitId),
           onExited: () => _finishDeleteSavedOutfit(outfit),
           child: FadeSlideIn(
             delay: staggerDelay(i, stepMs: 40, maxMs: 200),
@@ -548,14 +797,50 @@ class _TabToggle extends StatelessWidget {
 /// A draggable closet item in the left-hand palette. Tap to add it straight
 /// to the board, or drag it onto the board to place it exactly.
 class _PaletteThumb extends StatelessWidget {
-  const _PaletteThumb({required this.item, required this.onTap});
+  const _PaletteThumb({
+    required this.item,
+    required this.onTap,
+    this.onBoard = false,
+  });
 
   final ClothingItem item;
   final VoidCallback onTap;
 
+  /// Already placed on the board: shows a small check.
+  final bool onBoard;
+
   @override
   Widget build(BuildContext context) {
-    final thumb = ClothingThumb(icon: item.icon, size: 64, iconSize: 28);
+    final thumb = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        ClothingThumb(
+          icon: item.icon,
+          size: _kPaletteSize,
+          iconSize: 36,
+          imageUrl: item.imageUrl,
+          backgroundColorName: item.color,
+        ),
+        if (onBoard)
+          Positioned(
+            top: 4,
+            right: 4,
+            child: Semantics(
+              label: 'On the board',
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: AppColors.buttonPink,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.white, width: 1.5),
+                ),
+                child: Icon(Icons.check_rounded, size: 13, color: AppColors.white),
+              ),
+            ),
+          ),
+      ],
+    );
 
     return PressableScale(
       scale: 0.94,
@@ -563,13 +848,104 @@ class _PaletteThumb extends StatelessWidget {
         onTap: onTap,
         child: Draggable<ClothingItem>(
           data: item,
-          feedback: Material(
-            color: Colors.transparent,
-            child: ClothingThumb(icon: item.icon, size: 64, iconSize: 28),
+          // The drag position is the finger itself; the preview is shifted
+          // to sit centered under it, and the board drops the piece centered
+          // on the same point, so it lands exactly where the preview was.
+          dragAnchorStrategy: pointerDragAnchorStrategy,
+          feedback: Transform.translate(
+            offset: const Offset(-_kPieceSize / 2, -_kPieceSize / 2),
+            child: Material(
+              color: Colors.transparent,
+              // Looks exactly like it will on the board.
+              child: _BoardPieceImage(item: item, size: _kPieceSize),
+            ),
           ),
           childWhenDragging: Opacity(opacity: 0.35, child: thumb),
           child: thumb,
         ),
+      ),
+    );
+  }
+}
+
+/// A piece as it appears on the board: the transparent cutout with a soft
+/// shadow under the garment itself. Items without a photo (or whose photo
+/// can't load) fall back to their colored tile.
+class _BoardPieceImage extends StatelessWidget {
+  const _BoardPieceImage({required this.item, required this.size});
+
+  final ClothingItem item;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = item.imageUrl;
+    final tile = ClothingThumb(
+      icon: item.icon,
+      size: size,
+      iconSize: size * 0.36,
+      backgroundColorName: item.color,
+    );
+    if (url == null) return tile;
+
+    Widget image({Color? tint}) => Image.network(
+          url,
+          width: size,
+          height: size,
+          fit: BoxFit.contain,
+          gaplessPlayback: true,
+          color: tint,
+          colorBlendMode: tint == null ? null : BlendMode.srcIn,
+          // The shadow copy just disappears on error; the main copy shows
+          // the tile instead.
+          errorBuilder: (context, error, stack) =>
+              tint == null ? tile : const SizedBox.shrink(),
+        );
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: Transform.translate(
+              offset: Offset(0, size * 0.03),
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                child: image(tint: Colors.black.withValues(alpha: 0.18)),
+              ),
+            ),
+          ),
+          image(),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom-right grip on the selected piece: drag it to resize.
+class _ResizeHandle extends StatelessWidget {
+  const _ResizeHandle();
+
+  @override
+  Widget build(BuildContext context) {
+    // Bigger invisible touch area around the visible dot.
+    return Container(
+      width: 36,
+      height: 36,
+      alignment: Alignment.center,
+      color: Colors.transparent,
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.buttonPink, width: 1.5),
+          boxShadow: AppShadows.surface,
+        ),
+        child: Icon(Icons.open_in_full_rounded, size: 12, color: AppColors.buttonPink),
       ),
     );
   }
@@ -647,7 +1023,13 @@ class _SavedOutfitCard extends StatelessWidget {
                               color: AppColors.white,
                               borderRadius: BorderRadius.circular(AppRadius.field + 2),
                             ),
-                            child: ClothingThumb(icon: shown[i].item.icon, size: 36, iconSize: 16),
+                            child: ClothingThumb(
+                              icon: shown[i].item.icon,
+                              size: 36,
+                              iconSize: 16,
+                              imageUrl: shown[i].item.imageUrl,
+                              backgroundColorName: shown[i].item.color,
+                            ),
                           ),
                         ),
                     ],

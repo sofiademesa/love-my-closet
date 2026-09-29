@@ -3,49 +3,52 @@ import 'package:flutter/material.dart';
 import '../../animations/app_motion.dart';
 import '../../theme.dart';
 import '../../widgets/dot_pattern.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/hidden_gem_card.dart';
 
 /// Data for one item in the Hidden Gems list.
 class HiddenGemItem {
   const HiddenGemItem({
+    this.id,
     required this.name,
     required this.daysUnworn,
     this.icon = Icons.checkroom_rounded,
+    this.imageUrl,
+    this.backgroundColorName,
   });
 
+  /// Closet item id, so "Wear Again" can open it in the Outfit Builder.
+  final String? id;
   final String name;
   final int daysUnworn;
   final IconData icon;
+  final String? imageUrl;
+  final String? backgroundColorName;
 }
-
-const _defaultHiddenGems = [
-  HiddenGemItem(name: 'Snoopy Cream Shirt', daysUnworn: 30),
-  HiddenGemItem(name: 'The Beatles Shirt', daysUnworn: 45),
-  HiddenGemItem(name: 'Denim Skirt', daysUnworn: 52, icon: Icons.checkroom_rounded),
-  HiddenGemItem(name: 'Floral Sundress', daysUnworn: 38, icon: Icons.checkroom_rounded),
-  HiddenGemItem(name: 'Grey Knit Cardigan', daysUnworn: 60, icon: Icons.checkroom_rounded),
-  HiddenGemItem(name: 'Red Beret', daysUnworn: 27, icon: Icons.checkroom_rounded),
-];
 
 /// Opens Hidden Gems as a sheet that slides up over Home, matching the
 /// mockup's rounded-top panel over a dimmed background.
 Future<void> showHiddenGemsSheet(
   BuildContext context, {
-  List<HiddenGemItem> items = _defaultHiddenGems,
+  required List<HiddenGemItem> items,
+  ValueChanged<HiddenGemItem>? onWearAgain,
 }) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: AppColors.hotPink.withValues(alpha: 0.25),
-    builder: (context) => HiddenGemsSheet(items: items),
+    builder: (context) => HiddenGemsSheet(items: items, onWearAgain: onWearAgain),
   );
 }
 
 class HiddenGemsSheet extends StatelessWidget {
-  const HiddenGemsSheet({super.key, this.items = _defaultHiddenGems});
+  const HiddenGemsSheet({super.key, required this.items, this.onWearAgain});
 
   final List<HiddenGemItem> items;
+
+  /// Called after the sheet closes, with the gem that was tapped.
+  final ValueChanged<HiddenGemItem>? onWearAgain;
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +99,11 @@ class HiddenGemsSheet extends StatelessWidget {
                         style: textTheme.bodyMedium!.copyWith(fontSize: 14),
                       ),
                       const SizedBox(height: Spacing.md),
+                      if (items.isEmpty)
+                        const EmptyState(
+                          message: 'No hidden gems right now.\nEverything has been worn recently!',
+                          icon: Icons.diamond_outlined,
+                        ),
                       for (var i = 0; i < items.length; i++) ...[
                         FadeSlideIn(
                           delay: staggerDelay(i + 1, stepMs: 50, maxMs: 300),
@@ -103,7 +111,13 @@ class HiddenGemsSheet extends StatelessWidget {
                             name: items[i].name,
                             daysUnworn: items[i].daysUnworn,
                             icon: items[i].icon,
-                            onWearAgain: () {},
+                            imageUrl: items[i].imageUrl,
+                            backgroundColorName: items[i].backgroundColorName,
+                            onWearAgain: () {
+                              final gem = items[i];
+                              Navigator.of(context).pop();
+                              onWearAgain?.call(gem);
+                            },
                           ),
                         ),
                         const SizedBox(height: Spacing.md),

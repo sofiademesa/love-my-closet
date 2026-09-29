@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../animations/app_motion.dart';
 
-import '../../data/user_profile_store.dart';
+import '../../services/auth_flow.dart';
+import '../../services/auth_service.dart';
+import '../../services/backend_errors.dart';
 import '../../theme.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/primary_button.dart';
-import '../home/home_screen.dart';
 import 'auth_layout.dart';
 import 'log_in_screen.dart';
 
@@ -23,6 +24,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -33,20 +35,40 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
-    final firstName = _nameController.text.trim().split(' ').first;
-    // Seed the shared profile with what they just typed, so their real name
-    // (not a placeholder) shows up on Home, Closet, and Profile right away.
-    UserProfileStore.instance.updateProfile(
-      displayName: firstName,
-      email: _emailController.text.trim(),
-    );
-    Navigator.of(context).pushReplacement(
-      AppPageRoute<void>(
-        builder: (_) => const HomeScreen(),
-      ),
-    );
+  /// Creates the Supabase account. Their name is sent along so the profile
+  /// row (created by the database) shows their real first name right away.
+  Future<void> _submit() async {
+    if (_submitting || !_formKey.currentState!.validate()) return;
+    setState(() => _submitting = true);
+    try {
+      final outcome = await AuthService.signUp(
+        fullName: _nameController.text,
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      if (!mounted) return;
+      if (outcome == SignUpOutcome.confirmEmail) {
+        // Email confirmation is on. Clicking the link opens the app signed
+        // in (straight to Home), and this tab follows along on its own; Log
+        // In is only the fallback if the link is opened in another browser.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Almost there! Check your email and tap the link to confirm your '
+              'account. You’ll be signed in automatically.',
+            ),
+            duration: Duration(seconds: 8),
+          ),
+        );
+        _goToLogIn();
+        return;
+      }
+      await AuthFlow.enterApp();
+    } on BackendException catch (e) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    }
   }
 
   void _goToLogIn() {
@@ -115,7 +137,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   : null,
             ),
             const SizedBox(height: Spacing.lg),
-            PrimaryButton(label: 'Sign Up', onPressed: _submit),
+            PrimaryButton(
+              label: _submitting ? 'Signing Up…' : 'Sign Up',
+              onPressed: _submitting ? null : _submit,
+            ),
           ],
         ),
       ),

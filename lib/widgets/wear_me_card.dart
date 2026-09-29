@@ -14,12 +14,18 @@ class WearMeCard extends StatelessWidget {
     required this.daysUnworn,
     this.icon = Icons.checkroom_rounded,
     this.onStyleThis,
+    this.imageUrl,
+    this.backgroundColorName,
   });
 
   final String name;
   final int daysUnworn;
   final IconData icon;
   final VoidCallback? onStyleThis;
+  final String? imageUrl;
+
+  /// The item's Color, shown behind the photo.
+  final String? backgroundColorName;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +56,12 @@ class WearMeCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    ClothingThumb(icon: icon, size: 112),
+                    ClothingThumb(
+                      icon: icon,
+                      size: 140,
+                      imageUrl: imageUrl,
+                      backgroundColorName: backgroundColorName,
+                    ),
                     const SizedBox(width: Spacing.md),
                     Expanded(
                       child: Column(

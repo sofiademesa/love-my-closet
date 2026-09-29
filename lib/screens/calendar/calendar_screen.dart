@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../animations/app_motion.dart';
 
+import '../../data/closet_store.dart';
 import '../../data/outfit_store.dart';
-import '../../models/clothing_item.dart';
 import '../../models/outfit.dart';
 import '../../theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
@@ -12,6 +12,7 @@ import '../closet/closet_screen.dart';
 import '../home/home_screen.dart';
 import '../outfit_builder/outfit_builder_screen.dart';
 import '../profile/profile_screen.dart';
+import 'log_outfit_screen.dart';
 import 'outfit_detail_sheet.dart';
 
 const _kMonthNames = [
@@ -25,20 +26,18 @@ String _formatLongDate(DateTime date) =>
 
 DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
-/// My Calendar: a month grid marking every date with a logged outfit, plus
-/// a detail card for whichever date is selected. Reads outfits straight
-/// from [OutfitStore] — the same list the Outfit Builder saves to — so an
-/// outfit created (or edited, or deleted) in the Builder shows up here
-/// automatically, with no separate calendar data of its own.
+/// My Calendar (the Outfit Diary): a month grid marking every date with a
+/// logged outfit, plus a detail card for whichever date is selected. Reads
+/// the signed-in user's calendar entries from Supabase via [OutfitStore] —
+/// the same data the Outfit Builder saves to — so an outfit saved with a
+/// date in the Builder shows up here on that date.
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({
     super.key,
     this.userName = 'Sofia',
-    this.closetItems = sampleClosetItems,
   });
 
   final String userName;
-  final List<ClothingItem> closetItems;
 
   @override
   State<CalendarScreen> createState() => _CalendarScreenState();
@@ -55,11 +54,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _selectedDate = _today;
     _visibleMonth = DateTime(_today.year, _today.month, 1);
     OutfitStore.instance.addListener(_onStoreChanged);
+    ClosetStore.instance.addListener(_onStoreChanged);
+    if (!OutfitStore.instance.hasLoaded && !OutfitStore.instance.isLoading) {
+      OutfitStore.instance.load();
+    }
   }
 
   @override
   void dispose() {
     OutfitStore.instance.removeListener(_onStoreChanged);
+    ClosetStore.instance.removeListener(_onStoreChanged);
     super.dispose();
   }
 
@@ -109,15 +113,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
     // (or pick and re-save) a look.
     await Navigator.of(context).push(
       AppPageRoute(
-        builder: (_) => OutfitBuilderScreen(
-          userName: widget.userName,
-          closetItems: widget.closetItems,
-        ),
+        builder: (_) => OutfitBuilderScreen(userName: widget.userName),
       ),
     );
     // OutfitStore's own listener already triggers a rebuild once an entry
     // is saved, but this covers the (rare) case the screen closes without a
     // notifyListeners in between.
+    if (mounted) setState(() {});
+  }
+
+  /// Tapping an empty day opens Log Outfit, to record that a saved look
+  /// was worn on that date with a diary note.
+  Future<void> _openLogForSelectedDate() async {
+    await Navigator.of(context).push(
+      AppPageRoute(builder: (_) => LogOutfitScreen(date: _selectedDate)),
+    );
     if (mounted) setState(() {});
   }
 
@@ -144,7 +154,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (index == 2) {
       Navigator.of(context).pushReplacement(
         AppPageRoute(
-          builder: (_) => OutfitBuilderScreen(closetItems: widget.closetItems),
+          builder: (_) => const OutfitBuilderScreen(),
         ),
       );
       return;
@@ -305,7 +315,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         ),
                         const SizedBox(height: Spacing.sm),
                         if (selectedOutfits.isEmpty)
-                          const _NoOutfitCard()
+                          GestureDetector(
+                            onTap: _openLogForSelectedDate,
+                            child: const _NoOutfitCard(),
+                          )
                         else
                           for (final outfit in selectedOutfits) ...[
                             PressableScale(
@@ -550,22 +563,24 @@ class _LoggedOutfitCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(outfit.name, style: textTheme.headlineSmall!.copyWith(fontSize: 17)),
-                if (outfit.note != null && outfit.note!.trim().isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    'Note: ${outfit.note}',
-                    style: textTheme.bodyMedium!.copyWith(fontSize: 13),
-                  ),
-                ],
                 const SizedBox(height: Spacing.md),
+                // Top-aligned so a piece with a long (wrapping) name doesn't
+                // push its photo out of line with the others.
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     for (final piece in outfit.pieces.take(4))
                       Padding(
                         padding: const EdgeInsets.only(right: Spacing.sm),
                         child: Column(
                           children: [
-                            ClothingThumb(icon: piece.item.icon, size: 64, iconSize: 26),
+                            ClothingThumb(
+                              icon: piece.item.icon,
+                              size: 64,
+                              iconSize: 26,
+                              imageUrl: piece.item.imageUrl,
+                              backgroundColorName: piece.item.color,
+                            ),
                             const SizedBox(height: Spacing.xs),
                             SizedBox(
                               width: 72,
@@ -582,10 +597,68 @@ class _LoggedOutfitCard extends StatelessWidget {
                       ),
                   ],
                 ),
+                const SizedBox(height: Spacing.md),
+                _DiaryNote(note: outfit.note),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The day's diary note, shown as a little journal entry at the bottom of
+/// the outfit card. With no note yet, a soft prompt invites adding one (the
+/// whole card opens the detail sheet, where Edit Details holds the note).
+class _DiaryNote extends StatelessWidget {
+  const _DiaryNote({required this.note});
+
+  final String? note;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final text = note?.trim() ?? '';
+    final hasNote = text.isNotEmpty;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(Spacing.md - 4, Spacing.sm + 2, Spacing.md - 4, Spacing.sm + 4),
+      decoration: BoxDecoration(
+        color: AppColors.cream,
+        borderRadius: BorderRadius.circular(AppRadius.field - 4),
+        border: Border.all(color: AppColors.blush, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.edit_note_rounded, size: 16, color: AppColors.hotPink),
+              const SizedBox(width: Spacing.xs),
+              Text(
+                'Diary',
+                style: textTheme.labelSmall!.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.hotPink,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: Spacing.xs),
+          Text(
+            hasNote ? text : 'How did today’s look feel? Tap to add a note.',
+            style: textTheme.bodyMedium!.copyWith(
+              fontSize: 13,
+              height: 1.4,
+              fontStyle: hasNote ? FontStyle.normal : FontStyle.italic,
+              color: hasNote ? null : AppColors.mutedBrown.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
       ),
     );
   }

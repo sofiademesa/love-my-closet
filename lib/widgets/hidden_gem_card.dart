@@ -13,12 +13,18 @@ class HiddenGemCard extends StatelessWidget {
     required this.daysUnworn,
     this.icon = Icons.checkroom_rounded,
     this.onWearAgain,
+    this.imageUrl,
+    this.backgroundColorName,
   });
 
   final String name;
   final int daysUnworn;
   final IconData icon;
   final VoidCallback? onWearAgain;
+  final String? imageUrl;
+
+  /// The item's Color, shown behind the photo.
+  final String? backgroundColorName;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +47,13 @@ class HiddenGemCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(AppRadius.field),
-                child: ClothingThumb(icon: icon, size: 96, iconSize: 42),
+                child: ClothingThumb(
+                  icon: icon,
+                  size: 116,
+                  iconSize: 46,
+                  imageUrl: imageUrl,
+                  backgroundColorName: backgroundColorName,
+                ),
               ),
               const SizedBox(width: Spacing.md),
               Expanded(

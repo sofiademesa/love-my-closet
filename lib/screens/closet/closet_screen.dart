@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../animations/app_motion.dart';
+import '../../data/closet_store.dart';
 import '../../data/filter_icons.dart';
 import '../../data/user_profile_store.dart';
 import '../../models/clothing_item.dart';
+import '../../services/backend_errors.dart';
 import '../../theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/clothing_card.dart';
@@ -33,7 +35,9 @@ class _ClosetScreenState extends State<ClosetScreen> {
   static const _kAllOccasions = 'All Occasions';
 
   final _searchController = TextEditingController();
-  final List<ClothingItem> _items = List.of(sampleClosetItems);
+  // The user's saved items, straight from Supabase via the shared store.
+  final _closet = ClosetStore.instance;
+  List<ClothingItem> get _items => _closet.items;
 
   // Read live so the header keeps showing whatever name Edit Profile was
   // last saved with, not the value this screen happened to be built with.
@@ -54,16 +58,21 @@ class _ClosetScreenState extends State<ClosetScreen> {
   void initState() {
     super.initState();
     _profileStore.addListener(_onProfileChanged);
+    _closet.addListener(_onProfileChanged);
+    if (!_closet.hasLoaded && !_closet.isLoading) _closet.load();
   }
 
   @override
   void dispose() {
     _profileStore.removeListener(_onProfileChanged);
+    _closet.removeListener(_onProfileChanged);
     _searchController.dispose();
     super.dispose();
   }
 
-  void _onProfileChanged() => setState(() {});
+  void _onProfileChanged() {
+    if (mounted) setState(() {});
+  }
 
   List<ClothingItem> get _filtered {
     return _items.where((item) {
@@ -73,7 +82,7 @@ class _ClosetScreenState extends State<ClosetScreen> {
       final matchesOccasion = _occasion == null || item.occasion == _occasion;
       final matchesQuery =
           _query.isEmpty || item.name.toLowerCase().contains(_query.toLowerCase());
-      final matchesFavorite = !_favoritesOnly || item.isHiddenGem;
+      final matchesFavorite = !_favoritesOnly || item.isFavorite;
       return matchesCategory && matchesOccasion && matchesQuery && matchesFavorite;
     }).toList();
   }
@@ -90,7 +99,7 @@ class _ClosetScreenState extends State<ClosetScreen> {
     if (index == 2) {
       Navigator.of(context).pushReplacement(
         AppPageRoute(
-          builder: (_) => OutfitBuilderScreen(closetItems: _items),
+          builder: (_) => const OutfitBuilderScreen(),
         ),
       );
       return;
@@ -98,7 +107,7 @@ class _ClosetScreenState extends State<ClosetScreen> {
     if (index == 3) {
       Navigator.of(context).pushReplacement(
         AppPageRoute(
-          builder: (_) => CalendarScreen(closetItems: _items),
+          builder: (_) => const CalendarScreen(),
         ),
       );
       return;
@@ -108,22 +117,24 @@ class _ClosetScreenState extends State<ClosetScreen> {
     );
   }
 
-  void _toggleFavorite(ClothingItem item) {
-    setState(() {
-      final index = _items.indexWhere((i) => i.id == item.id);
-      if (index != -1) {
-        _items[index] = _items[index].copyWith(isHiddenGem: !_items[index].isHiddenGem);
-      }
-    });
+  Future<void> _toggleFavorite(ClothingItem item) async {
+    try {
+      await _closet.toggleFavorite(item.id);
+    } catch (e) {
+      _showError(e);
+    }
+  }
+
+  void _showError(Object e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendlyError(e))));
   }
 
   Future<void> _openAddClothes() async {
-    final added = await Navigator.of(context).push<ClothingItem>(
+    // Add Clothes saves to Supabase; the store then shows it here.
+    await Navigator.of(context).push<ClothingItem>(
       AppPageRoute(builder: (_) => const AddClothesScreen()),
     );
-    if (added != null) {
-      setState(() => _items.insert(0, added));
-    }
   }
 
   Future<void> _openDetail(ClothingItem item) async {
@@ -142,14 +153,11 @@ class _ClosetScreenState extends State<ClosetScreen> {
     _applyEditResult(item, result);
   }
 
+  /// Edits are already saved to Supabase by the time we're back here (the
+  /// store refreshes the grid); only a delete still needs its exit animation.
   void _applyEditResult(ClothingItem item, Object? result) {
     if (result == 'deleted') {
       setState(() => _removingIds.add(item.id));
-    } else if (result is ClothingItem) {
-      setState(() {
-        final index = _items.indexWhere((i) => i.id == result.id);
-        if (index != -1) _items[index] = result;
-      });
     }
   }
 
@@ -177,13 +185,16 @@ class _ClosetScreenState extends State<ClosetScreen> {
   }
 
   /// Called once a tile's exit animation has finished: only now is the
-  /// item really dropped from the list.
-  void _actuallyRemove(String id) {
+  /// item really deleted (database row, then its photo in Storage). If
+  /// that fails the tile comes back.
+  Future<void> _actuallyRemove(String id) async {
+    try {
+      await _closet.delete(id);
+    } catch (e) {
+      _showError(e);
+    }
     if (!mounted) return;
-    setState(() {
-      _items.removeWhere((i) => i.id == id);
-      _removingIds.remove(id);
-    });
+    setState(() => _removingIds.remove(id));
   }
 
   @override
@@ -238,7 +249,18 @@ class _ClosetScreenState extends State<ClosetScreen> {
                     ),
                     const SizedBox(height: Spacing.lg),
                     Expanded(
-                      child: filtered.isEmpty
+                      child: filtered.isEmpty && _closet.isLoading
+                          ? const Center(child: AppLoadingIndicator(size: 30))
+                          : filtered.isEmpty && _closet.error != null
+                          ? Center(
+                              child: EmptyState(
+                                message: _closet.error!,
+                                icon: Icons.cloud_off_rounded,
+                                buttonLabel: 'Try Again',
+                                onButtonPressed: _closet.load,
+                              ),
+                            )
+                          : filtered.isEmpty
                           ? Center(
                               child: EmptyState(
                                 message: _favoritesOnly
@@ -290,7 +312,9 @@ class _ClosetScreenState extends State<ClosetScreen> {
                                         child: ClothingCard(
                                           name: item.name,
                                           icon: item.icon,
-                                          isFavorite: item.isHiddenGem,
+                                          imageUrl: item.imageUrl,
+                                          backgroundColorName: item.color,
+                                          isFavorite: item.isFavorite,
                                           onFavoriteToggle: () => _toggleFavorite(item),
                                           onTap: () => _openDetail(item),
                                           onEdit: () => _openEdit(item),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../animations/app_motion.dart';
 
+import '../../data/closet_store.dart';
 import '../../models/clothing_item.dart';
+import '../../services/backend_errors.dart';
 import '../../theme.dart';
 import '../../widgets/back_circle_button.dart';
 import '../../widgets/bottom_nav_bar.dart';
@@ -30,11 +32,27 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   late ClothingItem _item = widget.item;
 
   Future<void> _edit() async {
-    final updated = await Navigator.of(context).push<ClothingItem>(
+    final result = await Navigator.of(context).push<Object?>(
       AppPageRoute(builder: (_) => EditItemScreen(item: _item)),
     );
-    if (updated != null) {
-      setState(() => _item = updated);
+    if (!mounted) return;
+    if (result == 'deleted') {
+      // Deleted from Edit Item: hand that on to Closet.
+      Navigator.of(context).pop('deleted');
+    } else if (result is ClothingItem) {
+      setState(() => _item = result);
+    }
+  }
+
+  /// Saves the heart to Supabase (the tile on Closet updates too).
+  Future<void> _toggleFavorite() async {
+    setState(() => _item = _item.copyWith(isFavorite: !_item.isFavorite));
+    try {
+      await ClosetStore.instance.toggleFavorite(_item.id);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _item = _item.copyWith(isFavorite: !_item.isFavorite));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendlyError(e))));
     }
   }
 
@@ -112,7 +130,14 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       border: Border.all(color: AppColors.blush, width: 1.5),
                       boxShadow: AppShadows.surface,
                     ),
-                    child: Center(child: ClothingThumb(icon: _item.icon, size: 160)),
+                    child: Center(
+                      child: ClothingThumb(
+                        icon: _item.icon,
+                        size: 240,
+                        imageUrl: _item.imageUrl,
+                        backgroundColorName: _item.color,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: Spacing.md),
                   Row(
@@ -125,10 +150,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         ),
                       ),
                       _HiddenGemToggle(
-                        active: _item.isHiddenGem,
-                        onTap: () => setState(
-                          () => _item = _item.copyWith(isHiddenGem: !_item.isHiddenGem),
-                        ),
+                        active: _item.isFavorite,
+                        onTap: _toggleFavorite,
                       ),
                     ],
                   ),

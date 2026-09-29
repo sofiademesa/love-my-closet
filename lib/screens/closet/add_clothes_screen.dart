@@ -3,8 +3,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../animations/app_motion.dart';
 
+import '../../data/closet_store.dart';
 import '../../data/filter_icons.dart';
 import '../../models/clothing_item.dart';
+import '../../services/backend_errors.dart';
 import '../../theme.dart';
 import '../../widgets/app_dropdown.dart';
 import '../../widgets/app_text_field.dart';
@@ -20,7 +22,8 @@ import 'adding_item_photo_screen.dart';
 /// Add Clothes: the "new item" form reached from the Closet FAB. Takes a
 /// photo (via [AddingItemPhotoScreen], which returns a background-removed
 /// PNG), a name, category, occasion tag, and
-/// color, then hands a new [ClothingItem] back to Closet.
+/// color, saves it to Supabase (details in the database, the transparent PNG
+/// in Storage), then hands the saved [ClothingItem] back.
 class AddClothesScreen extends StatefulWidget {
   const AddClothesScreen({super.key});
 
@@ -33,9 +36,10 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
   String? _category;
   String? _occasion;
   String? _color = 'Transparent';
-  /// Transparent PNG cutout from the photo flow. Held in memory only for now;
-  /// nothing is saved permanently yet.
+  /// Transparent PNG cutout from the photo flow. Uploaded as-is on Save; the
+  /// preview backdrop color is only stored as the item's Color.
   Uint8List? _photoBytes;
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -58,23 +62,32 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
     }
   }
 
-  void _save() {
+  Future<void> _save() async {
+    if (_saving) return;
     if (_nameController.text.trim().isEmpty || _category == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Add a name and category first, please!')),
       );
       return;
     }
-    Navigator.of(context).pop(
-      ClothingItem(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+    setState(() => _saving = true);
+    try {
+      final saved = await ClosetStore.instance.add(
         name: _nameController.text.trim(),
         category: _category!,
         occasion: _occasion ?? 'Everyday',
-        daysUnworn: 0,
         color: _color ?? 'Transparent',
-      ),
-    );
+        photoPng: _photoBytes,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop<ClothingItem>(saved);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(friendlyError(e))),
+      );
+    }
   }
 
   @override
@@ -140,7 +153,10 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: PrimaryButton(label: 'Save to Closet', onPressed: _save),
+                    child: PrimaryButton(
+                      label: _saving ? 'Saving…' : 'Save to Closet',
+                      onPressed: _saving ? null : _save,
+                    ),
                   ),
                   const SizedBox(width: Spacing.sm),
                   Expanded(

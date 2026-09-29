@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../services/auth_service.dart';
+import '../../services/backend_errors.dart';
 import '../../theme.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/primary_button.dart';
@@ -16,6 +18,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  bool _sending = false;
 
   @override
   void dispose() {
@@ -23,12 +26,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
-    // TODO: request the password reset from the backend.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Reset link sent! Check your email.')),
-    );
+  /// Asks Supabase to email a reset link. The link opens the app on the
+  /// Set New Password screen.
+  Future<void> _submit() async {
+    if (_sending || !_formKey.currentState!.validate()) return;
+    setState(() => _sending = true);
+    String message;
+    try {
+      await AuthService.sendPasswordReset(_emailController.text);
+      // Same wording whether or not the email has an account, so this
+      // screen can't be used to find out who is registered.
+      message = 'If that email has an account, a reset link is on its way. Check your inbox.';
+    } on BackendException catch (e) {
+      message = e.message;
+    }
+    if (!mounted) return;
+    setState(() => _sending = false);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -76,7 +90,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               validator: Validators.email,
             ),
             const SizedBox(height: Spacing.md),
-            PrimaryButton(label: 'Send Reset Link', onPressed: _submit),
+            PrimaryButton(
+              label: _sending ? 'Sending…' : 'Send Reset Link',
+              onPressed: _sending ? null : _submit,
+            ),
           ],
         ),
       ),

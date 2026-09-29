@@ -5,11 +5,14 @@ import '../../theme.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/primary_button.dart';
 
-/// Result of the "Save this look" sheet: the name and date the user chose.
+/// Result of the "Save this look" sheet: the name and date the user chose,
+/// plus the diary note when the sheet was opened with [showSaveLookSheet]'s
+/// `showNote`.
 class SaveLookResult {
-  const SaveLookResult({required this.name, required this.date});
+  const SaveLookResult({required this.name, required this.date, this.note});
   final String name;
   final DateTime date;
+  final String? note;
 }
 
 /// Shows the "Save this look" sheet from the mockup and resolves with the
@@ -18,20 +21,37 @@ Future<SaveLookResult?> showSaveLookSheet(
   BuildContext context, {
   String initialName = '',
   DateTime? initialDate,
+  bool showNote = false,
+  String? initialNote,
 }) {
   return showModalBottomSheet<SaveLookResult>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => SaveLookSheet(initialName: initialName, initialDate: initialDate),
+    builder: (_) => SaveLookSheet(
+      initialName: initialName,
+      initialDate: initialDate,
+      showNote: showNote,
+      initialNote: initialNote,
+    ),
   );
 }
 
 class SaveLookSheet extends StatefulWidget {
-  const SaveLookSheet({super.key, this.initialName = '', this.initialDate});
+  const SaveLookSheet({
+    super.key,
+    this.initialName = '',
+    this.initialDate,
+    this.showNote = false,
+    this.initialNote,
+  });
 
   final String initialName;
   final DateTime? initialDate;
+
+  /// Calendar's "Edit Details" also edits the day's diary note.
+  final bool showNote;
+  final String? initialNote;
 
   @override
   State<SaveLookSheet> createState() => _SaveLookSheetState();
@@ -40,12 +60,14 @@ class SaveLookSheet extends StatefulWidget {
 class _SaveLookSheetState extends State<SaveLookSheet> {
   late final _nameController = TextEditingController(text: widget.initialName);
   late final _dateController = TextEditingController(text: _dateLabel);
+  late final _noteController = TextEditingController(text: widget.initialNote ?? '');
   late DateTime _date = widget.initialDate ?? DateTime.now();
 
   @override
   void dispose() {
     _nameController.dispose();
     _dateController.dispose();
+    _noteController.dispose();
     super.dispose();
   }
 
@@ -71,7 +93,11 @@ class _SaveLookSheetState extends State<SaveLookSheet> {
   void _save() {
     final name = _nameController.text.trim();
     Navigator.of(context).pop(
-      SaveLookResult(name: name.isEmpty ? 'My Outfit' : name, date: _date),
+      SaveLookResult(
+        name: name.isEmpty ? 'My Outfit' : name,
+        date: _date,
+        note: widget.showNote ? _noteController.text.trim() : null,
+      ),
     );
   }
 
@@ -138,6 +164,16 @@ class _SaveLookSheetState extends State<SaveLookSheet> {
               onTap: _pickDate,
               suffixIcon: Icons.calendar_month_rounded,
             ),
+            if (widget.showNote) ...[
+              const SizedBox(height: Spacing.md),
+              AppTextField(
+                label: 'Note',
+                controller: _noteController,
+                hintText: "How did today's look feel?",
+                maxLines: 3,
+                textInputAction: TextInputAction.done,
+              ),
+            ],
             const SizedBox(height: Spacing.lg),
             Row(
               children: [

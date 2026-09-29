@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../animations/app_motion.dart';
 
-import '../../data/accessibility_store.dart';
 import '../../theme.dart';
 import '../../widgets/dot_pattern.dart';
 import '../../widgets/page_dots.dart';

@@ -19,6 +19,7 @@ class PhotoPicker extends StatelessWidget {
     required this.onPick,
     this.onRemove,
     this.icon = Icons.checkroom_rounded,
+    this.imageUrl,
   });
 
   final String? imagePath;
@@ -33,10 +34,13 @@ class PhotoPicker extends StatelessWidget {
   final VoidCallback? onRemove;
   final IconData icon;
 
+  /// An already-saved photo (signed Storage URL), e.g. on Edit Item.
+  final String? imageUrl;
+
   @override
   Widget build(BuildContext context) {
     final bytes = imageBytes;
-    final hasPhoto = imagePath != null || bytes != null;
+    final hasPhoto = imagePath != null || bytes != null || imageUrl != null;
 
     return AspectRatio(
       aspectRatio: 1.4,
@@ -57,6 +61,27 @@ class PhotoPicker extends StatelessWidget {
                               bytes,
                               fit: BoxFit.contain,
                               gaplessPlayback: true,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : imageUrl != null
+                  // Already-saved photo (Edit Item): same full-size preview
+                  // on the chosen backdrop as a freshly picked one.
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(AppRadius.field),
+                      child: SizedBox.expand(
+                        child: PhotoPreviewBackground(
+                          colorName: backgroundColorName,
+                          child: Padding(
+                            padding: const EdgeInsets.all(Spacing.sm),
+                            child: Image.network(
+                              imageUrl!,
+                              fit: BoxFit.contain,
+                              gaplessPlayback: true,
+                              errorBuilder: (context, error, stack) =>
+                                  Center(child: ClothingThumb(icon: icon, size: 96)),
                             ),
                           ),
                         ),
