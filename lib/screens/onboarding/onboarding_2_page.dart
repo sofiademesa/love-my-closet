@@ -6,13 +6,20 @@ import 'onboarding_slide.dart';
 
 /// Onboarding 2: the avatar card in a carousel + "love your closet" headline.
 class Onboarding2Page extends StatelessWidget {
-  const Onboarding2Page({super.key});
+  const Onboarding2Page({super.key, this.textOpacity = 1, this.textOffsetY = 0});
+
+  /// Set by [OnboardingFlow] so the headline rises in once the closet view
+  /// has settled, instead of overlapping Onboarding 1's headline.
+  final double textOpacity;
+  final double textOffsetY;
 
   @override
   Widget build(BuildContext context) {
     return OnboardingSlide(
       eyebrow: 'HERE\u2019S THE FIX',
       headline: 'Maybe it\u2019s time to love your closet',
+      textOpacity: textOpacity,
+      textOffsetY: textOffsetY,
       illustration: (width, height) =>
           _AvatarCarousel(cardWidth: width, cardHeight: height),
     );

@@ -13,10 +13,20 @@ class OnboardingSlide extends StatelessWidget {
     required this.eyebrow,
     required this.headline,
     required this.illustration,
+    this.textOpacity = 1,
+    this.textOffsetY = 0,
   });
 
   final String eyebrow;
   final String headline;
+
+  /// Lets [OnboardingFlow] fade the eyebrow + headline on their own timing,
+  /// separately from the artwork, so two headlines never cross-fade on top
+  /// of each other during the closet-opening transition.
+  final double textOpacity;
+
+  /// Vertical drift (logical pixels) for the text during that transition.
+  final double textOffsetY;
 
   /// Builds the artwork for the given size.
   final Widget Function(double width, double height) illustration;
@@ -78,23 +88,34 @@ class OnboardingSlide extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: Spacing.md),
-                    Text(
-                      eyebrow,
-                      style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                        color: AppColors.hotPink,
-                      ),
-                    ),
-                    const SizedBox(height: Spacing.sm),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 260),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
-                        child: Text(
-                          headline,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineSmall,
+                    Opacity(
+                      opacity: textOpacity.clamp(0.0, 1.0).toDouble(),
+                      child: Transform.translate(
+                        offset: Offset(0, textOffsetY),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              eyebrow,
+                              style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.5,
+                                color: AppColors.hotPink,
+                              ),
+                            ),
+                            const SizedBox(height: Spacing.sm),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 260),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
+                                child: Text(
+                                  headline,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.headlineSmall,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

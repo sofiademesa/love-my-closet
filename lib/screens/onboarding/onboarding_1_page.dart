@@ -13,15 +13,26 @@ import 'onboarding_slide.dart';
 /// reveal a peek of the closet interior underneath, so the transition to
 /// Onboarding 2 reads as "the closet opening" rather than a plain slide.
 class Onboarding1Page extends StatelessWidget {
-  const Onboarding1Page({super.key, this.openProgress = 0});
+  const Onboarding1Page({
+    super.key,
+    this.openProgress = 0,
+    this.textOpacity = 1,
+    this.textOffsetY = 0,
+  });
 
   final double openProgress;
+
+  /// Set by [OnboardingFlow] so the headline leaves before the doors open.
+  final double textOpacity;
+  final double textOffsetY;
 
   @override
   Widget build(BuildContext context) {
     return OnboardingSlide(
       eyebrow: 'SOUND FAMILIAR?',
       headline: 'When \u2018nothing to wear\u2019 is your daily problem...',
+      textOpacity: textOpacity,
+      textOffsetY: textOffsetY,
       illustration: (width, height) => _ClosetDoors(
         width: width,
         height: height,

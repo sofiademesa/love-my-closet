@@ -37,17 +37,20 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   void _goTo(int page) {
-    // The closet-opening boundary (Onboarding 1 <-> 2) runs a touch longer
-    // and softer so the door swing + push-in zoom actually reads instead of
-    // being rushed; the rest of the flow keeps a snappier "next" feel.
+    // The closet-opening boundary (Onboarding 1 <-> 2) is a little scene with
+    // its own stages (see [_ClosetStages]), each with its own easing. The
+    // page itself therefore moves at an even, gentle pace here: a strong
+    // ease-in-out would squeeze the whole door swing into a split second in
+    // the middle, which is what made it feel like the closet just popped
+    // open. The rest of the flow keeps a snappier "next" feel.
     final openingCloset =
         (_page == 0 && page == 1) || (_page == 1 && page == 0);
     _controller.animateToPage(
       page,
       duration: kMotionDuration(
-        Duration(milliseconds: openingCloset ? 620 : 350),
+        Duration(milliseconds: openingCloset ? 1150 : 350),
       ),
-      curve: openingCloset ? Curves.easeInOutCubic : Curves.easeOutCubic,
+      curve: openingCloset ? Curves.easeInOutSine : Curves.easeOutCubic,
     );
   }
 
@@ -55,13 +58,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     if (_page < _landingIndex) _goTo(_page + 1);
   }
 
-  /// The default [PageView] slides the whole card sideways, which is what
-  /// made this read as plain "next paging". For the Onboarding1 <-> 2
-  /// boundary specifically, this cancels that built-in slide (both pages
-  /// stay put, dead centre) and replaces it with a cross-fade + push-in
-  /// zoom, so it plays like the camera moving through the closet doors as
-  /// they swing open, rather than two cards passing each other. Every other
-  /// boundary (2 <-> Landing) keeps the normal slide untouched.
+  /// The default [PageView] slides the whole card sideways, which reads as
+  /// plain "next paging". For the Onboarding 1 <-> 2 boundary this cancels
+  /// that slide (both pages stay put, dead centre) and plays the stages in
+  /// [_ClosetStages] instead: doors swing open, the camera pushes in, and the
+  /// closet view dissolves into Onboarding 2. Every other boundary
+  /// (2 <-> Landing) keeps the normal slide untouched.
   Widget _transitionChild({
     required int index,
     required double page,
@@ -72,9 +74,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
     if (index == 0) {
       // Only the forward half (departing into Onboarding 2) is customized.
-      final t = delta.clamp(0.0, 1.0);
+      final t = delta.clamp(0.0, 1.0).toDouble();
       if (t <= 0) return child;
-      final eased = Curves.easeIn.transform(t);
+      final stages = _ClosetStages(t);
       return IgnorePointer(
         ignoring: t > 0.02,
         child: Transform.translate(
@@ -82,8 +84,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           // centred instead of sliding off to the left.
           offset: Offset(delta * width, 0),
           child: Opacity(
-            opacity: (1 - eased).clamp(0.0, 1.0),
-            child: Transform.scale(scale: 1 + eased * 0.10, child: child),
+            opacity: stages.closetOpacity,
+            child: Transform.scale(scale: stages.closetZoom, child: child),
           ),
         ),
       );
@@ -92,16 +94,16 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     if (index == 1) {
       // Only the backward half (arriving from Onboarding 1) is customized;
       // moving on toward Landing keeps the default slide.
-      final t = delta.clamp(-1.0, 0.0);
-      if (t >= 0) return child;
-      final eased = Curves.easeOut.transform(1 + t);
+      final d = delta.clamp(-1.0, 0.0).toDouble();
+      if (d >= 0) return child;
+      final stages = _ClosetStages(1 + d);
       return IgnorePointer(
-        ignoring: eased < 0.98,
+        ignoring: stages.t < 0.98,
         child: Transform.translate(
           offset: Offset(delta * width, 0),
           child: Opacity(
-            opacity: eased.clamp(0.0, 1.0),
-            child: Transform.scale(scale: 1.14 - eased * 0.14, child: child),
+            opacity: stages.nextOpacity,
+            child: Transform.scale(scale: stages.nextScale, child: child),
           ),
         ),
       );
@@ -179,7 +181,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                                   _controller.position.haveDimensions) {
                                 page = _controller.page ?? page;
                               }
-                              final openProgress = page.clamp(0.0, 1.0);
+                              final stages = _ClosetStages(
+                                page.clamp(0.0, 1.0).toDouble(),
+                              );
 
                               return PageView(
                                 controller: _controller,
@@ -191,14 +195,19 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                                     page: page,
                                     width: width,
                                     child: Onboarding1Page(
-                                      openProgress: openProgress,
+                                      openProgress: stages.doorOpen,
+                                      textOpacity: stages.oldTextOpacity,
+                                      textOffsetY: stages.oldTextOffsetY,
                                     ),
                                   ),
                                   _transitionChild(
                                     index: 1,
                                     page: page,
                                     width: width,
-                                    child: const Onboarding2Page(),
+                                    child: Onboarding2Page(
+                                      textOpacity: stages.newTextOpacity,
+                                      textOffsetY: stages.newTextOffsetY,
+                                    ),
                                   ),
                                   LandingPage(
                                     onSignUp: _openCreateAccount,
@@ -250,4 +259,53 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       ),
     );
   }
+}
+
+/// Timeline of the Onboarding 1 -> 2 "closet opening", worked out from how
+/// far the pages have moved ([t]: 0 = on Onboarding 1, 1 = on Onboarding 2).
+///
+/// Each effect gets its own window and easing so they happen one after
+/// another instead of all at once:
+///
+///   0.00-0.25  "nothing to wear" text drifts down and fades out
+///   0.05-0.60  doors swing open (eased at both ends)
+///   0.00-1.00  camera keeps pushing gently into the closet
+///   0.50-0.90  closet view dissolves...
+///   0.50-1.00  ...while Onboarding 2's card settles in from a slight zoom
+///   0.70-1.00  the new headline rises into place
+///
+/// Swiping runs the same timeline under the finger; backing up plays it in
+/// reverse. With Reduce Motion on, the page jump is instant, so none of it
+/// shows.
+class _ClosetStages {
+  _ClosetStages(this.t);
+
+  final double t;
+
+  static const _oldText = Interval(0.0, 0.25, curve: Curves.easeOut);
+  static const _doors = Interval(0.05, 0.60, curve: Curves.easeInOutCubic);
+  static const _push = Interval(0.0, 1.0, curve: Curves.easeInCubic);
+  static const _closetOut = Interval(0.50, 0.90, curve: Curves.easeIn);
+  static const _nextIn = Interval(0.50, 0.90, curve: Curves.easeOut);
+  static const _nextSettle = Interval(0.50, 1.0, curve: Curves.easeOutCubic);
+  static const _newText = Interval(0.70, 1.0, curve: Curves.easeOutCubic);
+
+  /// Door swing for [Onboarding1Page.openProgress] (0 closed, 1 open).
+  double get doorOpen => _doors.transform(t);
+
+  double get oldTextOpacity => 1 - _oldText.transform(t);
+  double get oldTextOffsetY => _oldText.transform(t) * 10;
+
+  /// Onboarding 1 as a whole: pushes in and dissolves late, once the doors
+  /// are already open.
+  double get closetZoom => 1 + _push.transform(t) * 0.12;
+  double get closetOpacity => 1 - _closetOut.transform(t);
+
+  /// Onboarding 2 as a whole: fades in and settles from a slight zoom, as
+  /// if arriving from the push-in.
+  double get nextOpacity => _nextIn.transform(t);
+  double get nextScale => 1.08 - _nextSettle.transform(t) * 0.08;
+
+  double get newTextOpacity => _newText.transform(t);
+  double get newTextOffsetY => (1 - _newText.transform(t)) * 14;
 }
