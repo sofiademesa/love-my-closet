@@ -35,7 +35,7 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
   final _nameController = TextEditingController();
   String? _category;
   String? _occasion;
-  String? _color = 'Transparent';
+  String? _color = defaultClothingColor;
   /// Transparent PNG cutout from the photo flow. Uploaded as-is on Save; the
   /// preview backdrop color is only stored as the item's Color.
   Uint8List? _photoBytes;
@@ -50,7 +50,7 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
   Future<void> _pickPhoto() async {
     final photo = await Navigator.of(context).push<ProcessedPhoto>(
       AppPageRoute(
-        builder: (_) => AddingItemPhotoScreen(initialBackground: _color ?? 'Transparent'),
+        builder: (_) => AddingItemPhotoScreen(initialBackground: _color ?? defaultClothingColor),
       ),
     );
     if (photo != null) {
@@ -76,7 +76,7 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
         name: _nameController.text.trim(),
         category: _category!,
         occasion: _occasion ?? 'Everyday',
-        color: _color ?? 'Transparent',
+        color: _color ?? defaultClothingColor,
         photoPng: _photoBytes,
       );
       if (!mounted) return;
@@ -115,7 +115,7 @@ class _AddClothesScreenState extends State<AddClothesScreen> {
               const SizedBox(height: Spacing.md),
               PhotoPicker(
                 imageBytes: _photoBytes,
-                backgroundColorName: _color ?? 'Transparent',
+                backgroundColorName: _color ?? defaultClothingColor,
                 onPick: _pickPhoto,
                 onRemove: () => setState(() => _photoBytes = null),
               ),

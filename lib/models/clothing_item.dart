@@ -19,8 +19,16 @@ const clothingColors = [
   'White',
   'Black',
   'Multicolor',
-  'Transparent',
 ];
+
+/// Default Color for new items and the fallback for anything unrecognised.
+const defaultClothingColor = 'White';
+
+/// Maps a stored color to one that is still offered. Items saved before
+/// 'Transparent' was removed (or any unknown value) become White, so the
+/// Color dropdown never receives a value that isn't in its list.
+String normalizeClothingColor(String? name) =>
+    name != null && clothingColors.contains(name) ? name : defaultClothingColor;
 
 /// Occasion tags used by the Occasion Tags chip picker, matching the design
 /// system's FilterChips component.
@@ -38,7 +46,7 @@ class ClothingItem {
     required this.occasion,
     this.daysUnworn = 0,
     this.icon = Icons.checkroom_rounded,
-    this.color = 'Transparent',
+    this.color = defaultClothingColor,
     this.isFavorite = false,
     this.timesWorn = 0,
     this.lastWorn,

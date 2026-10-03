@@ -27,11 +27,8 @@ class ProcessedPhoto {
   final String backgroundColorName;
 }
 
-/// Preview backdrops, Transparent first (the default).
-final List<String> _previewBackgrounds = [
-  'Transparent',
-  ...clothingColors.where((c) => c != 'Transparent'),
-];
+/// Preview backdrops: the same colors as the Color dropdown (White default).
+final List<String> _previewBackgrounds = List.unmodifiable(clothingColors);
 
 enum _Phase { idle, picking, processing }
 
@@ -42,7 +39,7 @@ enum _Phase { idle, picking, processing }
 class AddingItemPhotoScreen extends StatefulWidget {
   const AddingItemPhotoScreen({
     super.key,
-    this.initialBackground = 'Transparent',
+    this.initialBackground = defaultClothingColor,
     this.photoSource,
     this.backgroundRemover,
   });
@@ -75,7 +72,7 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
 
   late String _background = _previewBackgrounds.contains(widget.initialBackground)
       ? widget.initialBackground
-      : 'Transparent';
+      : defaultClothingColor;
 
   bool get _busy => _phase != _Phase.idle;
   bool get _processing => _phase == _Phase.processing;

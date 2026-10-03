@@ -32,7 +32,7 @@ class ClothingColorDot extends StatelessWidget {
     ],
   );
 
-  /// Solid swatch color for [name], or null for 'Transparent' / 'Multicolor'
+  /// Solid swatch color for [name], or null for 'Multicolor'
   /// / unknown names. Lets other widgets (e.g. the photo preview background)
   /// reuse this palette instead of duplicating it.
   static Color? swatchFor(String name) => _swatches[name];
@@ -42,7 +42,6 @@ class ClothingColorDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (name == 'Transparent') return _buildTransparent();
     final isMulti = name == 'Multicolor';
     return Container(
       width: size,
@@ -59,49 +58,4 @@ class ClothingColorDot extends StatelessWidget {
       ),
     );
   }
-
-  /// Neutral gray/white checkerboard (not pink, so it stays readable on the
-  /// pale-pink selected row), the usual "see-through" cue.
-  Widget _buildTransparent() {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: AppColors.mutedBrown.withValues(alpha: 0.18),
-          width: 1,
-        ),
-      ),
-      child: ClipOval(
-        child: CustomPaint(
-          painter: _CheckerPainter(const Color(0xFFCFCBD1)),
-        ),
-      ),
-    );
-  }
-}
-
-class _CheckerPainter extends CustomPainter {
-  _CheckerPainter(this.tint);
-
-  final Color tint;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const cells = 4;
-    final cell = size.width / cells;
-    canvas.drawRect(Offset.zero & size, Paint()..color = AppColors.white);
-    final paint = Paint()..color = tint;
-    for (var r = 0; r < cells; r++) {
-      for (var c = 0; c < cells; c++) {
-        if ((r + c).isOdd) {
-          canvas.drawRect(Rect.fromLTWH(c * cell, r * cell, cell, cell), paint);
-        }
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_CheckerPainter old) => old.tint != tint;
 }

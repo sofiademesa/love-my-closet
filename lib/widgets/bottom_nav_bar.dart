@@ -105,7 +105,7 @@ class _NavIcon extends StatelessWidget {
         duration: kMotionDuration(const Duration(milliseconds: 220)),
         curve: Curves.easeOut,
         padding: EdgeInsets.symmetric(
-          horizontal: selected ? 12 : 10,
+          horizontal: selected ? 12 : 8,
           vertical: 10,
         ),
         decoration: BoxDecoration(
@@ -116,7 +116,8 @@ class _NavIcon extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _icon(fg),
-            AnimatedSize(
+            Flexible(
+              child: AnimatedSize(
               duration: kMotionDuration(const Duration(milliseconds: 220)),
               curve: Curves.easeOut,
               child: selected
@@ -140,6 +141,7 @@ class _NavIcon extends StatelessWidget {
                       ],
                     )
                   : const SizedBox(width: 0, height: 22),
+            ),
             ),
           ],
         ),

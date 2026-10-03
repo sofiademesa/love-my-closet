@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../models/clothing_item.dart';
 import '../theme.dart';
 import 'clothing_thumb.dart';
 import 'photo_preview_background.dart';
@@ -15,7 +16,7 @@ class PhotoPicker extends StatelessWidget {
     super.key,
     this.imagePath,
     this.imageBytes,
-    this.backgroundColorName = 'Transparent',
+    this.backgroundColorName = defaultClothingColor,
     required this.onPick,
     this.onRemove,
     this.icon = Icons.checkroom_rounded,
@@ -27,8 +28,8 @@ class PhotoPicker extends StatelessWidget {
   /// A real photo to display. Takes priority over [imagePath].
   final Uint8List? imageBytes;
 
-  /// Preview-only backdrop behind [imageBytes] ('Transparent' shows a
-  /// checkerboard). Never merged into the image itself.
+  /// Preview-only backdrop behind [imageBytes]. Never merged into the
+  /// image itself.
   final String backgroundColorName;
   final VoidCallback onPick;
   final VoidCallback? onRemove;

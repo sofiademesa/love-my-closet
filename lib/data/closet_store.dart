@@ -293,7 +293,7 @@ class ClosetStore extends ChangeNotifier {
       name: row.name,
       category: row.category,
       occasion: row.occasion,
-      color: row.color,
+      color: normalizeClothingColor(row.color),
       isFavorite: row.isFavorite,
       imagePath: row.imagePath,
       imageUrl: row.imagePath == null ? null : _signedUrls[row.imagePath],

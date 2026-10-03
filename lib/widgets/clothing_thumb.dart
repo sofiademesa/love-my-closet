@@ -5,8 +5,7 @@ import 'clothing_color_dot.dart';
 
 /// Square tile for a clothing photo: the backdrop color picked for the item
 /// (the Color field on Add Clothes / Edit Item) with its transparent PNG
-/// cutout on top. 'Transparent' (or no color) keeps the soft blush-to-pink
-/// gradient. Items without a photo (or while
+/// cutout on top. No color keeps the soft blush-to-pink gradient. Items without a photo (or while
 /// it loads, or if it can't be fetched) show a garment icon instead, so
 /// cards always read clearly as "an item of clothing".
 class ClothingThumb extends StatelessWidget {
@@ -30,8 +29,8 @@ class ClothingThumb extends StatelessWidget {
   /// Signed URL of the item's transparent PNG (from Supabase Storage).
   final String? imageUrl;
 
-  /// The item's Color (e.g. 'White', 'Multicolor'). Null or 'Transparent'
-  /// shows the default pink gradient.
+  /// The item's Color (e.g. 'White', 'Multicolor'). Null shows
+  /// the default pink gradient.
   final String? backgroundColorName;
 
   @override
