@@ -16,6 +16,7 @@ import '../calendar/calendar_screen.dart';
 import '../closet/add_clothes_screen.dart';
 import '../closet/closet_screen.dart';
 import '../outfit_builder/outfit_builder_screen.dart';
+import '../../widgets/heart_avatar.dart';
 import '../profile/profile_screen.dart';
 import 'hidden_gems_sheet.dart';
 
@@ -34,7 +35,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _navIndex = 0;
 
-  // The name shown here always reflects Edit Profile's latest save, not the
+  // The name shown here always reflects the saved display name, not the
   // value this screen happened to be constructed with — so it listens to
   // the shared store the same way Calendar/Builder listen to OutfitStore.
   final _profileStore = UserProfileStore.instance;
@@ -360,17 +361,7 @@ class _Header extends StatelessWidget {
           ),
         ),
         const SizedBox(width: Spacing.sm),
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.blush,
-            border: Border.all(color: AppColors.softPink, width: 1.5),
-            boxShadow: AppShadows.surface,
-          ),
-          child: Icon(Icons.person_rounded, color: AppColors.buttonPink),
-        ),
+        const HeartAvatar(width: 56, small: true),
       ],
     );
   }
