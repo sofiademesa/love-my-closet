@@ -90,6 +90,60 @@ class AuthService {
     }
   }
 
+  /// Re-sends the sign-up confirmation email.
+  static Future<void> resendConfirmation(String email) async {
+    _requireBackend();
+    try {
+      await supabase.auth.resend(
+        type: OtpType.signup,
+        email: email.trim(),
+        emailRedirectTo: _webRedirectUrl,
+      );
+    } catch (e) {
+      throw BackendException(friendlyError(e));
+    }
+  }
+
+  /// Confirms the account with the 6-digit code from the sign-up email.
+  /// On success Supabase signs the user in, so no Log In is needed.
+  static Future<void> verifySignupCode({
+    required String email,
+    required String code,
+  }) async {
+    _requireBackend();
+    try {
+      RememberMeLocalStorage.rememberMe = true;
+      await supabase.auth.verifyOTP(
+        email: email.trim(),
+        token: code.trim(),
+        type: OtpType.signup,
+      );
+    } catch (e) {
+      throw BackendException(friendlyError(e));
+    }
+  }
+
+  /// Used by the "Check your email" screen to find out whether the link has
+  /// been confirmed yet (in this tab, another tab, or on another device).
+  /// Returns true once signed in, false while the email is still unconfirmed.
+  /// Any other problem throws.
+  static Future<bool> trySignInAfterConfirm({
+    required String email,
+    required String password,
+  }) async {
+    _requireBackend();
+    try {
+      RememberMeLocalStorage.rememberMe = true;
+      await supabase.auth.signInWithPassword(email: email.trim(), password: password);
+      return true;
+    } on AuthException catch (e) {
+      if (e.code == 'email_not_confirmed') return false;
+      throw BackendException(friendlyError(e));
+    } catch (e) {
+      throw BackendException(friendlyError(e));
+    }
+  }
+
   static Future<void> signOut() async {
     if (!SupabaseConfig.isInitialized) return;
     try {

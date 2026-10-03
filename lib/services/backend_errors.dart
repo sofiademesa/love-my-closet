@@ -23,6 +23,9 @@ String friendlyError(Object error) {
         return 'That email and password don’t match. Please try again.';
       case 'email_not_confirmed':
         return 'Please confirm your email first. Check your inbox for the link.';
+      case 'otp_expired':
+      case 'otp_disabled':
+        return 'That code is wrong or has expired. Check it or tap Resend.';
       case 'user_already_exists':
       case 'email_exists':
         return 'An account with this email already exists. Try logging in.';

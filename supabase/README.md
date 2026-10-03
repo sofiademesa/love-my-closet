@@ -87,3 +87,18 @@ psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
 ```
 
 Every check prints `PASS`; any failure stops with an error.
+
+## 5. Sign-up email code (no new tab)
+
+The "Check your email" screen lets new users type a 6-digit code instead of
+opening the link. In the Supabase dashboard go to **Authentication → Email
+Templates → Confirm signup** and make sure the body contains the code:
+
+```html
+<h2>Confirm your email</h2>
+<p>Your code: <strong>{{ .Token }}</strong></p>
+<p>Or <a href="{{ .ConfirmationURL }}">tap this link</a>.</p>
+```
+
+Under **Authentication → Providers → Email**, the code length/expiry can be
+adjusted (default 6 digits, valid 1 hour).

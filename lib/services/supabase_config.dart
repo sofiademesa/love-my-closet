@@ -77,6 +77,11 @@ class SupabaseConfig {
         url: url,
         anonKey: publishableKey,
         authOptions: FlutterAuthClientOptions(
+          // Implicit flow: the email link carries the session itself, so it
+          // signs the user in (straight to Home) in ANY browser or device,
+          // not only the one used to sign up. PKCE would need the same
+          // browser and falls back to Log In otherwise.
+          authFlowType: AuthFlowType.implicit,
           // Honors the "Remember me" checkbox on Log In.
           localStorage: RememberMeLocalStorage(
             persistSessionKey:

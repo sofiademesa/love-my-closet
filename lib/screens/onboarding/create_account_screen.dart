@@ -9,6 +9,7 @@ import '../../widgets/app_text_field.dart';
 import '../../widgets/primary_button.dart';
 import 'auth_layout.dart';
 import 'log_in_screen.dart';
+import 'verify_email_screen.dart';
 
 /// Create Account: full name, email, password, confirm password.
 class CreateAccountScreen extends StatefulWidget {
@@ -48,19 +49,17 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       );
       if (!mounted) return;
       if (outcome == SignUpOutcome.confirmEmail) {
-        // Email confirmation is on. Clicking the link opens the app signed
-        // in (straight to Home), and this tab follows along on its own; Log
-        // In is only the fallback if the link is opened in another browser.
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Almost there! Check your email and tap the link to confirm your '
-              'account. You’ll be signed in automatically.',
+        // Email confirmation is on. Wait on a "Check your email" screen that
+        // signs in by itself the moment the link is confirmed, wherever it
+        // was opened, so nobody has to log in a second time.
+        Navigator.of(context).pushReplacement(
+          AppPageRoute<void>(
+            builder: (_) => VerifyEmailScreen(
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
             ),
-            duration: Duration(seconds: 8),
           ),
         );
-        _goToLogIn();
         return;
       }
       await AuthFlow.enterApp();
