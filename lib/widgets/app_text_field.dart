@@ -6,7 +6,7 @@ import '../theme.dart';
 /// sheet). The onboarding screens use the compact style from the mockup:
 /// set `showLabel: false` and the label becomes the placeholder inside the
 /// field, next to an optional [prefixIcon].
-class AppTextField extends StatelessWidget {
+class AppTextField extends StatefulWidget {
   const AppTextField({
     super.key,
     required this.label,
@@ -46,6 +46,15 @@ class AppTextField extends StatelessWidget {
   /// Defaults to a single line.
   final int maxLines;
 
+  @override
+  State<AppTextField> createState() => _AppTextFieldState();
+}
+
+class _AppTextFieldState extends State<AppTextField> {
+  /// Only used when [AppTextField.obscureText] is true (password fields):
+  /// the eye icon flips this so people can check what they typed.
+  late bool _hidden = widget.obscureText;
+
   OutlineInputBorder _border(Color color, [double width = 1.5]) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.field),
@@ -57,31 +66,47 @@ class AppTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final body = textTheme.bodyMedium!;
+    final w = widget;
+
+    // Password fields get an eye button to show / hide what was typed.
+    final Widget? suffix = w.obscureText
+        ? IconButton(
+            tooltip: _hidden ? 'Show password' : 'Hide password',
+            onPressed: () => setState(() => _hidden = !_hidden),
+            icon: Icon(
+              _hidden
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              color: AppColors.mutedBrown,
+              size: 20,
+            ),
+          )
+        : (w.suffixIcon == null
+            ? null
+            : Icon(w.suffixIcon, color: AppColors.mutedBrown, size: 20));
 
     final field = TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      validator: validator,
-      onFieldSubmitted: onFieldSubmitted,
-      readOnly: readOnly,
-      onTap: onTap,
-      maxLines: maxLines,
-      textAlignVertical: maxLines > 1 ? TextAlignVertical.top : null,
+      controller: w.controller,
+      obscureText: w.obscureText && _hidden,
+      keyboardType: w.keyboardType,
+      textInputAction: w.textInputAction,
+      validator: w.validator,
+      onFieldSubmitted: w.onFieldSubmitted,
+      readOnly: w.readOnly,
+      onTap: w.onTap,
+      maxLines: w.obscureText ? 1 : w.maxLines,
+      textAlignVertical: w.maxLines > 1 ? TextAlignVertical.top : null,
       style: body,
       cursorColor: AppColors.buttonPink,
       decoration: InputDecoration(
-        hintText: hintText ?? (showLabel ? null : label),
+        hintText: w.hintText ?? (w.showLabel ? null : w.label),
         hintStyle: body.copyWith(
           color: AppColors.mutedBrown.withValues(alpha: 0.6),
         ),
-        prefixIcon: prefixIcon == null
+        prefixIcon: w.prefixIcon == null
             ? null
-            : Icon(prefixIcon, color: AppColors.mutedBrown, size: 20),
-        suffixIcon: suffixIcon == null
-            ? null
-            : Icon(suffixIcon, color: AppColors.mutedBrown, size: 20),
+            : Icon(w.prefixIcon, color: AppColors.mutedBrown, size: 20),
+        suffixIcon: suffix,
         filled: true,
         fillColor: AppColors.white,
         contentPadding: const EdgeInsets.symmetric(
@@ -96,12 +121,12 @@ class AppTextField extends StatelessWidget {
       ),
     );
 
-    if (!showLabel) return field;
+    if (!w.showLabel) return field;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: body),
+        Text(w.label, style: body),
         const SizedBox(height: Spacing.sm),
         field,
       ],
