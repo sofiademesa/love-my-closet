@@ -84,42 +84,88 @@ Love My Closet helps users get more out of the clothes they already own. Here is
 
 ## Running it yourself
 
-> Just want to try the app? Use the [live demo](https://sofiademesa.github.io/love-my-closet/). The steps below are only for running your own copy, which needs your own free Supabase project.
+> Just want to try the app? Use the [live demo](https://sofiademesa.github.io/love-my-closet/).
 
 Requires Flutter with Dart SDK `^3.8.0` (Flutter 3.32 or newer). Check yours with `flutter --version`.
 
-1. **Set up Supabase.** Follow [`supabase/README.md`](supabase/README.md): create a project, run the SQL migrations in [`supabase/migrations/`](supabase/migrations/), and set the auth redirect URLs.
-2. **Clone and install:**
+**Quick start.** The app ships with the project's public Supabase URL and publishable key as defaults, so it runs with no setup:
 
-   ```bash
-   git clone https://github.com/sofiademesa/love-my-closet.git
-   cd love-my-closet
-   flutter pub get
-   ```
+```bash
+git clone https://github.com/sofiademesa/love-my-closet.git
+cd love-my-closet
+flutter pub get
+flutter run -d chrome
+```
 
-3. **Add your keys.** Create an `env.json` file in the project root. It is git-ignored, so never commit it:
+Accounts you create this way are stored in the author's Supabase project, so use a test account.
 
-   ```json
-   {
-     "SUPABASE_URL": "https://xxxx.supabase.co",
-     "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_..."
-   }
-   ```
+### Use your own Supabase backend (optional)
 
-4. **Run it:**
+Only needed if you want your own copy of the app with its own separate database, for example to keep test accounts out of the author's project. You need a free [Supabase](https://supabase.com) account.
 
-   ```bash
-   flutter run -d chrome --web-port 5000 --dart-define-from-file=env.json
-   ```
+**1. Create a project**
 
-### Environment variables
+Go to the [Supabase dashboard](https://supabase.com/dashboard) and create a new project. The Free plan is enough.
 
-| Variable | What it is | Where to get one |
-| --- | --- | --- |
-| `SUPABASE_URL` | The URL of your Supabase project | Supabase dashboard → Project Settings → API |
-| `SUPABASE_PUBLISHABLE_KEY` | Public publishable (anon) key, safe to use because RLS protects the data | Supabase dashboard → Project Settings → API Keys |
+**2. Create the database**
 
-Never use the secret / `service_role` key in the app. It is not needed, and the app refuses to start if it is given one. The deploy workflow reads the same two names from repository secrets.
+1. In your project, open **SQL Editor → New query**.
+2. Open [`supabase/migrations/20260929000000_love_my_closet_schema.sql`](supabase/migrations/20260929000000_love_my_closet_schema.sql) in this repo, copy all of it, paste it into the editor, and click **Run**.
+
+This one script creates the tables, the Row Level Security policies, the `save_outfit` function, and the private `clothing-images` storage bucket. It is safe to run again. You can ignore the second file, `20261001000000_outfit_piece_scale.sql`: it only upgrades projects that were set up before piece resizing existed.
+
+**3. Set the auth redirect URLs**
+
+Go to **Authentication → URL Configuration** and set:
+
+- **Site URL:** `http://localhost:5000/` (or your deployed URL, if you host it)
+- **Redirect URLs:** add `http://localhost:5000/`
+
+Password-reset and confirm-email links only work for URLs listed here.
+
+**4. Enable email sign-up**
+
+Go to **Authentication → Providers → Email** and make sure it is enabled. Leave "Confirm email" on, so new users confirm their email before logging in.
+
+To let users type the 6-digit code instead of opening the link, go to **Authentication → Email Templates → Confirm signup** and make sure the body contains `{{ .Token }}`, for example:
+
+```html
+<h2>Confirm your email</h2>
+<p>Your code: <strong>{{ .Token }}</strong></p>
+<p>Or <a href="{{ .ConfirmationURL }}">tap this link</a>.</p>
+```
+
+**5. Copy your keys**
+
+Go to **Project Settings → API Keys** and copy:
+
+- the **Project URL** (`https://xxxx.supabase.co`)
+- the **publishable key** (starts with `sb_publishable_`)
+
+Never copy the secret / `service_role` key into this project. The app does not need it and refuses to start if it is given one.
+
+**6. Add your keys to the app**
+
+Create a file named `env.json` in the project root. It is git-ignored, so it will not be committed:
+
+```json
+{
+  "SUPABASE_URL": "https://xxxx.supabase.co",
+  "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_..."
+}
+```
+
+**7. Run the app**
+
+```bash
+flutter run -d chrome --web-port 5000 --dart-define-from-file=env.json
+```
+
+Use port 5000 so it matches the redirect URL from step 3. Create an account, confirm your email, and the app now uses your own Supabase project.
+
+**Note:** Supabase's built-in email sender only allows a few emails per hour, which is fine for testing. For real users, add your own SMTP under **Authentication → SMTP Settings**.
+
+More detail on the data model and the RLS isolation test is in [`supabase/README.md`](supabase/README.md).
 
 ## Privacy and secrets
 
