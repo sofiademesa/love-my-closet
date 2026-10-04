@@ -1,38 +1,26 @@
 # Demo video
 
-**File:** `demo.mp4` in this folder, or the hosted link (see below)
-**Length:** aim for 3 to 5 minutes
-**Recorded on:** the device you used
+**File:** [Watch the demo video on Google Drive](https://drive.google.com/drive/folders/1ENsXnS1F7lNJyDt4Lj1jMHNdJeBugn4f?usp=sharing)  
+**Length:** 10 minutes 58 seconds  
+**Recorded on:** Desktop computer
 
 ## What it shows
 
-A short list, in order, so a viewer can skip to what they need:
+A walkthrough of **Love My Closet (LMC)**, a digital closet app designed to help users organize their wardrobe, create outfits, and plan what to wear.
 
-- 0:00 what the app is and who it is for
-- 0:20 ...
-- 1:10 ...
-
-Cover, in this order: the main user journey end to end, anything that only works
-on a real device (camera, GPS, sensors), and the thing you are proudest of.
+- **0:00 – 0:14** — Introduction
+- **0:15 – 0:28** — Problem
+- **0:29 – 0:48** — Love My Closet overview
+- **0:49 – 1:00** — Demo introduction
+- **1:00 – 2:01** — Onboarding, login, and sign-up
+- **2:02 – 4:33** — Digital Closet
+- **4:34 – 5:32** — Outfit Builder
+- **5:33 – 6:13** — Calendar
+- **6:14 – 9:00** — Profile
+- **9:01 – 9:47** — Technology Stack
+- **9:48 – 10:43** — Challenges and what's next
+- **10:44 – 10:58** — Ending
 
 ## Getting it into the repo
 
-GitHub **blocks any file over 100 MB** and warns over 50 MB, so compress before
-you commit:
-
-```bash
-ffmpeg -i raw.mp4 -vcodec libx264 -crf 28 -preset slow \
-       -vf scale=-2:720 -acodec aac -b:a 96k demo.mp4
-```
-
-Raise `-crf` (28 to 32) or drop to `-2:480` if it is still too large. If it still
-does not fit, attach it to a **GitHub Release** or upload it unlisted and link it
-here. Never commit the raw capture: git keeps it forever even after you delete
-it.
-
-## Before you record
-
-- Real data off the screen: no classmates' names, numbers, faces or messages.
-- Notifications off.
-- Sensible sample data, not "asdf".
-- One unbroken take per feature. Say what you are doing while you do it.
+The demo video is hosted on Google Drive to avoid GitHub's file size limitations.
