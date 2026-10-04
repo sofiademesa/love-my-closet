@@ -14,10 +14,26 @@ This repository contains the final project developed for 6ADET. It is public for
 ---
 
 ## Screenshots
-
-| Home | Detail | Add |
+ 
+**Getting started**
+ 
+| Onboarding 1 | Onboarding 2 | Landing |
 | --- | --- | --- |
-| ![Home](docs/assets/screen-home.png) | ![Detail](docs/assets/screen-detail.png) | ![Add](docs/assets/screen-add.png) |
+| ![Onboarding 1](docs/assets/screen-onboarding-1.png) | ![Onboarding 2](docs/assets/screen-onboarding-2.png) | ![Landing](docs/assets/screen-landing.png) |
+ 
+| Create Account | Log In |
+| --- | --- |
+| ![Create Account](docs/assets/screen-signup.png) | ![Log In](docs/assets/screen-login.png) |
+ 
+**Main app**
+ 
+| Home | Closet | Add Clothes |
+| --- | --- | --- |
+| ![Home](docs/assets/screen-home.png) | ![Closet](docs/assets/screen-closet.png) | ![Add Clothes](docs/assets/screen-add.png) |
+ 
+| Outfit Builder | Calendar | Profile |
+| --- | --- | --- |
+| ![Outfit Builder](docs/assets/screen-builder.png) | ![Calendar](docs/assets/screen-calendar.png) | ![Profile](docs/assets/screen-profile.png) |
 
 ## Who it is for
 
