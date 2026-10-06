@@ -106,31 +106,40 @@ class ClothingCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: Spacing.sm),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: textTheme.bodyMedium!.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
+                  // The name row is a fixed 28px so a long name can wrap to a
+                  // second line instead of being cut off. On the Closet grid
+                  // that fits inside the height the grid already reserves, so
+                  // the tile doesn't change; on Home every tile is the same
+                  // height, whether its name is one line or two.
+                  SizedBox(
+                    height: 28,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.bodyMedium!.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12.5,
+                              height: 1.1,
+                            ),
                           ),
                         ),
-                      ),
-                      if (onFavoriteToggle != null)
-                        // Nudged in from the card's edge, in from the
-                        // same amount as the "more" circle above, so the
-                        // two sit in one column instead of hugging it.
-                        Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: _FavoriteHeart(
-                            active: isFavorite,
-                            onTap: onFavoriteToggle!,
+                        if (onFavoriteToggle != null)
+                          // Nudged in from the card's edge, in from the
+                          // same amount as the "more" circle above, so the
+                          // two sit in one column instead of hugging it.
+                          Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: _FavoriteHeart(
+                              active: isFavorite,
+                              onTap: onFavoriteToggle!,
+                            ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                   if (daysUnworn != null) ...[
                     const SizedBox(height: 4),

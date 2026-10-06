@@ -8,7 +8,8 @@ import '../../widgets/dot_pattern.dart';
 import '../../widgets/heart_avatar.dart';
 import '../../widgets/primary_button.dart';
 
-/// Edit Profile: update display name, email, bio, and photo. Saving writes
+/// Edit Profile: update display name, email, and bio. The avatar is the
+/// app's logo, so there is no photo upload. Saving writes
 /// to the Supabase `profiles` table through [UserProfileStore], so Profile,
 /// Home's greeting, and Closet's header all pick up the change immediately
 /// and it persists between sessions. A new email goes through Supabase
@@ -61,12 +62,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  void _photoComingSoon() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming soon!')),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -108,36 +103,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
               ),
               const SizedBox(height: Spacing.lg),
-              Center(
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    const HeartAvatar(width: 170),
-                    Positioned(
-                      right: 4,
-                      bottom: 4,
-                      child: GestureDetector(
-                        onTap: _photoComingSoon,
-                        child: Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: AppColors.buttonPink,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.white, width: 2),
-                            boxShadow: AppShadows.surface,
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt_rounded,
-                            color: AppColors.white,
-                            size: 16,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const Center(child: HeartAvatar(width: 170)),
               const SizedBox(height: Spacing.lg),
               AppTextField(
                 label: 'Display Name',

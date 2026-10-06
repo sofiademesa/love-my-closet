@@ -15,6 +15,7 @@ import 'services/auth_service.dart';
 import 'services/supabase_config.dart';
 import 'theme.dart';
 import 'widgets/heart_avatar.dart';
+import 'widgets/mouse_drag_scroll_behavior.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -177,6 +178,10 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           navigatorKey: appNavigatorKey,
           scaffoldMessengerKey: appMessengerKey,
+
+          // Lets every scrollable in the app (chip rows, lists) be dragged with a
+          // mouse on desktop/web, not just touch.
+          scrollBehavior: const MouseDragScrollBehavior(),
 
           // These two lines make the DevicePreview toolbar actually change the
           // app. Keep them.
