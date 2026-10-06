@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../animations/app_motion.dart';
 import '../theme.dart';
+import 'mouse_drag_scroll_behavior.dart';
 
 /// Builds a chip's leading icon at the given [size], tinted [color] —
 /// matching the chip's active (white) or inactive (muted brown) state.
@@ -11,20 +12,6 @@ typedef ChipIconBuilder = Widget Function(
   double size,
   Color color,
 );
-
-/// The Material default only lets touch, stylus and trackpad drag a
-/// scroll view — a mouse click-drag does nothing. This row is meant to be
-/// scrollable on desktop/web too (e.g. presenting on a laptop with no
-/// touchscreen), so mouse is added to the draggable devices.
-class _MouseDragScrollBehavior extends MaterialScrollBehavior {
-  @override
-  Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.trackpad,
-      };
-}
 
 /// Horizontally-scrolling row of single-select pills. Used for the category
 /// and occasion filters on Closet and Hidden Gems, and for the Occasion Tags
@@ -153,7 +140,7 @@ class _FilterChipsState extends State<FilterChips> {
             stops: const [0, 0.08, 0.88, 1],
           ).createShader(rect),
           child: ScrollConfiguration(
-            behavior: _MouseDragScrollBehavior(),
+            behavior: const MouseDragScrollBehavior(),
             child: row,
           ),
         ),

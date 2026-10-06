@@ -11,6 +11,7 @@ import '../../theme.dart';
 import '../../widgets/back_circle_button.dart';
 import '../../widgets/clothing_color_dot.dart';
 import '../../widgets/dot_pattern.dart';
+import '../../widgets/mouse_drag_scroll_behavior.dart';
 import '../../widgets/photo_preview_background.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/secondary_button.dart';
@@ -447,7 +448,9 @@ class _BackgroundPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final labelStyle = Theme.of(context).textTheme.labelSmall!.copyWith(fontSize: 10);
 
-    return SingleChildScrollView(
+    return ScrollConfiguration(
+      behavior: const MouseDragScrollBehavior(),
+      child: SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
@@ -493,6 +496,7 @@ class _BackgroundPicker extends StatelessWidget {
               ),
             ),
         ],
+      ),
       ),
     );
   }

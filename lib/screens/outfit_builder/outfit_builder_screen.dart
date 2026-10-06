@@ -326,6 +326,10 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
         SnackBar(
           content: const Text('Outfit cleared'),
           duration: const Duration(seconds: 5),
+          // A SnackBar with an action stays on screen forever by default in
+          // newer Flutter; persist: false restores the 5-second auto-dismiss.
+          persist: false,
+          showCloseIcon: true,
           action: SnackBarAction(
             label: 'Undo',
             onPressed: () {
