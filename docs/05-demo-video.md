@@ -19,7 +19,7 @@ A walkthrough of **Love My Closet (LMC)**, a digital closet app designed to help
 - **7:48 – 10:09** — Profile
 - **10:10 – 10:48** — Technology Stack
 - **10:49 – 12:01** — Challenges and what's next
-- **12:01 – 12:24** — Ending
+- **12:01 – 12:23** — Ending
 
 ## Getting it into the repo
 
