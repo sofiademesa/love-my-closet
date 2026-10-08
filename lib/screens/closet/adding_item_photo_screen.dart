@@ -60,7 +60,6 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
   late final BackgroundRemovalService _remover =
       widget.backgroundRemover ?? createBackgroundRemover();
 
-  bool _fromCamera = true;
   _Phase _phase = _Phase.idle;
   String? _error;
 
@@ -80,10 +79,9 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
   bool get _hasImage => _history.isNotEmpty;
   bool get _isCutout => _history.length > 1;
 
-  Future<void> _pick(ImageSource source) async {
+  Future<void> _pickFromGallery() async {
     if (_busy) return;
     setState(() {
-      _fromCamera = source == ImageSource.camera;
       _phase = _Phase.picking;
       _error = null;
     });
@@ -91,7 +89,7 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
     _remover.prepare();
 
     try {
-      final picked = await _photos.pick(source);
+      final Uint8List? picked = await _photos.pick(ImageSource.gallery);
       if (!mounted) return;
       if (picked == null) {
         // Cancelled: nothing to report, just stay where we were.
@@ -194,7 +192,7 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
     } else if (_hasImage) {
       statusText = 'Ready to remove the background.';
     } else {
-      statusText = 'Take a photo or pick one from your gallery.';
+      statusText = 'Pick a photo from your gallery.';
     }
 
     // The main button turns into "Remove Background" after an Undo (or a
@@ -222,33 +220,6 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
                     Text('Add Clothes', style: textTheme.headlineSmall!.copyWith(fontSize: 20)),
                   ],
                 ),
-                const SizedBox(height: Spacing.md),
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.blush, width: 1.5),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _SegmentButton(
-                          label: 'Take Photo',
-                          active: _fromCamera,
-                          onTap: _busy ? null : () => _pick(ImageSource.camera),
-                        ),
-                      ),
-                      Expanded(
-                        child: _SegmentButton(
-                          label: 'Choose from Gallery',
-                          active: !_fromCamera,
-                          onTap: _busy ? null : () => _pick(ImageSource.gallery),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: Spacing.lg),
                 Expanded(
                   child: Container(
@@ -267,7 +238,7 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
                             _EmptyPanel(
                               onTap: _busy
                                   ? null
-                                  : () => _pick(_fromCamera ? ImageSource.camera : ImageSource.gallery),
+                                  : _pickFromGallery,
                             )
                           else
                             // Checkerboard/color is only a widget behind the
@@ -497,50 +468,6 @@ class _BackgroundPicker extends StatelessWidget {
             ),
         ],
       ),
-      ),
-    );
-  }
-}
-
-/// Two-way "Take Photo / Choose from Gallery" segmented control.
-class _SegmentButton extends StatelessWidget {
-  const _SegmentButton({
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool active;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: AnimatedContainer(
-          duration: kMotionDuration(const Duration(milliseconds: 150)),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            gradient: active
-                ? LinearGradient(colors: [AppColors.softPink, AppColors.buttonPink])
-                : null,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'DMSans',
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: active ? AppColors.white : AppColors.mutedBrown,
-            ),
-          ),
-        ),
       ),
     );
   }
