@@ -185,3 +185,26 @@ I used AI mainly as a coding assistant during the development of Love My Closet.
 - **What it gave back:** Claude modified the existing Outfit Builder and its supporting functionality to implement the requested improvements. Clothing pieces could now be resized on the outfit board, and the selected scale could be saved as part of the outfit instead of being lost when the outfit was reopened. The implementation also updated the outfit data model and store to handle the new scale value and added the required Supabase database migration for the `scale` field in `outfit_items`. Claude also improved the interaction of the Outfit Builder by removing the unnecessary visual backdrop behind individual clothing pieces, making it clearer when a clothing item was already being used in the current outfit, improving the category-chip area so users could recognize that more categories were available by scrolling, and improving the empty board state. The clear-outfit behavior was also updated to provide an Undo option, and the subtitle was changed to explain that clothing pieces could be tapped or dragged onto the board.
 - **What I kept, what I changed, and why:** I kept the existing Outfit Builder structure, interaction pattern, and visual design because I did not want the feature redesigned from scratch. My goal was to improve the usability of the existing implementation based on problems I identified during testing. I kept the resizing functionality because it gives users more control over how clothing pieces are arranged on the outfit board, and I kept the database migration and related model/store changes because the `scale` value needs to persist when an outfit is saved and reopened. I also kept the Undo behavior because accidentally clearing an outfit should not force the user to rebuild it from the beginning. I reviewed the generated changes against the existing Love My Closet design and project structure and made sure the improvements felt like part of the existing application rather than a completely separate feature. The changes were committed together because the requested Outfit Builder improvements were implemented during the same development session and several of the changes, especially resizing, were connected across the UI, model, store, and database.
 - **Commit:** [ ](https://github.com/sofiademesa/love-my-closet/commit/234bd001b5073d4f6e8a1489e167ba861e82f947)https://github.com/sofiademesa/love-my-closet/commit/234bd001b5073d4f6e8a1489e167ba861e82f947
+
+## 2. Where the AI got it wrong
+
+### Case 1 - Favorites Became a Separate Navigation Tab
+
+- **What it gave me:** Claude added Favorites as a separate item in the bottom navigation, making it a sixth main navigation destination.
+- **What was wrong with it:** Favorites was supposed to be part of the Closet feature, not a separate main section. Adding another navigation tab also affected the navigation indexes and made the bottom navigation more crowded.
+- **What I did instead:** I removed the separate Favorites tab and moved Favorites into the Closet category/filter row. I also corrected the Closet navigation index and the Home navigation mapping so the rest of the navigation continued to work correctly.
+- **Commit:**[ 48d372d](https://github.com/sofiademesa/love-my-closet/commit/48d372d46c324c2046713551f6e568d2db71ab7c)
+
+### Case 2 - High Contrast Mode Changed the App Too Aggressively
+
+- **What it gave me:** Claude initially implemented the High Contrast accessibility setting by applying broad color changes across the application.
+- **What was wrong with it:** The implementation changed the existing pink palette too aggressively and made some of the colors appear overly bright and neon. Although the result increased contrast, it did not fit the existing visual design and made the interface uncomfortable to look at.
+- **What I did instead:** I asked Claude to revise the implementation so High Contrast would use specific, darker shades for text and accent colors instead of broadly changing the application's colors. I kept the existing backgrounds and overall visual identity and made sure that turning High Contrast off returned the application to its original appearance.
+- **Commit:**[ e163012](https://github.com/sofiademesa/love-my-closet/commit/e163012452ff9cc644e9e2885bcd399fd853285f)
+
+### Case 3 - Background Removal Initially Used a Paid API
+
+- **What it gave me:** When I first asked Claude to help implement the background-removal feature, its initial approach used a paid external background-removal API.
+- **What was wrong with it:** I did not want the feature to depend on a paid API or require ongoing API credits. I also wanted the photo-processing flow to work with the existing implementation in my project instead of introducing an unnecessary external service.
+- **What I did instead:** I rejected the paid API approach and directed the implementation toward the existing local/web background-removal setup. The final feature uses the existing U²-Net/ONNX-based implementation and focuses Claude's work on integrating the background-removal process into the Add Clothes photo flow.
+- **Commit:**[ 7f38864](https://github.com/sofiademesa/love-my-closet/commit/7f38864e556397361a7469e8278bd3fe20af4b8b)
