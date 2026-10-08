@@ -34,9 +34,10 @@
 
 ### Calendar
 
-| Calendar | Log Outfit | Selected Day |
-|:---:|:---:|:---:|
-| <img src="assets/mockup-calendar.png" width="150"> | <img src="assets/mockup-calendar-log-outfit.png" width="150"> | 
+| Calendar | Log Outfit |
+|:---:|:---:|
+| <img src="assets/mockup-calendar.png" width="150"> | <img src="assets/mockup-calendar-log-outfit.png" width="150"> |
+
 ### Profile
 
 | Profile | Edit Profile |
