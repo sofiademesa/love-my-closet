@@ -15,16 +15,14 @@ import '../../widgets/mouse_drag_scroll_behavior.dart';
 import '../../widgets/photo_preview_background.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/secondary_button.dart';
+import 'take_photo_screen.dart';
 
-/// What Adding Item Photo hands back to Add Clothes when Sofia taps
-/// "Use Photo".
+/// What Adding Item Photo hands back to Add Clothes when User taps "Use Photo".
 class ProcessedPhoto {
   const ProcessedPhoto({required this.bytes, required this.backgroundColorName});
 
-  /// Transparent PNG cutout. The preview backdrop is NOT baked into it.
   final Uint8List bytes;
 
-  /// The backdrop she previewed it on (a color name from [clothingColors]).
   final String backgroundColorName;
 }
 
@@ -33,8 +31,11 @@ final List<String> _previewBackgrounds = List.unmodifiable(clothingColors);
 
 enum _Phase { idle, picking, processing }
 
+/// Where the photo comes from, chosen with the toggle above the photo box.
+enum _PhotoMode { camera, gallery }
+
 /// Adding Item Photo: the capture/preview step reached from the photo box
-/// on Add Clothes. Lets Sofia take a photo or choose one from the gallery,
+/// on Add Clothes. Lets Users take a photo or choose one from the gallery,
 /// automatically removes the background, previews the transparent cutout,
 /// then Undo or Use Photo. Pops a [ProcessedPhoto] on Use Photo, or null.
 class AddingItemPhotoScreen extends StatefulWidget {
@@ -43,6 +44,7 @@ class AddingItemPhotoScreen extends StatefulWidget {
     this.initialBackground = defaultClothingColor,
     this.photoSource,
     this.backgroundRemover,
+    this.takePhoto,
   });
 
   final String initialBackground;
@@ -50,6 +52,10 @@ class AddingItemPhotoScreen extends StatefulWidget {
   /// Overridable so tests can fake the camera/gallery and the network.
   final PhotoSourceService? photoSource;
   final BackgroundRemovalService? backgroundRemover;
+
+  /// Opens the camera and returns the captured bytes (null if cancelled).
+  /// Defaults to [TakePhotoScreen]; overridable so tests can fake it.
+  final Future<Uint8List?> Function(BuildContext context)? takePhoto;
 
   @override
   State<AddingItemPhotoScreen> createState() => _AddingItemPhotoScreenState();
@@ -61,6 +67,7 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
       widget.backgroundRemover ?? createBackgroundRemover();
 
   _Phase _phase = _Phase.idle;
+  _PhotoMode _mode = _PhotoMode.camera;
   String? _error;
 
   /// Loading message: first-time model download, then the removal itself.
@@ -79,7 +86,20 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
   bool get _hasImage => _history.isNotEmpty;
   bool get _isCutout => _history.length > 1;
 
-  Future<void> _pickFromGallery() async {
+  Future<void> _pickFromGallery() =>
+      _getPhoto(() => _photos.pick(ImageSource.gallery));
+
+  Future<void> _takePhoto() => _getPhoto(() {
+        final take = widget.takePhoto;
+        if (take != null) return take(context);
+        return Navigator.of(context).push<Uint8List>(
+          MaterialPageRoute(builder: (_) => const TakePhotoScreen()),
+        );
+      });
+
+  /// Shared by Take Photo and Choose from Gallery: gets the photo, then
+  /// removes its background.
+  Future<void> _getPhoto(Future<Uint8List?> Function() source) async {
     if (_busy) return;
     setState(() {
       _phase = _Phase.picking;
@@ -89,7 +109,7 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
     _remover.prepare();
 
     try {
-      final Uint8List? picked = await _photos.pick(ImageSource.gallery);
+      final Uint8List? picked = await source();
       if (!mounted) return;
       if (picked == null) {
         // Cancelled: nothing to report, just stay where we were.
@@ -106,6 +126,13 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
       setState(() {
         _phase = _Phase.idle;
         _error = e.message;
+      });
+      return;
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _phase = _Phase.idle;
+        _error = "Couldn't get that photo. Please try again.";
       });
       return;
     }
@@ -192,7 +219,7 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
     } else if (_hasImage) {
       statusText = 'Ready to remove the background.';
     } else {
-      statusText = 'Pick a photo from your gallery.';
+      statusText = 'Take a photo or pick one from your gallery.';
     }
 
     // The main button turns into "Remove Background" after an Undo (or a
@@ -220,7 +247,12 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
                     Text('Add Clothes', style: textTheme.headlineSmall!.copyWith(fontSize: 20)),
                   ],
                 ),
-                const SizedBox(height: Spacing.lg),
+                const SizedBox(height: Spacing.md),
+                _PhotoModeToggle(
+                  selected: _mode,
+                  onSelected: _busy ? null : (mode) => setState(() => _mode = mode),
+                ),
+                const SizedBox(height: Spacing.md),
                 Expanded(
                   child: Container(
                     width: double.infinity,
@@ -238,7 +270,7 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
                             _EmptyPanel(
                               onTap: _busy
                                   ? null
-                                  : _pickFromGallery,
+                                  : (_mode == _PhotoMode.camera ? _takePhoto : _pickFromGallery),
                             )
                           else
                             // Checkerboard/color is only a widget behind the
@@ -334,7 +366,82 @@ class _AddingItemPhotoScreenState extends State<AddingItemPhotoScreen> {
   }
 }
 
-/// Shown before any photo is chosen.
+/// Take Photo | Choose from Gallery switch shown above the photo box.
+class _PhotoModeToggle extends StatelessWidget {
+  const _PhotoModeToggle({required this.selected, required this.onSelected});
+
+  final _PhotoMode selected;
+  final ValueChanged<_PhotoMode>? onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(AppRadius.button + 4),
+        border: Border.all(color: AppColors.blush, width: 1.5),
+        boxShadow: AppShadows.surface,
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _segment(_PhotoMode.camera, 'Take Photo')),
+          const SizedBox(width: 4),
+          Expanded(child: _segment(_PhotoMode.gallery, 'Choose from Gallery')),
+        ],
+      ),
+    );
+  }
+
+  Widget _segment(_PhotoMode mode, String label) {
+    final isSelected = mode == selected;
+    final radius = BorderRadius.circular(AppRadius.button);
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: radius,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onSelected == null ? null : () => onSelected!(mode),
+          child: AnimatedContainer(
+            duration: kMotionDuration(const Duration(milliseconds: 180)),
+            height: 42,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: Spacing.xs),
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              gradient: isSelected
+                  ? LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [AppColors.softPink, AppColors.buttonPink],
+                    )
+                  : null,
+              boxShadow: isSelected ? AppShadows.glow(AppColors.buttonPink) : null,
+            ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                maxLines: 1,
+                style: TextStyle(
+                  fontFamily: 'DMSans',
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? AppColors.white : AppColors.mutedBrown,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown before any photo is chosen. Tapping it uses the toggle's choice.
 class _EmptyPanel extends StatelessWidget {
   const _EmptyPanel({required this.onTap});
 

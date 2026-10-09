@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
-/// Picking a photo failed. [message] is safe to show to Sofia.
+/// Picking a photo failed. [message] is safe to show to user.
 class PhotoSourceException implements Exception {
   const PhotoSourceException(this.message);
   final String message;
@@ -12,7 +12,7 @@ class PhotoSourceException implements Exception {
 
 /// Take Photo / Choose from Gallery, returning the raw image bytes.
 ///
-/// Returns null when Sofia cancels. Permission problems and unreadable
+/// Returns null when user  cancels. Permission problems and unreadable
 /// files become a [PhotoSourceException] with a friendly message. Nothing is
 /// uploaded or saved: the bytes only live in memory.
 class PhotoSourceService {

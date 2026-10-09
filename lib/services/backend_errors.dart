@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// A problem talking to the backend. [message] is safe to show to Sofia.
+/// A problem talking to the backend. [message] is safe to show to user.
 class BackendException implements Exception {
   const BackendException(this.message);
   final String message;

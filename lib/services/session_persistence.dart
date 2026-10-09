@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 ///   storage on web, shared preferences on mobile) and survives a refresh or
 ///   app restart.
 /// - Remember me OFF: the session only lives in memory, so closing the tab or
-///   app signs Sofia out. Anything previously saved is wiped.
+///   app signs user out. Anything previously saved is wiped.
 ///
 /// Only the session tokens go through here; no closet data is cached.
 class RememberMeLocalStorage extends LocalStorage {

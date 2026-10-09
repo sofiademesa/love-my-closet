@@ -14,7 +14,7 @@ These users may check their physical closet, rely on memory, or browse photos on
 
 All of the core MVP features were built, tested, and deployed.
 
-- **Digital Closet:** Add clothing items using an image selected from the gallery, along with a name, category, color, and occasion. Clothing photos can have their backgrounds removed automatically on the user's device. Items can be searched, filtered by category, occasion, color, and favorites, marked as favorites, edited, and deleted.
+- **Digital Closet:** Add clothing items using a photo taken with the camera or selected from the gallery, along with a name, category, color, and occasion. Clothing photos can have their backgrounds removed automatically on the user's device. Items can be searched, filtered by category, occasion, color, and favorites, marked as favorites, edited, and deleted.
 
 - **Outfit Builder:** Select clothing pieces from the Closet and place them on an outfit board. Pieces can be tapped or dragged onto the board, moved, resized, rearranged, and removed. Users can save an outfit with a name and an optional date.
 
@@ -77,7 +77,7 @@ The feature uses an on-device/web-based **U²-Net/ONNX model with ONNX Runtime W
 
 The photo flow allows the user to:
 
-1. Choose an image from the gallery.
+1. Take a photo with the camera or choose an image from the gallery.
 2. Process the image and remove its background.
 3. Preview the resulting transparent clothing image.
 4. Undo the background removal if needed.

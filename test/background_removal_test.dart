@@ -10,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:final_project/screens/closet/adding_item_photo_screen.dart';
+import 'package:final_project/screens/closet/take_photo_screen.dart';
+import 'package:final_project/services/live_camera.dart';
 import 'package:final_project/services/background_removal_service.dart';
 import 'package:final_project/services/image_bytes.dart';
 import 'package:final_project/services/photo_source_service.dart';
@@ -25,10 +27,12 @@ class FakePhotoSource extends PhotoSourceService {
   Uint8List? result;
   PhotoSourceException? error;
   int calls = 0;
+  ImageSource? lastSource;
 
   @override
   Future<Uint8List?> pick(ImageSource source) async {
     calls++;
+    lastSource = source;
     if (error != null) throw error!;
     return result;
   }
@@ -112,6 +116,10 @@ void main() {
     ProcessedPhoto? popped;
     bool closed = false;
 
+    // Fake camera for Take Photo.
+    Uint8List? cameraResult;
+    int cameraCalls = 0;
+
     setUp(() {
       original = Uint8List.fromList(_png);
       cutout = Uint8List.fromList(_png);
@@ -119,6 +127,8 @@ void main() {
       remover = FakeRemover()..result = cutout;
       popped = null;
       closed = false;
+      cameraResult = Uint8List.fromList(_png);
+      cameraCalls = 0;
     });
 
     /// Opens the screen from a host page so we can see what it pops.
@@ -137,6 +147,10 @@ void main() {
                         builder: (_) => AddingItemPhotoScreen(
                           photoSource: photos,
                           backgroundRemover: remover,
+                          takePhoto: (_) async {
+                            cameraCalls++;
+                            return cameraResult;
+                          },
                         ),
                       ),
                     );
@@ -153,6 +167,13 @@ void main() {
       await tester.pumpAndSettle();
     }
 
+    /// Switches the toggle to Choose from Gallery, then taps the photo box.
+    Future<void> pickFromGallery(WidgetTester tester) async {
+      await tester.tap(find.text('Choose from Gallery'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tap to add a photo'));
+    }
+
     /// Lets queued async work (fake picker, fake remover) finish.
     Future<void> settle(WidgetTester tester) async {
       await tester.pump();
@@ -163,15 +184,62 @@ void main() {
       await openScreen(tester);
 
       expect(find.text('Tap to add a photo'), findsOneWidget);
-      expect(find.text('Pick a photo from your gallery.'), findsOneWidget);
+      expect(find.text('Take a photo or pick one from your gallery.'), findsOneWidget);
       expect(remover.calls, 0);
+    });
+
+    testWidgets('toggle offers Take Photo (default) and Choose from Gallery', (tester) async {
+      await openScreen(tester);
+      expect(find.text('Take Photo'), findsOneWidget);
+      expect(find.text('Choose from Gallery'), findsOneWidget);
+
+      // Picking a mode alone opens nothing.
+      await tester.tap(find.text('Choose from Gallery'));
+      await tester.pumpAndSettle();
+      expect(photos.calls, 0);
+      expect(cameraCalls, 0);
+    });
+
+    testWidgets('Take Photo uses the camera, then removes the background', (tester) async {
+      await openScreen(tester);
+
+      await tester.tap(find.text('Tap to add a photo'));
+      await settle(tester);
+      await tester.pumpAndSettle();
+
+      expect(cameraCalls, 1);
+      expect(photos.calls, 0); // gallery not opened
+      expect(remover.calls, 1);
+      expect(find.text('Background removed! Looks great.'), findsOneWidget);
+      expect(find.text('Use Photo'), findsOneWidget);
+    });
+
+    testWidgets('closing the camera without a photo changes nothing', (tester) async {
+      cameraResult = null;
+      await openScreen(tester);
+
+      await tester.tap(find.text('Tap to add a photo'));
+      await settle(tester);
+
+      expect(cameraCalls, 1);
+      expect(remover.calls, 0);
+      expect(find.text('Take a photo or pick one from your gallery.'), findsOneWidget);
+      expect(find.text('Take Photo'), findsOneWidget);
+    });
+
+    testWidgets('Choose from Gallery asks the gallery, not the camera', (tester) async {
+      await openScreen(tester);
+      await pickFromGallery(tester);
+      await settle(tester);
+      expect(photos.lastSource, ImageSource.gallery);
+      expect(cameraCalls, 0);
     });
 
     testWidgets('image selected -> processing state -> success', (tester) async {
       remover.gate = Completer<Uint8List>();
       await openScreen(tester);
 
-      await tester.tap(find.text('Tap to add a photo'));
+      await pickFromGallery(tester);
       await settle(tester);
 
       // Processing: overlay message is on screen, buttons are locked.
@@ -192,7 +260,7 @@ void main() {
 
     testWidgets('warms up the remover while the picker is open', (tester) async {
       await openScreen(tester);
-      await tester.tap(find.text('Tap to add a photo'));
+      await pickFromGallery(tester);
       await settle(tester);
       expect(remover.prepareCalls, 1);
     });
@@ -201,10 +269,10 @@ void main() {
       photos.result = null; // user cancelled
       await openScreen(tester);
 
-      await tester.tap(find.text('Tap to add a photo'));
+      await pickFromGallery(tester);
       await settle(tester);
 
-      expect(find.text('Pick a photo from your gallery.'), findsOneWidget);
+      expect(find.text('Take a photo or pick one from your gallery.'), findsOneWidget);
       expect(remover.calls, 0);
     });
 
@@ -212,7 +280,7 @@ void main() {
       photos.error = const PhotoSourceException('Photo access is turned off.');
       await openScreen(tester);
 
-      await tester.tap(find.text('Tap to add a photo'));
+      await pickFromGallery(tester);
       await settle(tester);
 
       expect(find.text('Photo access is turned off.'), findsOneWidget);
@@ -224,7 +292,7 @@ void main() {
       remover.error = const BackgroundRemovalException("Couldn't cut this one out.");
       await openScreen(tester);
 
-      await tester.tap(find.text('Tap to add a photo'));
+      await pickFromGallery(tester);
       await settle(tester);
       await tester.pumpAndSettle();
 
@@ -237,7 +305,7 @@ void main() {
       remover.error = StateError('boom');
       await openScreen(tester);
 
-      await tester.tap(find.text('Tap to add a photo'));
+      await pickFromGallery(tester);
       await settle(tester);
       await tester.pumpAndSettle();
 
@@ -250,7 +318,7 @@ void main() {
     testWidgets('retry after an error succeeds', (tester) async {
       remover.error = const BackgroundRemovalException('Try again');
       await openScreen(tester);
-      await tester.tap(find.text('Tap to add a photo'));
+      await pickFromGallery(tester);
       await settle(tester);
       await tester.pumpAndSettle();
       expect(find.text('Remove Background'), findsOneWidget);
@@ -267,7 +335,7 @@ void main() {
 
     testWidgets('Undo goes back to the original photo', (tester) async {
       await openScreen(tester);
-      await tester.tap(find.text('Tap to add a photo'));
+      await pickFromGallery(tester);
       await settle(tester);
       await tester.pumpAndSettle();
       expect(find.text('Use Photo'), findsOneWidget);
@@ -282,7 +350,7 @@ void main() {
 
     testWidgets('Use Photo hands back the cutout and closes the screen', (tester) async {
       await openScreen(tester);
-      await tester.tap(find.text('Tap to add a photo'));
+      await pickFromGallery(tester);
       await settle(tester);
       await tester.pumpAndSettle();
 
@@ -305,6 +373,90 @@ void main() {
       expect(popped, isNull);
     });
   });
+
+  group('TakePhotoScreen', () {
+    testWidgets('shows the error and the browser detail when the camera fails', (tester) async {
+      usePhoneSize(tester);
+      final camera = FakeLiveCamera()
+        ..openError = const LiveCameraException(
+          "Your camera couldn't start.",
+          detail: 'NotReadableError: Could not start video source',
+        );
+      await tester.pumpWidget(MaterialApp(
+        theme: buildAppTheme(),
+        home: TakePhotoScreen(camera: camera),
+      ));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.text("Your camera couldn't start."), findsOneWidget);
+      expect(find.text('NotReadableError: Could not start video source'), findsOneWidget);
+      expect(find.text('Try Again'), findsOneWidget);
+
+      // Try Again succeeds once the camera is free.
+      camera.openError = null;
+      await tester.tap(find.text('Try Again'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(find.text('Try Again'), findsNothing);
+    });
+
+    testWidgets('the shutter hands back the photo and turns the camera off', (tester) async {
+      usePhoneSize(tester);
+      final camera = FakeLiveCamera()..photo = Uint8List.fromList(_png);
+      Uint8List? popped;
+      await tester.pumpWidget(MaterialApp(
+        theme: buildAppTheme(),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: ElevatedButton(
+              onPressed: () async {
+                popped = await Navigator.of(context).push<Uint8List>(
+                  MaterialPageRoute(builder: (_) => TakePhotoScreen(camera: camera)),
+                );
+              },
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byWidgetPredicate(
+        (w) => w is Semantics && w.properties.label == 'Take photo',
+      ));
+      await tester.pumpAndSettle();
+
+      expect(popped, isNotNull);
+      expect(camera.closeCalls, greaterThanOrEqualTo(1));
+    });
+  });
+}
+
+/// Pretends to be the browser camera.
+class FakeLiveCamera implements LiveCamera {
+  LiveCameraException? openError;
+  Uint8List? photo;
+  int closeCalls = 0;
+
+  @override
+  Future<int> open() async {
+    if (openError != null) throw openError!;
+    return 1;
+  }
+
+  @override
+  Future<int> switchCamera() async => 1;
+
+  @override
+  Future<Uint8List> capture() async => photo!;
+
+  @override
+  void close() => closeCalls++;
+
+  @override
+  Widget buildPreview() => const SizedBox.expand();
 }
 
 class _ProgressRemover extends BackgroundRemovalService {

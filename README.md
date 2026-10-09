@@ -96,19 +96,19 @@ Love My Closet helps users get more out of the clothes they already own. Here is
 
 ## Built with
 
-|                    |                                                                                                                                                                        |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Framework          | Flutter (web and mobile)                                                                                                                                               |
-| Language           | Dart                                                                                                                                                                   |
-| State management   | `setState`                                                                                                                                                             |
-| Backend            | Supabase: Auth (accounts), Postgres (data), Storage (private photos)                                                                                                   |
-| Data security      | Supabase Row Level Security (RLS)                                                                                                                                      |
-| Background removal | `silueta` (a size-reduced U²-Net model) running on-device in the browser with ONNX Runtime Web                                                                         |
-| Packages           | `supabase_flutter` (backend), `image_picker` (camera and gallery), `url_launcher` (links on the About screen), `device_preview` (phone-frame preview while developing) |
-| Design             | Figma                                                                                                                                                                  |
-| Typography         | Young Serif (headings), DM Sans (body)                                                                                                                                 |
-| Deployment         | GitHub Actions to GitHub Pages                                                                                                                                         |
-| Version control    | Git and GitHub                                                                                                                                                         |
+|                    |                                                                                                                                                                                               |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework          | Flutter (web and mobile)                                                                                                                                                                      |
+| Language           | Dart                                                                                                                                                                                          |
+| State management   | `setState`                                                                                                                                                                                    |
+| Backend            | Supabase: Auth (accounts), Postgres (data), Storage (private photos)                                                                                                                          |
+| Data security      | Supabase Row Level Security (RLS)                                                                                                                                                             |
+| Background removal | `silueta` (a size-reduced U²-Net model) running on-device in the browser with ONNX Runtime Web                                                                                                |
+| Packages           | `supabase_flutter` (backend), `camera` (Take Photo viewfinder), `image_picker` (gallery), `url_launcher` (links on the About screen), `device_preview` (phone-frame preview while developing) |
+| Design             | Figma                                                                                                                                                                                         |
+| Typography         | Young Serif (headings), DM Sans (body)                                                                                                                                                        |
+| Deployment         | GitHub Actions to GitHub Pages                                                                                                                                                                |
+| Version control    | Git and GitHub                                                                                                                                                                                |
 
 ## Running it yourself
 
