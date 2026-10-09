@@ -4,7 +4,7 @@ import 'on_device_background_remover_stub.dart'
     if (dart.library.js_interop) 'on_device_background_remover_web.dart'
     as on_device;
 
-/// Background removal failed. [message] is safe to show to Sofia.
+/// Background removal failed. [message] is safe to show to user.
 class BackgroundRemovalException implements Exception {
   const BackgroundRemovalException(this.message);
   final String message;

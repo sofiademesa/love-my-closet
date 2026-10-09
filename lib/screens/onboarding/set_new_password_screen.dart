@@ -10,7 +10,7 @@ import '../../widgets/primary_button.dart';
 import '../home/home_screen.dart';
 import 'auth_layout.dart';
 
-/// Opened automatically when Sofia follows the link in a password-reset
+/// Opened automatically when user follows the link in a password-reset
 /// email (Forgot Password). Same look as Log In / Forgot Password.
 class SetNewPasswordScreen extends StatefulWidget {
   const SetNewPasswordScreen({super.key});

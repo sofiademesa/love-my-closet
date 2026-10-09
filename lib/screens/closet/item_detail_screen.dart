@@ -14,7 +14,7 @@ import '../../widgets/secondary_button.dart';
 import 'edit_item_screen.dart';
 
 /// Clothing Item: a closet item's full detail, reached by tapping a tile
-/// on Closet. Lets Sofia mark it a hidden gem, edit it, or delete it.
+/// on Closet. 
 class ItemDetailScreen extends StatefulWidget {
   const ItemDetailScreen({super.key, required this.item, this.originIndex = 1});
 
