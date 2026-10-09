@@ -2,7 +2,7 @@
 
 > Love My Closet is a digital wardrobe app for people who own plenty of clothes but keep wearing the same few. It helps them keep track of what they own, plan outfits, and rediscover pieces they rarely wear.
 
-*You own it. You just forgot you do.*
+*Made to be Loved Again*
 
 **Live demo:** <https://sofiademesa.github.io/love-my-closet/>
 **Demo video:** [docs/demo.mp4](docs/demo.mp4)
