@@ -40,6 +40,7 @@ class OutfitBuilderScreen extends StatefulWidget {
     this.userName = 'Sofia',
     this.editOutfitId,
     this.startWithItemId,
+    this.initialDate,
   });
 
   final String userName;
@@ -54,6 +55,8 @@ class OutfitBuilderScreen extends StatefulWidget {
   /// to tweak. Saving updates that same outfit in Supabase instead of
   /// creating a duplicate.
   final String? editOutfitId;
+
+  final DateTime? initialDate;
 
   @override
   State<OutfitBuilderScreen> createState() => _OutfitBuilderScreenState();
@@ -365,7 +368,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     final result = await showSaveLookSheet(
       context,
       initialName: editing?.name ?? '',
-      initialDate: editing?.date,
+      initialDate: editing?.date ?? widget.initialDate,
     );
     if (result == null || !mounted) return;
     final pieces = _boardPieces

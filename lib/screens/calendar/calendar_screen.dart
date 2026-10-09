@@ -108,22 +108,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     setState(() => _selectedDate = date);
   }
 
-  Future<void> _openLogOutfit() async {
-    // The "+" action always goes straight to the Outfit Builder to build
-    // (or pick and re-save) a look.
-    await Navigator.of(context).push(
-      AppPageRoute(
-        builder: (_) => OutfitBuilderScreen(userName: widget.userName),
-      ),
-    );
-    // OutfitStore's own listener already triggers a rebuild once an entry
-    // is saved, but this covers the (rare) case the screen closes without a
-    // notifyListeners in between.
-    if (mounted) setState(() {});
-  }
-
-  /// Tapping an empty day opens Log Outfit, to record that a saved look
-  /// was worn on that date with a diary note.
   Future<void> _openLogForSelectedDate() async {
     await Navigator.of(context).push(
       AppPageRoute(builder: (_) => LogOutfitScreen(date: _selectedDate)),
@@ -203,8 +187,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       style: textTheme.headlineSmall!.copyWith(fontSize: 26),
                     ),
                   ),
-                  const SizedBox(height: Spacing.sm),
-                  _DottedDivider(),
                   const SizedBox(height: Spacing.md),
                   Container(
                     width: double.infinity,
@@ -314,12 +296,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           style: textTheme.headlineSmall!.copyWith(fontSize: 18),
                         ),
                         const SizedBox(height: Spacing.sm),
-                        if (selectedOutfits.isEmpty)
-                          GestureDetector(
-                            onTap: _openLogForSelectedDate,
-                            child: const _NoOutfitCard(),
-                          )
-                        else
+                        if (selectedOutfits.isEmpty) ...[
+                          const _NoOutfitCard(),
+                          const SizedBox(height: Spacing.sm),
+                        ] else
                           for (final outfit in selectedOutfits) ...[
                             PressableScale(
                               scale: 0.98,
@@ -330,29 +310,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             ),
                             const SizedBox(height: Spacing.sm),
                           ],
+                        PressableScale(
+                          scale: 0.98,
+                          child: _AddOutfitBar(
+                            date: _selectedDate,
+                            onTap: _openLogForSelectedDate,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ],
-              ),
-              // Floating "log outfit" action, sitting above the nav bar.
-              Positioned(
-                right: Spacing.md,
-                bottom: 92,
-                child: PressableScale(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: AppShadows.glow(AppColors.buttonPink),
-                    ),
-                    child: FloatingActionButton(
-                      onPressed: _openLogOutfit,
-                      backgroundColor: AppColors.buttonPink,
-                      foregroundColor: AppColors.white,
-                      child: const Icon(Icons.add_rounded),
-                    ),
-                  ),
-                ),
               ),
               Positioned(
                 left: Spacing.md,
@@ -363,36 +331,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DottedDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 1,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          const dashWidth = 5.0;
-          const gap = 4.0;
-          final count = (constraints.maxWidth / (dashWidth + gap)).floor();
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              for (var i = 0; i < count; i++)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: gap / 2),
-                  child: Container(
-                    width: dashWidth,
-                    height: 1.5,
-                    color: AppColors.softPink.withValues(alpha: 0.35),
-                  ),
-                ),
-            ],
-          );
-        },
       ),
     );
   }
@@ -492,6 +430,70 @@ class _DayCell extends StatelessWidget {
                     : const SizedBox.shrink(key: ValueKey('nodot')),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class _AddOutfitBar extends StatelessWidget {
+  const _AddOutfitBar({required this.date, required this.onTap});
+
+  final DateTime date;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(AppRadius.card);
+    final label = 'Add outfit for ${_kMonthNames[date.month - 1]} ${date.day}';
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: Material(
+        color: AppColors.white,
+        borderRadius: radius,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              border: Border.all(color: AppColors.blush, width: 1.5),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm + 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(colors: [AppColors.softPink, AppColors.buttonPink]),
+                    ),
+                    child: Icon(Icons.add_rounded, size: 18, color: AppColors.white),
+                  ),
+                  const SizedBox(width: Spacing.sm),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'DMSans',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.hotPink,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
