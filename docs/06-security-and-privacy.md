@@ -6,14 +6,14 @@ This repository is public. This page was filled in honestly and is dated.
 
 ## What this app stores
 
-| Data | Where it lives | Who can see it |
-| --- | --- | --- |
-| Account email and password (password stored only as a hash) | Supabase Auth | Only that user. I can see the email as project owner in the Supabase dashboard; I cannot see passwords. |
-| Clothing items (category, color, season, occasion, wear history) | Supabase PostgreSQL | Only the user who owns the row (Row Level Security) |
-| Saved outfits and Outfit Diary entries | Supabase PostgreSQL | Only the user who owns the row (Row Level Security) |
-| Photos of clothing | Supabase Storage, private bucket | Only the owner, through short-lived signed URLs |
-| Background-removed images | Created in the browser (U²-Net via ONNX Runtime Web); only the result is uploaded | Same as photos above. The original image is not sent to any third-party AI service. |
-| UI state (current filters, selected tab) | In memory on the device (`setState`) | Only that user, lost on reload |
+| Data                                                             | Where it lives                                                                    | Who can see it                                                                                          |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Account email and password (password stored only as a hash)      | Supabase Auth                                                                     | Only that user. I can see the email as project owner in the Supabase dashboard; I cannot see passwords. |
+| Clothing items (category, color, season, occasion, wear history) | Supabase PostgreSQL                                                               | Only the user who owns the row (Row Level Security)                                                     |
+| Saved outfits and Outfit Diary entries                           | Supabase PostgreSQL                                                               | Only the user who owns the row (Row Level Security)                                                     |
+| Photos of clothing                                               | Supabase Storage, private bucket                                                  | Only the owner, through short-lived signed URLs                                                         |
+| Background-removed images                                        | Created in the browser (U²-Net via ONNX Runtime Web); only the result is uploaded | Same as photos above. The original image is not sent to any third-party AI service.                     |
+| UI state (current filters, selected tab)                         | In memory on the device (`setState`)                                              | Only that user, lost on reload                                                                          |
 
 ## Secrets
 
@@ -22,7 +22,7 @@ Values my app needs at run time (names only):
 - `SUPABASE_URL`
 - `SUPABASE_PUBLISHABLE_KEY`
 
-Where they live locally: `env.json`, which is git-ignored. `.env.example` is committed with placeholders only.
+Where they live locally: `lib/services/supabase_config.dart` has this project's public URL and publishable key as defaults, so the app runs with no setup; a git-ignored `env.json` overrides them. `.env.example` is committed with placeholders only.
 
 Where the deploy workflow gets them: repository secrets (Settings > Secrets and variables > Actions). `.github/workflows/deploy-web.yml` reads them as `${{ secrets.SUPABASE_URL }}` and `${{ secrets.SUPABASE_PUBLISHABLE_KEY }}` and passes them to the build with `--dart-define`.
 
@@ -51,4 +51,4 @@ How I checked: listed every policy with `select * from pg_policies where scheman
 
 ## Keys found and revoked
 
-None found while doing this check. 
+None found while doing this check.

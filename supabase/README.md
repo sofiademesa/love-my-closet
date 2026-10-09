@@ -41,8 +41,9 @@ add your own SMTP under Auth → SMTP Settings before real users sign up.
 
 ## 2. Where the two values go
 
-They are public project identifiers (safe in a web build, protected by RLS),
-but still keep them out of git so the repo stays clean.
+They are public project identifiers (safe in a web build, protected by RLS).
+If you set up your own project, put its values in `env.json` (git-ignored)
+rather than editing the defaults in `supabase_config.dart`.
 
 | Where               | What                                                                                                                                                                                                                         |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

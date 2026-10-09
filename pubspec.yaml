@@ -20,8 +20,8 @@ dependencies:
   url_launcher: ^6.3.1
   # Choose from Gallery on Add Clothes (works on web too).
   image_picker: ^1.1.2
-  # Backend: auth, database, storage. Configured at build time with
-  # --dart-define-from-file=env.json (see .env.example); no keys in source.
+  # Backend: auth, database, storage. Defaults to the project's public URL and
+  # publishable key; override with --dart-define-from-file=env.json.
   supabase_flutter: ^2.8.0
 
 dev_dependencies:
