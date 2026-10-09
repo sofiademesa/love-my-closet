@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../animations/app_motion.dart';
 import '../../data/outfit_store.dart';
 import '../../models/outfit.dart';
 import '../../services/backend_errors.dart';
@@ -9,6 +10,8 @@ import '../../widgets/app_text_field.dart';
 import '../../widgets/back_circle_button.dart';
 import '../../widgets/dot_pattern.dart';
 import '../../widgets/primary_button.dart';
+import '../../widgets/secondary_button.dart';
+import '../outfit_builder/outfit_builder_screen.dart';
 
 const _kMonthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -22,7 +25,6 @@ String _formatLongDate(DateTime date) =>
 /// with a diary note. The "Outfit Worn" dropdown lists the user's saved
 /// looks from [OutfitStore]; saving adds a `calendar_entries` row in
 /// Supabase, which is what makes it show up on the Calendar for [date].
-/// Reached by tapping an empty day on the Calendar.
 class LogOutfitScreen extends StatefulWidget {
   const LogOutfitScreen({super.key, required this.date});
 
@@ -51,6 +53,12 @@ class _LogOutfitScreenState extends State<LogOutfitScreen> {
       byName.putIfAbsent(outfit.name, () => outfit);
     }
     return byName.values.toList();
+  }
+
+  void _buildNewLook() {
+    Navigator.of(context).pushReplacement(
+      AppPageRoute(builder: (_) => OutfitBuilderScreen(initialDate: widget.date)),
+    );
   }
 
   Future<void> _save() async {
@@ -137,10 +145,12 @@ class _LogOutfitScreenState extends State<LogOutfitScreen> {
                     const SizedBox(height: Spacing.lg),
                     if (options.isEmpty) ...[
                       Text(
-                        'No saved outfits yet. Build and save one in Outfit Builder '
-                        'first, then log it here.',
+                        'No saved outfits yet. Build one now and it will be saved '
+                        'on this date.',
                         style: textTheme.bodyMedium!.copyWith(fontSize: 13),
                       ),
+                      const SizedBox(height: Spacing.lg),
+                      PrimaryButton(label: 'Build a New Look', onPressed: _buildNewLook),
                     ] else ...[
                       AppDropdown(
                         label: 'Outfit Worn',
@@ -160,6 +170,20 @@ class _LogOutfitScreenState extends State<LogOutfitScreen> {
                       PrimaryButton(
                         label: _saving ? 'Saving…' : 'Save Entry',
                         onPressed: (_selectedOutfitName == null || _saving) ? null : _save,
+                      ),
+                      const SizedBox(height: Spacing.md),
+                      Center(
+                        child: Text(
+                          'or',
+                          style: textTheme.labelSmall!.copyWith(
+                            color: AppColors.mutedBrown.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.md),
+                      SecondaryButton(
+                        label: 'Build a New Look',
+                        onPressed: _saving ? null : _buildNewLook,
                       ),
                     ],
                   ],
