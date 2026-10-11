@@ -2,153 +2,75 @@
 
 ## The problem, in one sentence
 
-People with around 40 clothing pieces may still rely on the same familiar items because they have difficulty keeping track of their wardrobe and often overlook clothing they rarely wear or forget they own.
+A person with around 40 clothing pieces struggles to keep track of their wardrobe and decide what to wear, so they keep reaching for the same familiar items while other pieces are overlooked or forgotten.
 
 ## Who it is for
 
-Love My Closet is for people who own around 40 clothing pieces but regularly rely on a smaller selection when choosing what to wear.
-
-These users may check their physical closet, rely on memory, or browse photos on their phone when deciding what to wear. The app puts the whole closet in one place so they can see what they have, build outfits, keep track of what they wear, and bring forgotten pieces back into rotation.
+People who own around 40 clothing pieces but regularly rely on a smaller selection when choosing what to wear. Today they check their physical closet, rely on memory, or scroll through photos on their phone. Love My Closet puts the whole closet in one place so they can see what they own, build outfits, log what they wear, and bring forgotten pieces back into rotation.
 
 ## Core features
 
-All of the core MVP features were built, tested, and deployed.
+All five MVP features from the M7A1 proposal were built, tested and deployed.
 
-- **Digital Closet:** Add clothing items using a photo taken with the camera or selected from the gallery, along with a name, category, color, and occasion. Clothing photos can have their backgrounds removed automatically on the user's device. Items can be searched, filtered by category, occasion, color, and favorites, marked as favorites, edited, and deleted.
+- **Home:** the first screen after logging in. It shows a "Wear Me" card with today's Hidden Gem, Wardrobe Stats (total clothing items, saved outfits, and items worn this month), and a More Hidden Gems preview that opens the full list.
+- **Digital Closet:** add a clothing item by taking a photo with the camera or choosing one from the gallery, then give it a name, category, occasion and color. The photo's background is removed automatically on the device. Items can be searched, filtered by category, occasion and favorites, marked as favorites, edited and deleted.
+- **Outfit Builder:** drag or tap pieces from the Closet onto an outfit board, then move, resize, reorder or remove them. Save the outfit with a name and an optional date.
+- **Outfit Diary (Calendar):** a monthly calendar of logged outfits. Add an outfit to a date with the date add bar, write an optional diary note, and tap a date to view or edit it.
+- **Hidden Gems:** finds pieces that haven't been worn within the user's chosen threshold (7, 14, 30, 60 or 90 days) and shows them on Home and in the Hidden Gems list.
+- **User Profile:** edit display name, email and bio; set the Hidden Gems threshold and a notifications preference; open Accessibility, About, and Help & Support; log out.
 
-- **Outfit Builder:** Select clothing pieces from the Closet and place them on an outfit board. Pieces can be tapped or dragged onto the board, moved, resized, rearranged, and removed. Users can save an outfit with a name and an optional date.
+Added during development to support these:
 
-- **Outfit Diary (Calendar):** View logged outfits through a monthly calendar. Users can assign outfits to dates, add an optional diary note, and tap a date to view or edit its entry.
-
-- **Hidden Gems:** Identifies clothing pieces that have not been worn recently and surfaces them through a Wear Me suggestion and a Hidden Gems list. Users can choose a threshold of 7, 14, 30, 60, or 90 days from their Profile settings.
-
-- **Favorites:** Users can mark clothing pieces as favorites and access them through the Favorites filter within the Closet instead of having Favorites as a separate main navigation section.
-
-- **User Profile:** Users can edit their display name, full name, and bio, manage notifications and the Hidden Gems threshold, access Accessibility settings, view About and Help & Support information, and log out.
-
-- **Accessibility:** Users can change Text Size, Reduce Motion, and High Contrast settings. These settings are applied across the application rather than being limited to the Accessibility screen.
-
-- **Onboarding:** The application includes an onboarding flow with a closet-opening animation designed around the application's physical-closet metaphor.
-
-- **Animations and interactions:** The application includes reusable animations and interaction feedback across major screens, including screen transitions, Closet and Hidden Gems animations, Outfit Builder interactions, Calendar interactions, dialogs, sheets, deletion feedback, and favorite/heart animations. The Reduce Motion setting can disable or reduce these animations.
-
-- **Accounts:** Users can create an account with email verification, log in, use the forgot-password and set-new-password flows, and maintain a remembered session.
-
-- **Responsive web experience:** The interface was refined to work across different screen sizes, including adjustments to the bottom navigation, clothing grids, filter controls, and accessibility font sizes.
+- **Accounts:** sign up with email verification, log in, forgot and reset password, and "Remember me".
+- **Accessibility:** Text Size, Reduce Motion and High Contrast, applied across the whole app.
+- **Onboarding** with a closet-opening animation, plus animations across the app that Reduce Motion turns off.
 
 ## Out of scope, and why
 
-The following features were planned as stretch goals and were **not built**:
-
-- Smart Outfit Recommendations
-- Weather-Based Outfit Suggestions
-- Personalized Avatar
-- Automatic outfit generation based on the user's wardrobe
-
-These features were kept out of the final implementation so development could focus on completing the core wardrobe experience, account functionality, backend integration, security, accessibility, testing, and deployment.
-
-The earlier stretch goals of additional profile customization and more advanced Hidden Gems recommendations were partly incorporated into the completed application through the Hidden Gems threshold setting and accessibility options.
+- **Smart outfit recommendations, weather-based suggestions, and automatic outfit generation:** each needs its own logic and data (and weather needs an outside API), so I left them out to finish the core features, backend, security and testing properly.
+- **Personalized avatar and profile picture:** the profile uses the Love My Closet logo instead. Photo capture belongs in Add Clothes, and an avatar wasn't needed for the app's main purpose.
+- **Theme preference (light/dark):** dropped from the profile. High Contrast in Accessibility covers the visibility need.
+- **Language / translation:** I started it, but translations didn't work reliably, so I replaced it with Accessibility settings rather than ship a half-working feature.
+- **Sending notifications:** the notifications preference is saved, but the app doesn't send reminders yet. That needs a push or email service, which is beyond this scope.
+- **Native Android/iOS builds:** the app is built and deployed for the web only (GitHub Pages), which is what the course demo needs.
 
 ## Data the app remembers, and where it is saved
 
-The app uses **Supabase** as its backend. User data is associated with the authenticated user's account, and Row Level Security (RLS) ensures that users can only access their own data.
+Everything is in **Supabase**, and Row Level Security means each user can only reach their own rows and photos.
 
-The main database tables are:
+| Thing | Fields | Where saved |
+| --- | --- | --- |
+| Account | email, password (hashed) | Supabase Auth |
+| Profile | display name, full name, bio, notifications on/off, Hidden Gems threshold | `profiles` table |
+| Clothing item | name, category, occasion, color, favorite, photo path, created/updated dates | `clothing_items` table |
+| Outfit | name, created/updated dates | `outfits` table |
+| Outfit piece | which item, position on the board, size, stacking order | `outfit_items` table |
+| Diary entry | outfit, date worn, optional note | `calendar_entries` table |
+| Clothing photo | transparent PNG cutout | private `clothing-images` bucket in Supabase Storage, one folder per user |
+| Login session | session token | browser storage if "Remember me" is on, otherwise memory only |
+| Accessibility settings | text size, reduce motion, high contrast | memory only; they reset when the page reloads |
 
-- **`profiles`**: display name, full name, bio, notification setting, and Hidden Gems threshold
-- **`clothing_items`**: name, category, occasion, color, image path, favorite status, and created/updated timestamps
-- **`outfits`**: outfit name and timestamps
-- **`outfit_items`**: the clothing pieces included on an outfit board, including their position, size/scale, and stacking order
-- **`calendar_entries`**: an outfit assigned to a date (`worn_on`) with an optional diary note
+Last-worn date and times-worn are **not stored**. They're calculated from the diary entries, so they can never disagree with what the user actually logged.
 
-Clothing photos are stored as transparent PNG files in a **private Supabase Storage bucket** called `clothing-images`. Each user's files are stored in their own folder.
-
-Email and password authentication are handled through **Supabase Auth**.
-
-Last-worn date and times-worn are **not stored as separate fields**. Instead, these values are calculated from the user's calendar entries. This avoids storing duplicate information that could become inconsistent with the outfits the user actually logged.
-
-Supabase was chosen instead of `shared_preferences` because the project aimed to explore a cloud-based backend and persistent user-specific data beyond a single device or session.
-
-## Background removal
-
-Love My Closet includes automatic background removal for clothing photos.
-
-The feature uses an on-device/web-based **U²-Net/ONNX model with ONNX Runtime Web** rather than sending clothing photos to a paid third-party background-removal API.
-
-The photo flow allows the user to:
-
-1. Take a photo with the camera or choose an image from the gallery.
-2. Process the image and remove its background.
-3. Preview the resulting transparent clothing image.
-4. Undo the background removal if needed.
-5. Use the processed photo for the clothing item.
-
-The background-removal process was kept within the application so the project would not depend on a paid external API or API credits for this feature.
+I chose Supabase over `shared_preferences` to learn a cloud backend and so the data follows the account across devices, accepting the extra setup time.
 
 ## Risks
 
-The main risks identified during planning were addressed during development:
-
-- **Hidden Gems:** Resolved. Instead of storing `lastWornDate` and `wearCount`, the application derives these values from Calendar entries and compares the number of days since an item was worn against the user's selected threshold.
-
-- **Supabase integration:** Resolved. Authentication, database, storage, and Row Level Security were integrated into the application. RLS was also tested with separate accounts to verify that one account could not access another user's data.
-
-- **Browser compatibility:** Resolved. Gallery image selection and the background-removal flow were adapted for the web build. The application was deployed as a web application, so the planned sample-image fallback was not required.
-
-- **Background-removal cost:** Resolved. The initial approach considered an external background-removal API, but this was rejected because it could require paid credits. The final implementation uses the project's on-device/web ONNX-based approach instead.
-
-- **Responsive layout:** Resolved. The application was tested and refined for different screen widths and accessibility font sizes. The bottom navigation was adjusted using flexible layouts and text handling so labels such as "Outfit Builder" could remain readable without causing overflow.
-
-- **Email delivery:** A remaining limitation is Supabase's built-in email sender, which is rate-limited. When many users request emails within a short period, confirmation or password-reset emails may be delayed. A custom SMTP provider would address this limitation.
-
-## Testing
-
-Automated tests were added to verify important application behavior in addition to manually testing the application.
-
-The tests cover:
-
-- **Profile:** Display name fallback, blank-name validation, rollback when settings fail to save, Text Size, Reduce Motion, and High Contrast.
-- **Closet:** `ClothingItem`, favorites, `copyWith`, colors, categories, empty closet behavior, and logged-out add/delete/favorite behavior.
-- **Outfit:** Outfit piece scale limits, copying outfit pieces, `SavedOutfit.copyWith`, empty outfit state, and logged-out save behavior.
-- **Background Removal:** Processing state, successful removal, errors, retry behavior, Undo, Use Photo, and returning from the flow.
-- **Authentication:** Email validation, email-link helpers, password visibility, Create Account validation, short passwords, mismatched passwords, and invalid email addresses.
-
-The background-removal tests use fake photo and background-removal dependencies so the application flow can be tested without requiring the actual ONNX model to run during every test.
-
-## Security and deployment
-
-The application uses Supabase Row Level Security to isolate user data.
-
-The project includes RLS policies for the application's database tables and storage bucket. An RLS isolation test was also created to verify that a second account cannot access another user's data.
-
-Clothing images are stored in a private storage bucket rather than being publicly accessible through direct links.
-
-The web application was deployed to **GitHub Pages using GitHub Actions**.
-
-Only the public Supabase URL and publishable key are used by the deployed application. These values are stored as repository secrets, and the git history was scanned for accidentally committed secrets.
+- **Hidden Gems logic (from M7A1):** Instead of storing `lastWornDate` and `wearCount`, the app works them out from Calendar entries and compares them with the user's threshold.
+- **Supabase integration (from M7A1):** Auth, database, storage and RLS all work. RLS is tested by a two-user SQL test and by trying two accounts on the live app.
+- **image_picker on the web:** Gallery selection works in the browser, and a live camera "Take Photo" was added, so the sample-image fallback wasn't needed.
+- **Background removal cost:** I didn't use a paid background-removal API. Removal runs in the browser with a U²-Net model (silueta) on ONNX Runtime Web, so there's no API key and no per-photo cost, and the original photo never leaves the device.
+- **Turning Figma designs into Flutter:** the closet/cabinet layout and the Outfit Builder drag-and-drop took much longer than planned and cut into time for other screens.
+- **CI failing:** checks failed on every commit until automated tests were added on Oct 8.
+- **Still open: email delivery.** Supabase's built-in email sender is rate-limited, so confirmation and reset emails can be slow if many are sent at once. A custom SMTP provider would fix this.
 
 ## Changes since the last version
 
-- Replaced the planned `lastWornDate` and `wearCount` columns with values calculated from Calendar entries.
-- Removed the planned `season` field. Clothing items use category, occasion, and color instead.
-- Replaced the original planned diary structure with `calendar_entries` and added `outfit_items` for individual clothing pieces placed on the Outfit Builder board.
-- Added persistent outfit-piece position, scale, and stacking order.
-- Changed Favorites from a separate navigation destination into a Closet filter.
-- Added gallery image selection for clothing photos.
-- Added automatic on-device/web background removal using the U²-Net/ONNX approach.
-- Added transparent clothing previews and the ability to undo the background-removal result.
-- Added resizable clothing pieces in the Outfit Builder.
-- Added the Outfit Diary calendar and connected it to shared outfit data.
-- Added Profile functionality with editable user information, notifications, Hidden Gems threshold, About, Help & Support, and Log Out.
-- Added Accessibility settings for Text Size, Reduce Motion, and High Contrast.
-- Added a floating pill-style bottom navigation while retaining the five main sections: Home, Closet, Outfit Builder, Diary, and Profile.
-- Redesigned the Closet category filters with custom category icons for Tops, Bottoms, Dresses, Outerwear, and Shoes.
-- Refined the Closet layout with a fixed header and independently scrolling clothing grid.
-- Improved clothing cards, empty states, Hidden Gems cards, and responsive navigation behavior.
-- Added a reusable app-wide animation system while keeping Reduce Motion functional.
-- Added full email account flows, including verification, login, forgot password, set new password, and remembered sessions.
-- Added automated tests for authentication, Profile, Closet, Outfit Builder, and background-removal behavior.
-- Added Row Level Security and tested user-data isolation.
-- Added a private Supabase Storage bucket for clothing images.
-- Added the Love My Closet favicon and web application icons.
-- Deployed the web application to GitHub Pages using GitHub Actions.
+- **2026-09-20:** built the design system and onboarding first, so every later screen would share one style. The Figma closet took longer to rebuild in Flutter than planned.
+- **2026-09-27:** built the whole frontend in one week, from Home to the Outfit Builder, so the full flow worked before any backend existed. Replaced translation with Accessibility settings because translations were unreliable.
+- **2026-09-29:** built the whole backend (Supabase, private photo storage, RLS) in one day. Dropped `season`, `lastWornDate` and `wearCount`; wear stats are now calculated from the diary so they can't go out of sync. Added on-device background removal instead of a paid API.
+- **2026-10-03:** added email accounts with verification, password reset and "Remember me", so each user's closet is private and saved.
+- **2026-10-06:** dropped the profile picture and theme preference to keep photos in Add Clothes and the profile simple.
+- **2026-10-08:** added automated tests, which fixed the CI check that had failed since Week 3.
+- **2026-10-09:** ran the security checklist and pinned the GitHub Actions to commit SHAs.
+- **2026-10-10:** added a live-camera "Take Photo" option and a date add bar in the Calendar, both through pull requests to keep `main` stable.
