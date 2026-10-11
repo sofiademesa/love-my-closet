@@ -5,7 +5,7 @@
 _Made to be Loved Again_
 
 **Live demo:** <https://sofiademesa.github.io/love-my-closet/>
-**Demo video:** [docs/demo.mp4](docs/demo.mp4)
+**Demo video:** [docs/05-demo-video.md](docs/05-demo-video.md)
 **Course:** Applications Development and Emerging Technologies (6ADET), Holy Angel University
 **Author:** Sofia Ryza D. De Mesa
 
@@ -17,23 +17,27 @@ This repository contains the final project developed for 6ADET. It is public for
 
 **Getting started**
 
-| Onboarding 1                                         | Onboarding 2                                         | Landing                                    |
-| ---------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------ |
+| Onboarding 1 | Onboarding 2 | Landing |
+| --- | --- | --- |
 | ![Onboarding 1](docs/assets/screen-onboarding-1.png) | ![Onboarding 2](docs/assets/screen-onboarding-2.png) | ![Landing](docs/assets/screen-landing.png) |
 
-| Create Account                                   | Log In                                  |
-| ------------------------------------------------ | --------------------------------------- |
-| ![Create Account](docs/assets/screen-signup.png) | ![Log In](docs/assets/screen-login.png) |
+| Create Account | Log In | Forgot Password |
+| --- | --- | --- |
+| ![Create Account](docs/assets/screen-signup.png) | ![Log In](docs/assets/screen-login.png) | ![Forgot Password](docs/assets/screen-forgot-password.png) |
 
 **Main app**
 
-| Home                                 | Closet                                   | Add Clothes                                |
-| ------------------------------------ | ---------------------------------------- | ------------------------------------------ |
+| Home | Closet | Add Clothes |
+| --- | --- | --- |
 | ![Home](docs/assets/screen-home.png) | ![Closet](docs/assets/screen-closet.png) | ![Add Clothes](docs/assets/screen-add.png) |
 
-| Outfit Builder                                    | Calendar                                     | Profile                                    |
-| ------------------------------------------------- | -------------------------------------------- | ------------------------------------------ |
-| ![Outfit Builder](docs/assets/screen-builder.png) | ![Calendar](docs/assets/screen-calendar.png) | ![Profile](docs/assets/screen-profile.png) |
+| Add Photo | Outfit Builder | View Outfits |
+| --- | --- | --- |
+| ![Add Photo](docs/assets/screen-add-photo.png) | ![Outfit Builder](docs/assets/screen-builder.png) | ![View Outfits](docs/assets/screen-view-outfits.png) |
+
+| Calendar | Profile | Accessibility |
+| --- | --- | --- |
+| ![Calendar](docs/assets/screen-calendar.png) | ![Profile](docs/assets/screen-profile.png) | ![Accessibility](docs/assets/screen-accessibility.png) |
 
 ## Who it is for
 
