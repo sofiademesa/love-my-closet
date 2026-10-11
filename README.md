@@ -153,7 +153,8 @@ The screenshots, demo video, and sample data use test accounts and sample clothi
 | [Design system](docs/03-design-system.md)               | colors, type, spacing, components             |
 | [Weekly reports](docs/04-weekly-reports.md)             | what happened each week                       |
 | [Demo video](docs/05-demo-video.md)                     | the recording and what it shows               |
-| [Security and privacy](docs/06-security-and-privacy.md) | the checklist, filled in                      |
+| [Security and privacy](docs/06-security-and-privacy.md) | what the app stores and how it is protected   |
+| [Security checklist](security-checklist.md)             | the 25-point security audit, with evidence    |
 | [Supabase backend](supabase/README.md)                  | setup, data model, and the RLS isolation test |
 
 ## Status and what is next
