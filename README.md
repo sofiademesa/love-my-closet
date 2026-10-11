@@ -57,19 +57,19 @@ Love My Closet helps users get more out of the clothes they already own. Here is
 **Home**
 
 - A greeting and a **Wear Me** card that suggests a piece you haven't worn in a while.
-- **Wardrobe Stats**: total items and total outfits.
+- **Wardrobe Stats**: total items, outfits, and items worn this month.
 - **More Hidden Gems**, with a full Hidden Gems sheet: pieces waiting for their moment again.
 
 **Closet**
 
 - Browse every piece you own as cards.
-- Filter by category (Tops, Bottoms, Dresses, Outerwear, Shoes, Accessories), occasion, color, and Favorites.
+- Filter by category (Tops, Bottoms, Dresses, Outerwear, Shoes, Accessories), occasion, and Favorites.
 - Search by name.
 - Delete items you no longer want.
 
 **Add Clothes**
 
-- Take a photo or choose one from your gallery.
+- Take a photo with your camera or choose one from your gallery.
 - The background is removed automatically, on your device, so each piece looks clean.
 - Set the item's name, category, occasion, and color.
 
@@ -87,28 +87,29 @@ Love My Closet helps users get more out of the clothes they already own. Here is
 **Calendar and Outfit Diary**
 
 - A monthly calendar of the outfits you logged.
-- Log an outfit for a date and add a diary note.
+- Add an outfit to a date with the date add bar, and write a diary note.
 - Tap a day to see the outfit and edit its details.
 
 **Profile**
 
-- Edit your profile (display name, full name, bio).
+- Edit your profile (display name, email, bio).
 - **Accessibility:** text size, reduce motion, and high contrast.
 - **Hidden Gems Threshold:** choose how long a piece must go unworn to count as a hidden gem.
-- Turn notifications on or off.
+- Notifications preference (saved for a future reminders feature).
 - About and Help & Support, and log out.
 
 ## Built with
 
 |                    |                                                                                                                                                                                               |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Framework          | Flutter (web and mobile)                                                                                                                                                                      |
+| Framework          | Flutter (web)                                                                                                                                                                                 |
 | Language           | Dart                                                                                                                                                                                          |
 | State management   | `setState`                                                                                                                                                                                    |
 | Backend            | Supabase: Auth (accounts), Postgres (data), Storage (private photos)                                                                                                                          |
 | Data security      | Supabase Row Level Security (RLS)                                                                                                                                                             |
 | Background removal | `silueta` (a size-reduced U²-Net model) running on-device in the browser with ONNX Runtime Web                                                                                                |
-| Packages           | `supabase_flutter` (backend), `camera` (Take Photo viewfinder), `image_picker` (gallery), `url_launcher` (links on the About screen), `device_preview` (phone-frame preview while developing) |
+| Camera             | Take Photo uses the browser's camera directly through a small JavaScript helper (`web/camera/camera.js`)                                                                                      |
+| Packages           | `supabase_flutter` (backend), `image_picker` (gallery), `url_launcher` (links on the About screen), `device_preview` (phone-frame preview while developing)                                    |
 | Design             | Figma                                                                                                                                                                                         |
 | Typography         | Young Serif (headings), DM Sans (body)                                                                                                                                                        |
 | Deployment         | GitHub Actions to GitHub Pages                                                                                                                                                                |
@@ -168,6 +169,7 @@ The app is complete and deployed. Accounts, the closet, background removal, the 
 - Smart outfit recommendations
 - Weather-based outfit suggestions
 - A customizable personal avatar
+- Notification reminders to wear your Hidden Gems
 
 ## Credits
 
