@@ -5,8 +5,8 @@ One entry per week, newest at the top, written during that week. Five minutes ea
 ## Week 4 (Oct 5 to Oct 11)
 
 **Done this week**
-- Rewrote the README with new screenshots and sections (several revision passes)
-- Updated the design system, weekly reports, security and privacy, mockup, and demo video docs
+- Rewrote the README with new screenshots and sections, then gave it and the docs a final polish
+- Updated the design system, weekly reports, security and privacy, and mockup docs
 - Revised the proposal with detailed feature descriptions
 - Added widget tests and merged them through PR #1; CI checks now pass 2/2
 - Improved outfit clearing feedback and made color selection accessible
@@ -18,15 +18,14 @@ One entry per week, newest at the top, written during that week. Five minutes ea
 - Pinned GitHub workflow actions to commit SHAs
 - Added the OFL licence for the bundled fonts and fixed a pubspec comment
 - Documented AI usage in detail in AI-USAGE.md
-- Deleted START-HERE.md
+- Recorded the demo video (18:42), uploaded it to Google Drive, and wrote up its timestamps in 05-demo-video.md
 
 **In progress**
-- Finalizing the demo video and its markdown write-up
-- Final polish on the README and docs before submission
+- Nothing. The app, docs, and demo video are finished.
 
 **Blocked or stuck on**
 - CI was failing (1/2 checks) on every commit until Oct 6. Adding proper tests on Oct 8 fixed it.
-- A few doc-only upload commits still show 0/2 checks and need a look
+- A few doc-only upload commits showed 0/2 checks; fixed, and the latest commit on main now passes
 
 **Decisions made, and why**
 - Switched to feature branches and pull requests (add-tests, add-take-photo, calendar-add-bar) so main stays stable and every change is reviewable
@@ -38,10 +37,7 @@ One entry per week, newest at the top, written during that week. Five minutes ea
 **Hours spent, roughly:** 20
 
 **Next week I will:**
-- Finish and submit the demo video
-- Fix the remaining failing checks on doc commits
-- Do a full app test pass on a real device
-- Write the final reflection
+- N/A
 
 ## Week 3 (Sep 28 to Oct 4)
 
