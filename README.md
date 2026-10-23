@@ -17,26 +17,26 @@ This repository contains the final project developed for 6ADET. It is public for
 
 **Getting started**
 
-| Onboarding 1 | Onboarding 2 | Landing |
-| --- | --- | --- |
+| Onboarding 1                                         | Onboarding 2                                         | Landing                                    |
+| ---------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------ |
 | ![Onboarding 1](docs/assets/screen-onboarding-1.png) | ![Onboarding 2](docs/assets/screen-onboarding-2.png) | ![Landing](docs/assets/screen-landing.png) |
 
-| Create Account | Log In | Forgot Password |
-| --- | --- | --- |
+| Create Account                                   | Log In                                  | Forgot Password                                            |
+| ------------------------------------------------ | --------------------------------------- | ---------------------------------------------------------- |
 | ![Create Account](docs/assets/screen-signup.png) | ![Log In](docs/assets/screen-login.png) | ![Forgot Password](docs/assets/screen-forgot-password.png) |
 
 **Main app**
 
-| Home | Closet | Add Clothes |
-| --- | --- | --- |
+| Home                                 | Closet                                   | Add Clothes                                |
+| ------------------------------------ | ---------------------------------------- | ------------------------------------------ |
 | ![Home](docs/assets/screen-home.png) | ![Closet](docs/assets/screen-closet.png) | ![Add Clothes](docs/assets/screen-add.png) |
 
-| Add Photo | Outfit Builder | View Outfits |
-| --- | --- | --- |
+| Add Photo                                      | Outfit Builder                                    | View Outfits                                         |
+| ---------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------- |
 | ![Add Photo](docs/assets/screen-add-photo.png) | ![Outfit Builder](docs/assets/screen-builder.png) | ![View Outfits](docs/assets/screen-view-outfits.png) |
 
-| Calendar | Profile | Accessibility |
-| --- | --- | --- |
+| Calendar                                     | Profile                                    | Accessibility                                          |
+| -------------------------------------------- | ------------------------------------------ | ------------------------------------------------------ |
 | ![Calendar](docs/assets/screen-calendar.png) | ![Profile](docs/assets/screen-profile.png) | ![Accessibility](docs/assets/screen-accessibility.png) |
 
 ## Who it is for
@@ -82,7 +82,9 @@ Love My Closet helps users get more out of the clothes they already own. Here is
 
 - Place pieces from your closet on a board.
 - Move and resize each piece to style the look.
-- Save the look with a name and, if you want, a date.
+- Save the look with a name and, if you want, a date. Looks saved without a date are kept as **Ideas**.
+- **View Outfits** groups your looks into **On Calendar** (any date, upcoming first) and **Ideas** (no date yet), with filter chips once the list gets long. Tap **Plan** on an idea to put it on the Calendar.
+- Change or remove an outfit's date any time: clear the date when editing it (in the Builder or the Calendar's Edit Details) and the look comes off the Calendar but stays in the Builder.
 
 **Calendar and Outfit Diary**
 
@@ -100,20 +102,20 @@ Love My Closet helps users get more out of the clothes they already own. Here is
 
 ## Built with
 
-|                    |                                                                                                                                                                                               |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Framework          | Flutter (web)                                                                                                                                                                                 |
-| Language           | Dart                                                                                                                                                                                          |
-| State management   | `setState`                                                                                                                                                                                    |
-| Backend            | Supabase: Auth (accounts), Postgres (data), Storage (private photos)                                                                                                                          |
-| Data security      | Supabase Row Level Security (RLS)                                                                                                                                                             |
-| Background removal | `silueta` (a size-reduced U²-Net model) running on-device in the browser with ONNX Runtime Web                                                                                                |
-| Camera             | Take Photo uses the browser's camera directly through a small JavaScript helper (`web/camera/camera.js`)                                                                                      |
-| Packages           | `supabase_flutter` (backend), `image_picker` (gallery), `url_launcher` (links on the About screen), `device_preview` (phone frame around the app, kept on in the deployed site)                                    |
-| Design             | Figma                                                                                                                                                                                         |
-| Typography         | Young Serif (headings), DM Sans (body)                                                                                                                                                        |
-| Deployment         | GitHub Actions to GitHub Pages                                                                                                                                                                |
-| Version control    | Git and GitHub                                                                                                                                                                                |
+|                    |                                                                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework          | Flutter (web)                                                                                                                                                                   |
+| Language           | Dart                                                                                                                                                                            |
+| State management   | `setState`                                                                                                                                                                      |
+| Backend            | Supabase: Auth (accounts), Postgres (data), Storage (private photos)                                                                                                            |
+| Data security      | Supabase Row Level Security (RLS)                                                                                                                                               |
+| Background removal | `silueta` (a size-reduced U²-Net model) running on-device in the browser with ONNX Runtime Web                                                                                  |
+| Camera             | Take Photo uses the browser's camera directly through a small JavaScript helper (`web/camera/camera.js`)                                                                        |
+| Packages           | `supabase_flutter` (backend), `image_picker` (gallery), `url_launcher` (links on the About screen), `device_preview` (phone frame around the app, kept on in the deployed site) |
+| Design             | Figma                                                                                                                                                                           |
+| Typography         | Young Serif (headings), DM Sans (body)                                                                                                                                          |
+| Deployment         | GitHub Actions to GitHub Pages                                                                                                                                                  |
+| Version control    | Git and GitHub                                                                                                                                                                  |
 
 ## Running it yourself
 

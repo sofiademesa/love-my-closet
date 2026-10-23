@@ -97,6 +97,24 @@ void main() {
       expect(outfit.pieces.length, 2);
     });
 
+    test('a calendar entry has a date by default', () {
+      expect(outfit.hasDate, true);
+    });
+
+    test('an undated look gets a date once one is set with copyWith', () {
+      final idea = SavedOutfit(
+        id: '',
+        outfitId: 'o2',
+        name: 'Someday look',
+        date: DateTime(2026, 10, 1),
+        pieces: pieces,
+        hasDate: false,
+      );
+      expect(idea.hasDate, false);
+      expect(idea.copyWith(name: 'Renamed').hasDate, false);
+      expect(idea.copyWith(date: DateTime(2026, 11, 2)).hasDate, true);
+    });
+
     test('editing the date and note with copyWith', () {
       final edited = outfit.copyWith(date: DateTime(2026, 10, 5), note: 'Felt great');
       expect(edited.date, DateTime(2026, 10, 5));
@@ -114,6 +132,41 @@ void main() {
       expect(store.byId('nope'), isNull);
       expect(store.hasLoaded, false);
       expect(store.error, isNull);
+    });
+
+    test('grouped outfits are empty for a fresh store', () {
+      final groups = store.groupedOutfits(today: DateTime(2026, 10, 24));
+      expect(groups.isEmpty, true);
+      expect(groups.total, 0);
+      expect(groups.upNext, isEmpty);
+      expect(groups.ideas, isEmpty);
+      expect(groups.past, isEmpty);
+      expect(groups.dated, isEmpty);
+    });
+
+    test('saving an undated outfit while logged out fails too', () async {
+      await expectLater(
+        store.saveFromBuilder(
+          name: 'Idea',
+          date: null,
+          pieces: [OutfitPiece(id: 'p1', item: _tee, offset: Offset.zero)],
+        ),
+        throwsA(isA<BackendException>()),
+      );
+    });
+
+    test('removing a date while logged out fails', () async {
+      final entry = SavedOutfit(
+        id: 'e1',
+        outfitId: 'o1',
+        name: 'Look',
+        date: DateTime(2026, 10, 1),
+        pieces: const [],
+      );
+      await expectLater(
+        store.updateEntryDetails(entry, name: 'Look', date: null, note: null),
+        throwsA(isA<BackendException>()),
+      );
     });
 
     test('no worn dates for an item that was never in an outfit', () {

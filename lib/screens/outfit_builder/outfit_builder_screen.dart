@@ -100,8 +100,18 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
 
   /// Saved outfits read straight from the shared store — the same data the
   /// Calendar reads from — so both stay in sync with no separate data. One
-  /// card per look.
-  List<SavedOutfit> get _savedOutfits => OutfitStore.instance.builderOutfits;
+  /// card per look, grouped into On Calendar / Ideas.
+  OutfitGroups get _groups => OutfitStore.instance.groupedOutfits();
+
+  /// View Outfits filter ([_kOnCalendar] or [_kIdeas]), or null for
+  /// everything.
+  String? _groupFilter;
+
+  static const _kOnCalendar = 'On Calendar';
+  static const _kIdeas = 'Ideas';
+
+  /// The filter chips only appear once the list is long enough to need them.
+  static const _kFilterThreshold = 6;
 
   @override
   void initState() {
@@ -365,10 +375,15 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
             OutfitStore.instance.builderOutfits
                 .where((o) => o.outfitId == _editingLookId)
                 .firstOrNull);
+    // The date is always optional here: leave it empty to keep the look as
+    // an idea, or clear an existing date to take it off the Calendar.
+    final onCalendar = editing?.hasDate ?? false;
     final result = await showSaveLookSheet(
       context,
       initialName: editing?.name ?? '',
-      initialDate: editing?.date ?? widget.initialDate,
+      initialDate: onCalendar ? editing!.date : widget.initialDate,
+      allowNoDate: true,
+      onCalendar: onCalendar,
     );
     if (result == null || !mounted) return;
     final pieces = _boardPieces
@@ -409,6 +424,30 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
       _editingLookId = outfit.outfitId;
       _tab = 0;
     });
+  }
+
+  /// "Plan" on an idea card: pick a day and put the look on the Calendar.
+  Future<void> _planOutfit(SavedOutfit outfit) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 2),
+      helpText: 'When will you wear it?',
+    );
+    if (picked == null || !mounted) return;
+    try {
+      await OutfitStore.instance.logEntry(outfitId: outfit.outfitId, date: picked);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text('“${outfit.name}” added to ${_shortDate(picked)}')),
+        );
+    } catch (e) {
+      _showError(e);
+    }
   }
 
   void _deleteSavedOutfit(SavedOutfit outfit) {
@@ -713,7 +752,8 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   }
 
   Widget _buildSavedOutfits(TextTheme textTheme) {
-    if (_savedOutfits.isEmpty) {
+    final groups = _groups;
+    if (groups.isEmpty) {
       return const Center(
         child: EmptyState(
           message: 'No saved outfits yet.\nBuild one on the Builder tab and save it here.',
@@ -721,28 +761,98 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
         ),
       );
     }
-    return ListView.separated(
-      itemCount: _savedOutfits.length,
-      separatorBuilder: (_, __) => const SizedBox(height: Spacing.sm),
-      itemBuilder: (context, i) {
-        final outfit = _savedOutfits[i];
-        return FadeScaleOut(
-          key: ValueKey(outfit.outfitId),
-          removing: _removingOutfitIds.contains(outfit.outfitId),
-          onExited: () => _finishDeleteSavedOutfit(outfit),
-          child: FadeSlideIn(
-            delay: staggerDelay(i, stepMs: 40, maxMs: 200),
-            child: PressableScale(
-              scale: 0.98,
-              child: _SavedOutfitCard(
-                outfit: outfit,
-                onTap: () => _loadSavedOutfit(outfit),
-                onDelete: () => _deleteSavedOutfit(outfit),
+
+    final sections = <(String, String, List<SavedOutfit>)>[
+      // Any look with a date, past or future (upcoming ones first).
+      (_kOnCalendar, 'On Calendar', groups.dated),
+      (_kIdeas, 'Ideas', groups.ideas),
+    ].where((s) => s.$3.isNotEmpty).toList();
+
+    // Headers only earn their space when there's more than one group, and
+    // the filter row only once the list gets long.
+    final showHeaders = sections.length > 1;
+    final showFilter = showHeaders && groups.total >= _kFilterThreshold;
+    final filter = showFilter && sections.any((s) => s.$1 == _groupFilter) ? _groupFilter : null;
+    final visible = filter == null ? sections : sections.where((s) => s.$1 == filter).toList();
+
+    final rows = <Widget>[];
+    var index = 0;
+    for (final (_, title, outfits) in visible) {
+      if (showHeaders && filter == null) {
+        rows.add(_GroupHeader(title: title, count: outfits.length, first: rows.isEmpty));
+      }
+      for (final outfit in outfits) {
+        final i = index++;
+        if (rows.isNotEmpty) rows.add(const SizedBox(height: Spacing.sm));
+        rows.add(
+          FadeScaleOut(
+            key: ValueKey(outfit.outfitId),
+            removing: _removingOutfitIds.contains(outfit.outfitId),
+            onExited: () => _finishDeleteSavedOutfit(outfit),
+            child: FadeSlideIn(
+              delay: staggerDelay(i, stepMs: 40, maxMs: 200),
+              child: PressableScale(
+                scale: 0.98,
+                child: _SavedOutfitCard(
+                  outfit: outfit,
+                  onTap: () => _loadSavedOutfit(outfit),
+                  onDelete: () => _deleteSavedOutfit(outfit),
+                  onPlan: outfit.hasDate ? null : () => _planOutfit(outfit),
+                ),
               ),
             ),
           ),
         );
-      },
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (showFilter) ...[
+          FilterChips(
+            options: [for (final s in sections) s.$1],
+            selected: filter,
+            onSelected: (v) => setState(() => _groupFilter = v),
+          ),
+          const SizedBox(height: Spacing.sm),
+        ],
+        Expanded(child: ListView(children: rows)),
+      ],
+    );
+  }
+}
+
+String _shortDate(DateTime d) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return '${months[d.month - 1]} ${d.day}';
+}
+
+/// A small label above each group on View Outfits, e.g. "Ideas · 2".
+class _GroupHeader extends StatelessWidget {
+  const _GroupHeader({required this.title, required this.count, this.first = false});
+
+  final String title;
+  final int count;
+  final bool first;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      header: true,
+      child: Padding(
+        padding: EdgeInsets.only(top: first ? 0 : Spacing.md, bottom: 2, left: 2),
+        child: Text(
+          '$title  ·  $count',
+          style: TextStyle(
+            fontFamily: 'DMSans',
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.3,
+            color: AppColors.mutedBrown.withValues(alpha: 0.75),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -989,11 +1099,15 @@ class _SavedOutfitCard extends StatelessWidget {
     required this.outfit,
     required this.onTap,
     required this.onDelete,
+    this.onPlan,
   });
 
   final SavedOutfit outfit;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+
+  /// Only for looks with no date yet: shows a small "Plan" button.
+  final VoidCallback? onPlan;
 
   @override
   Widget build(BuildContext context) {
@@ -1055,19 +1169,70 @@ class _SavedOutfitCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${outfit.date.month.toString().padLeft(2, '0')}/'
-                        '${outfit.date.day.toString().padLeft(2, '0')}/'
-                        '${outfit.date.year}',
+                        outfit.hasDate
+                            ? '${outfit.date.month.toString().padLeft(2, '0')}/'
+                                '${outfit.date.day.toString().padLeft(2, '0')}/'
+                                '${outfit.date.year}'
+                            : 'No date yet',
                         style: textTheme.labelSmall,
                       ),
                     ],
                   ),
                 ),
+                if (onPlan != null) ...[
+                  _PlanButton(onTap: onPlan!),
+                  const SizedBox(width: Spacing.xs),
+                ],
                 GestureDetector(
                   onTap: onDelete,
                   child: Padding(
                     padding: EdgeInsets.all(4),
                     child: Icon(Icons.close_rounded, size: 18, color: AppColors.mutedBrown),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The small "Plan" pill on an idea card: puts the look on a date.
+class _PlanButton extends StatelessWidget {
+  const _PlanButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Plan a date',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.blush, width: 1.5),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.event_available_rounded, size: 14, color: AppColors.buttonPink),
+                const SizedBox(width: 4),
+                Text(
+                  'Plan',
+                  style: TextStyle(
+                    fontFamily: 'DMSans',
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.buttonPink,
                   ),
                 ),
               ],

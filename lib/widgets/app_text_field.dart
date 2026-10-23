@@ -22,6 +22,8 @@ class AppTextField extends StatefulWidget {
     this.readOnly = false,
     this.onTap,
     this.suffixIcon,
+    this.onSuffixTap,
+    this.suffixTooltip,
     this.maxLines = 1,
   });
 
@@ -41,6 +43,11 @@ class AppTextField extends StatefulWidget {
   final bool readOnly;
   final VoidCallback? onTap;
   final IconData? suffixIcon;
+
+  /// Makes [suffixIcon] its own button (e.g. an "x" that clears a date)
+  /// instead of a plain decoration.
+  final VoidCallback? onSuffixTap;
+  final String? suffixTooltip;
 
   /// Line count for multi-line fields (e.g. the "Note" box on Log Outfit).
   /// Defaults to a single line.
@@ -74,16 +81,24 @@ class _AppTextFieldState extends State<AppTextField> {
             tooltip: _hidden ? 'Show password' : 'Hide password',
             onPressed: () => setState(() => _hidden = !_hidden),
             icon: Icon(
+              // Shows the current state: crossed-out eye while hidden,
+              // open eye once the password is visible.
               _hidden
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
               color: AppColors.mutedBrown,
               size: 20,
             ),
           )
         : (w.suffixIcon == null
             ? null
-            : Icon(w.suffixIcon, color: AppColors.mutedBrown, size: 20));
+            : (w.onSuffixTap == null
+                ? Icon(w.suffixIcon, color: AppColors.mutedBrown, size: 20)
+                : IconButton(
+                    tooltip: w.suffixTooltip,
+                    onPressed: w.onSuffixTap,
+                    icon: Icon(w.suffixIcon, color: AppColors.mutedBrown, size: 20),
+                  )));
 
     final field = TextFormField(
       controller: w.controller,

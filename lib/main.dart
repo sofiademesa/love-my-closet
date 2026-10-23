@@ -22,14 +22,29 @@ void main() {
 
   runApp(
     // DevicePreview draws a phone frame around the app so it is judged at the
-    // size it was designed for. It stays ON in the deployed build on purpose.
+    // size it was designed for. It stays ON in the deployed build on purpose,
+    // but only on wide screens (laptops, desktops): on a real phone the app
+    // fills the screen like a normal app instead of showing a phone inside
+    // a phone.
     DevicePreview(
-      enabled: true,
+      enabled: _isWideScreen(),
       // Starts on a splash while the session is restored (see StartupScreen),
       // so a signed-in user never sees Log In flash by first.
       builder: (context) => const MyApp(home: StartupScreen()),
     ),
   );
+}
+
+/// True on laptop/desktop-sized screens (600+ logical pixels wide), where
+/// the phone frame is shown. False on phones and small tablets.
+bool _isWideScreen() {
+  final views = WidgetsBinding.instance.platformDispatcher.views;
+  if (views.isEmpty) return true;
+  final view = views.first;
+  final width = view.physicalSize.width / view.devicePixelRatio;
+  // Size not known yet: keep the original behavior (frame on).
+  if (width <= 0) return true;
+  return width >= 600;
 }
 
 /// Shown for the moment it takes to connect to Supabase and work out who is

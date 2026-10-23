@@ -3,8 +3,8 @@
   "short_name": "Love My Closet",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#FFFFFF",
-  "theme_color": "#6750A4",
+  "background_color": "#FFF8F2",
+  "theme_color": "#E95B9F",
   "description": "My 6ADET final project.",
   "orientation": "portrait-primary",
   "icons": [

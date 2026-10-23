@@ -36,6 +36,11 @@ class OutfitPiece {
 /// (`calendar_entries`, identified by [id]) which also holds the diary
 /// [note]. The same look can be logged on several dates; each date is its
 /// own [SavedOutfit] sharing one [outfitId].
+///
+/// A look can also be saved with no date at all ("just an idea"). Then
+/// there's no calendar entry: [id] is empty, [hasDate] is false and [date]
+/// is only the day the look was created (used for sorting, never shown as
+/// a planned or worn date).
 class SavedOutfit {
   const SavedOutfit({
     required this.id,
@@ -44,6 +49,7 @@ class SavedOutfit {
     required this.date,
     required this.pieces,
     this.note,
+    this.hasDate = true,
   });
 
   /// Calendar entry id.
@@ -58,6 +64,9 @@ class SavedOutfit {
   /// Optional "how did today's look feel?" diary note.
   final String? note;
 
+  /// False for a look that isn't on the Calendar yet.
+  final bool hasDate;
+
   SavedOutfit copyWith({
     String? name,
     DateTime? date,
@@ -71,6 +80,7 @@ class SavedOutfit {
       date: date ?? this.date,
       pieces: pieces ?? this.pieces,
       note: note ?? this.note,
+      hasDate: date != null || hasDate,
     );
   }
 }

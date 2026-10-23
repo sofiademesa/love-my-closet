@@ -18,7 +18,8 @@ String _formatLongDate(DateTime date) =>
     '${_kMonthNames[date.month - 1]} ${date.day}, ${date.year}';
 
 /// What the caller should do after the outfit detail sheet closes.
-enum OutfitDetailAction { deleted, none }
+/// [unscheduled] = the date was removed; the look still exists.
+enum OutfitDetailAction { deleted, unscheduled, none }
 
 /// Shows an outfit's full detail — name, date, note, and every piece — as a
 /// bottom sheet. Reached by tapping a logged outfit on the Calendar (or the
@@ -54,7 +55,8 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendlyError(e))));
   }
 
-  /// Rename the look, move it to another date, and edit the diary note.
+  /// Rename the look, move it to another date (or remove the date), and
+  /// edit the diary note.
   Future<void> _editDetails(SavedOutfit outfit) async {
     if (_busy) return;
     final result = await showSaveLookSheet(
@@ -63,6 +65,8 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
       initialDate: outfit.date,
       showNote: true,
       initialNote: outfit.note,
+      allowNoDate: true,
+      onCalendar: true,
     );
     if (result == null || !mounted) return;
     setState(() => _busy = true);
@@ -73,6 +77,19 @@ class _OutfitDetailSheetState extends State<OutfitDetailSheet> {
         date: result.date,
         note: result.note,
       );
+      if (result.date == null && mounted) {
+        // This entry no longer exists, so close the sheet.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Removed from ${_formatLongDate(outfit.date)}. '
+              '“${result.name}” is still in your Outfit Builder.',
+            ),
+          ),
+        );
+        Navigator.of(context).pop(OutfitDetailAction.unscheduled);
+        return;
+      }
     } catch (e) {
       _showError(e);
     }

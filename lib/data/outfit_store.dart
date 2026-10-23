@@ -54,14 +54,15 @@ class OutfitStore extends ChangeNotifier {
       result.add(
         entry != null
             ? _toSaved(entry)
-            // A look without a date yet (shouldn't normally happen) still
-            // shows, dated the day it was created.
+            // A look saved without a date ("just an idea"): no calendar
+            // entry yet, sorted by the day it was created.
             : SavedOutfit(
                 id: '',
                 outfitId: o.id,
                 name: o.name,
                 date: _dateOnly(o.createdAt.toLocal()),
                 pieces: _resolvePieces(o),
+                hasDate: false,
               ),
       );
     }
@@ -70,6 +71,42 @@ class OutfitStore extends ChangeNotifier {
 
   /// Number of distinct saved looks (Home's "Outfits" stat).
   int get outfitCount => _outfits.length;
+
+  /// The View Outfits list, split into three tidy groups so undated looks
+  /// never get mixed in with dated ones:
+  ///   * [OutfitGroups.upNext]  - next date is today or later, soonest first
+  ///   * [OutfitGroups.ideas]   - saved with no date yet, newest first
+  ///   * [OutfitGroups.past]    - latest date is before today, most recent first
+  ///     (a past date only means it was on the Calendar, not that it was worn)
+  OutfitGroups groupedOutfits({DateTime? today}) {
+    final now = today ?? DateTime.now();
+    final day = DateTime(now.year, now.month, now.day);
+
+    // For each look, its soonest date from today on (if any).
+    final nextDate = <String, _EntryRow>{};
+    for (final e in _entries) {
+      if (e.wornOn.isBefore(day)) continue;
+      final current = nextDate[e.outfitId];
+      if (current == null || e.wornOn.isBefore(current.wornOn)) nextDate[e.outfitId] = e;
+    }
+
+    final upNext = <SavedOutfit>[];
+    final ideas = <SavedOutfit>[];
+    final past = <SavedOutfit>[];
+    for (final look in builderOutfits) {
+      final next = nextDate[look.outfitId];
+      if (next != null) {
+        upNext.add(_toSaved(next));
+      } else if (!look.hasDate) {
+        ideas.add(look);
+      } else {
+        past.add(look);
+      }
+    }
+    upNext.sort((a, b) => a.date.compareTo(b.date));
+    past.sort((a, b) => b.date.compareTo(a.date));
+    return OutfitGroups(upNext: upNext, ideas: ideas, past: past);
+  }
 
   /// Outfits scheduled on [date] (comparing year/month/day only).
   List<SavedOutfit> onDate(DateTime date) {
@@ -189,13 +226,19 @@ class OutfitStore extends ChangeNotifier {
   /// Outfit Builder → "Save Outfit" / "Update Outfit". Creates (or updates)
   /// the look, its pieces and its calendar date in one transaction, and
   /// returns the saved calendar entry.
+  ///
+  /// A null [date] means "no date": a new look is saved as an idea, and
+  /// when editing a dated entry that entry comes off the Calendar (the look
+  /// itself is kept, along with any other dates it has).
   Future<SavedOutfit> saveFromBuilder({
     String? editingEntryId,
     String? editingOutfitId,
     required String name,
-    required DateTime date,
+    required DateTime? date,
     required List<OutfitPiece> pieces,
   }) async {
+    final removeEntryId =
+        (date == null && editingEntryId != null && editingEntryId.isNotEmpty) ? editingEntryId : null;
     final ids = await _saveOutfit(
       outfitId: editingOutfitId,
       entryId: (editingEntryId == null || editingEntryId.isEmpty) ? null : editingEntryId,
@@ -211,20 +254,34 @@ class OutfitStore extends ChangeNotifier {
           },
       ],
     );
+    if (removeEntryId != null) await _deleteEntry(removeEntryId);
     await _refetchOrThrow();
-    final saved = byId(ids.entryId);
+    final entryId = ids.entryId;
+    final saved = entryId != null
+        ? byId(entryId)
+        : builderOutfits.where((o) => o.outfitId == ids.outfitId).firstOrNull;
     if (saved == null) throw const BackendException('Couldn’t save your outfit. Please try again.');
     return saved;
   }
 
   /// Calendar → outfit detail → "Edit Details": rename the look, move the
   /// entry to another date, and edit its diary note.
+  ///
+  /// A null [date] takes this entry (and its note) off the Calendar but
+  /// keeps the look, so it stays in the Builder (as an idea if it has no
+  /// other dates).
   Future<void> updateEntryDetails(
     SavedOutfit entry, {
     required String name,
-    required DateTime date,
+    required DateTime? date,
     required String? note,
   }) async {
+    if (date == null) {
+      await _saveOutfit(outfitId: entry.outfitId, entryId: null, name: name, date: null);
+      if (entry.id.isNotEmpty) await _deleteEntry(entry.id);
+      await _refetchOrThrow();
+      return;
+    }
     await _saveOutfit(
       outfitId: entry.outfitId,
       entryId: entry.id.isEmpty ? null : entry.id,
@@ -274,6 +331,15 @@ class OutfitStore extends ChangeNotifier {
     await _refetchOrThrow();
   }
 
+  /// Deletes one calendar entry only; the look itself is never touched.
+  Future<void> _deleteEntry(String entryId) async {
+    try {
+      await supabase.from('calendar_entries').delete().eq('id', entryId);
+    } catch (e) {
+      throw BackendException(friendlyError(e));
+    }
+  }
+
   /// Outfit Builder → View Outfits → "x": removes the look and every date
   /// it was logged on.
   Future<void> removeOutfit(String outfitId) async {
@@ -285,11 +351,11 @@ class OutfitStore extends ChangeNotifier {
     await _refetchOrThrow();
   }
 
-  Future<({String outfitId, String entryId})> _saveOutfit({
+  Future<({String outfitId, String? entryId})> _saveOutfit({
     required String? outfitId,
     required String? entryId,
     required String name,
-    required DateTime date,
+    required DateTime? date,
     List<Map<String, dynamic>>? pieces,
     String? note,
     bool updateNote = false,
@@ -303,13 +369,14 @@ class OutfitStore extends ChangeNotifier {
         'p_name': name.trim().isEmpty ? 'My Outfit' : name.trim(),
         'p_pieces': pieces,
         'p_entry_id': entryId,
-        'p_worn_on': _isoDate(date),
+        // null = leave the Calendar alone (an undated look).
+        'p_worn_on': date == null ? null : _isoDate(date),
         'p_note': note,
         'p_update_note': updateNote,
       });
       final Map<String, dynamic> row =
           (result is List ? result.first : result) as Map<String, dynamic>;
-      return (outfitId: row['outfit_id'] as String, entryId: row['entry_id'] as String);
+      return (outfitId: row['outfit_id'] as String, entryId: row['entry_id'] as String?);
     } catch (e) {
       throw BackendException(friendlyError(e));
     }
@@ -357,6 +424,23 @@ class OutfitStore extends ChangeNotifier {
 
   static bool isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+/// The Builder's View Outfits list in its three groups. See
+/// [OutfitStore.groupedOutfits].
+class OutfitGroups {
+  const OutfitGroups({required this.upNext, required this.ideas, required this.past});
+
+  final List<SavedOutfit> upNext;
+  final List<SavedOutfit> ideas;
+  final List<SavedOutfit> past;
+
+  /// Every look with a date, upcoming (soonest first) then past (most
+  /// recent first): the Builder's "On Calendar" group.
+  List<SavedOutfit> get dated => [...upNext, ...past];
+
+  bool get isEmpty => upNext.isEmpty && ideas.isEmpty && past.isEmpty;
+  int get total => upNext.length + ideas.length + past.length;
 }
 
 class _OutfitRow {

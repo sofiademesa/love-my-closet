@@ -8,10 +8,13 @@ import '../../widgets/primary_button.dart';
 /// Result of the "Save this look" sheet: the name and date the user chose,
 /// plus the diary note when the sheet was opened with [showSaveLookSheet]'s
 /// `showNote`.
+///
+/// [date] is null when the sheet allowed no date (`allowNoDate`) and the
+/// user left it empty: the look is saved as an idea, not on the Calendar.
 class SaveLookResult {
   const SaveLookResult({required this.name, required this.date, this.note});
   final String name;
-  final DateTime date;
+  final DateTime? date;
   final String? note;
 }
 
@@ -23,6 +26,8 @@ Future<SaveLookResult?> showSaveLookSheet(
   DateTime? initialDate,
   bool showNote = false,
   String? initialNote,
+  bool allowNoDate = false,
+  bool onCalendar = false,
 }) {
   return showModalBottomSheet<SaveLookResult>(
     context: context,
@@ -33,6 +38,8 @@ Future<SaveLookResult?> showSaveLookSheet(
       initialDate: initialDate,
       showNote: showNote,
       initialNote: initialNote,
+      allowNoDate: allowNoDate,
+      onCalendar: onCalendar,
     ),
   );
 }
@@ -44,6 +51,8 @@ class SaveLookSheet extends StatefulWidget {
     this.initialDate,
     this.showNote = false,
     this.initialNote,
+    this.allowNoDate = false,
+    this.onCalendar = false,
   });
 
   final String initialName;
@@ -53,6 +62,14 @@ class SaveLookSheet extends StatefulWidget {
   final bool showNote;
   final String? initialNote;
 
+  /// The date can be left empty or cleared: a new look is saved as an
+  /// idea, and an existing date comes off the Calendar.
+  final bool allowNoDate;
+
+  /// The look is already on the Calendar on [initialDate], so clearing the
+  /// date takes it off (the sheet explains this).
+  final bool onCalendar;
+
   @override
   State<SaveLookSheet> createState() => _SaveLookSheetState();
 }
@@ -61,7 +78,8 @@ class _SaveLookSheetState extends State<SaveLookSheet> {
   late final _nameController = TextEditingController(text: widget.initialName);
   late final _dateController = TextEditingController(text: _dateLabel);
   late final _noteController = TextEditingController(text: widget.initialNote ?? '');
-  late DateTime _date = widget.initialDate ?? DateTime.now();
+  late DateTime? _date =
+      widget.initialDate ?? (widget.allowNoDate ? null : DateTime.now());
 
   @override
   void dispose() {
@@ -71,22 +89,33 @@ class _SaveLookSheetState extends State<SaveLookSheet> {
     super.dispose();
   }
 
-  String get _dateLabel =>
-      '${_date.month.toString().padLeft(2, '0')}/'
-      '${_date.day.toString().padLeft(2, '0')}/'
-      '${_date.year}';
+  String get _dateLabel {
+    final d = _date;
+    if (d == null) return '';
+    return '${d.month.toString().padLeft(2, '0')}/'
+        '${d.day.toString().padLeft(2, '0')}/'
+        '${d.year}';
+  }
 
   Future<void> _pickDate() async {
+    final start = _date ?? DateTime.now();
     final picked = await showDatePicker(
       context: context,
-      initialDate: _date,
-      firstDate: DateTime(_date.year - 2),
-      lastDate: DateTime(_date.year + 2),
+      initialDate: start,
+      firstDate: DateTime(start.year - 2),
+      lastDate: DateTime(start.year + 2),
     );
     if (picked == null) return;
     setState(() {
       _date = picked;
       _dateController.text = _dateLabel;
+    });
+  }
+
+  void _clearDate() {
+    setState(() {
+      _date = null;
+      _dateController.text = '';
     });
   }
 
@@ -96,9 +125,20 @@ class _SaveLookSheetState extends State<SaveLookSheet> {
       SaveLookResult(
         name: name.isEmpty ? 'My Outfit' : name,
         date: _date,
-        note: widget.showNote ? _noteController.text.trim() : null,
+        note: widget.showNote && _date != null ? _noteController.text.trim() : null,
       ),
     );
+  }
+
+  /// True once a date the look already had has been cleared.
+  bool get _removingDate => widget.onCalendar && _date == null;
+
+  String get _removeDateHint {
+    if (widget.showNote) {
+      return 'This look comes off the Calendar, along with its note. '
+          'It stays in your Outfit Builder.';
+    }
+    return 'This look comes off the Calendar but stays in your Outfit Builder.';
   }
 
   @override
@@ -146,7 +186,9 @@ class _SaveLookSheetState extends State<SaveLookSheet> {
             Text('Save this look', style: textTheme.headlineSmall),
             const SizedBox(height: Spacing.xs),
             Text(
-              "Give it a name and date so it's easy to find later.",
+              widget.allowNoDate
+                  ? 'Give it a name. Add a date only if you plan to wear it.'
+                  : "Give it a name and date so it's easy to find later.",
               style: textTheme.bodyMedium!.copyWith(fontSize: 13),
             ),
             const SizedBox(height: Spacing.lg),
@@ -158,13 +200,31 @@ class _SaveLookSheetState extends State<SaveLookSheet> {
             ),
             const SizedBox(height: Spacing.md),
             AppTextField(
-              label: 'Date',
+              label: widget.allowNoDate ? 'Date (optional)' : 'Date',
               controller: _dateController,
+              hintText: widget.allowNoDate ? 'No date, just saving the idea' : null,
               readOnly: true,
               onTap: _pickDate,
-              suffixIcon: Icons.calendar_month_rounded,
+              // Once a date is picked, the icon turns into an "x" to take it
+              // back off (only where an undated save is allowed).
+              suffixIcon: widget.allowNoDate && _date != null
+                  ? Icons.close_rounded
+                  : Icons.calendar_month_rounded,
+              onSuffixTap: widget.allowNoDate && _date != null ? _clearDate : null,
+              suffixTooltip: 'Remove date',
             ),
-            if (widget.showNote) ...[
+            if (_removingDate) ...[
+              const SizedBox(height: Spacing.xs),
+              Text(
+                _removeDateHint,
+                style: textTheme.labelSmall!.copyWith(
+                  color: AppColors.mutedBrown.withValues(alpha: 0.8),
+                ),
+              ),
+            ],
+            // A diary note belongs to a date, so it hides once the date is
+            // cleared.
+            if (widget.showNote && _date != null) ...[
               const SizedBox(height: Spacing.md),
               AppTextField(
                 label: 'Note',
