@@ -23,6 +23,13 @@ dependencies:
   # Backend: auth, database, storage. Defaults to the project's public URL and
   # publishable key; override with --dart-define-from-file=env.json.
   supabase_flutter: ^2.8.0
+  # Android app only (the web app keeps its own browser versions):
+  # the phone camera for Take Photo,
+  camera: ">=0.11.0 <0.13.0"
+  # and on-device background removal with the same model as the web app.
+  flutter_onnxruntime: ^1.6.0
+  image: ^4.2.0
+  path_provider: ^2.1.0
 
 dev_dependencies:
   flutter_test:

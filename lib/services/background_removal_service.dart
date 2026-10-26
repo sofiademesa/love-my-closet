@@ -1,7 +1,11 @@
 import 'dart:typed_data';
 
+// Web: ONNX Runtime Web (web/bg_removal/). Android: ONNX Runtime on the
+// phone (on_device_background_remover_native, which falls back to "not
+// available" on other platforms).
 import 'on_device_background_remover_stub.dart'
     if (dart.library.js_interop) 'on_device_background_remover_web.dart'
+    if (dart.library.io) 'on_device_background_remover_native.dart'
     as on_device;
 
 /// Background removal failed. [message] is safe to show to user.
@@ -45,7 +49,8 @@ abstract class BackgroundRemovalService {
 /// The app's default remover: free, open-source, and fully on-device.
 ///
 /// On web it runs U2-Net ("silueta") through ONNX Runtime Web in a Web
-/// Worker (see web/bg_removal/). The photo never leaves the device, there is
+/// Worker (see web/bg_removal/). On Android it runs the same model with
+/// ONNX Runtime on the phone. The photo never leaves the device, there is
 /// no API key, no server, and no per-use cost. Platforms without an
 /// on-device implementation yet get a remover that fails with a clear
 /// message instead of silently uploading anything.

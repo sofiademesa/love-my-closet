@@ -2,8 +2,11 @@ import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 
+// Web: the browser camera. Android: the phone camera (live_camera_native,
+// which falls back to "not available" on other platforms).
 import 'live_camera_stub.dart'
     if (dart.library.js_interop) 'live_camera_web.dart'
+    if (dart.library.io) 'live_camera_native.dart'
     as platform;
 
 /// The camera failed. [message] is safe to show to user; [detail] is the

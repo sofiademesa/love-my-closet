@@ -136,6 +136,31 @@ Accounts you create this way are stored in the author's Supabase project, so use
 
 Want your own separate backend? See [`supabase/README.md`](supabase/README.md) for the setup.
 
+## Android app (work in progress)
+
+The same code also builds as an Android app. Take Photo uses the phone camera (`camera` package), and background removal runs the same `silueta` model on the phone with ONNX Runtime (`flutter_onnxruntime`). The model (about 44 MB) is downloaded once from the deployed site on first use, then kept on the phone.
+
+One-time setup:
+
+```bash
+flutter create --platforms=android --org com.sofiademesa .
+```
+
+Then in `android/app/src/main/AndroidManifest.xml`, set `android:label="Love My Closet"` and add above `<application>`:
+
+```xml
+<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.CAMERA"/>
+```
+
+Create `android/app/proguard-rules.pro` with:
+
+```
+-keep class ai.onnxruntime.** { *; }
+```
+
+Run on a phone with USB debugging on: `flutter run`. Build an installable file: `flutter build apk --release` (it lands in `build/app/outputs/flutter-apk/app-release.apk`).
+
 ## Privacy and secrets
 
 Love My Closet stores only what its features need: your account (email and password, handled by Supabase Auth), a profile (display name, full name, bio, and settings), your clothing details, outfits, diary notes, and the photos of your clothes. This data lives in Supabase.
