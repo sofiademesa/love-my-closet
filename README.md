@@ -1,12 +1,15 @@
 # Love My Closet
 
+_Note: the app is currently undergoing a major visual redesign along with feature improvements, so the live demo may be temporarily unavailable or out of date._
+
 > Love My Closet is a digital wardrobe app for people who own plenty of clothes but keep wearing the same few. It helps them keep track of what they own, plan outfits, and rediscover pieces they rarely wear.
 
-_Made to be Loved Again_
-
 **Live demo:** <https://sofiademesa.github.io/love-my-closet/>
+
 **Demo video:** [docs/05-demo-video.md](docs/05-demo-video.md)
+
 **Course:** Applications Development and Emerging Technologies (6ADET), Holy Angel University
+
 **Author:** Sofia Ryza D. De Mesa
 
 This repository contains the final project developed for 6ADET. It is public for academic evaluation and portfolio purposes.
