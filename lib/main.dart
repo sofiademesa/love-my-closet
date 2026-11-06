@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'animations/app_motion.dart';
 import 'data/accessibility_store.dart';
@@ -27,7 +28,7 @@ void main() {
     // fills the screen like a normal app instead of showing a phone inside
     // a phone.
     DevicePreview(
-      enabled: _isWideScreen(),
+      enabled: kIsWeb && _isWideScreen(),
       // Starts on a splash while the session is restored (see StartupScreen),
       // so a signed-in user never sees Log In flash by first.
       builder: (context) => const MyApp(home: StartupScreen()),
