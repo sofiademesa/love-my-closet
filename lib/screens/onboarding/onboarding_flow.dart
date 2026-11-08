@@ -31,6 +31,16 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   bool get _onLanding => _page == _landingIndex;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Decode the artwork up front. Otherwise Onboarding 2's logo gets
+    // decoded in the middle of the closet-opening animation, which shows up
+    // as a hitch on the first frames.
+    precacheImage(const AssetImage('assets/images/logo_mark.png'), context);
+    precacheImage(const AssetImage('assets/images/heart_avatar.png'), context);
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -150,12 +160,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                       const Duration(milliseconds: 400),
                     ),
                     opacity: _onLanding ? 0 : 1,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0x00FAD7E7), AppColors.blush],
+                    child: RepaintBoundary(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0x00FAD7E7), AppColors.blush],
+                          ),
                         ),
                       ),
                     ),
@@ -231,7 +243,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                           duration: kMotionDuration(
                             const Duration(milliseconds: 250),
                           ),
-                          child: Padding(
+                          // Cached: dots + the Next button (gradient and
+                          // blurred shadow) stay put while the pages move.
+                          child: RepaintBoundary(
+                            child: Padding(
                             padding: const EdgeInsets.fromLTRB(
                               Spacing.md,
                               0,
@@ -246,7 +261,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                                 PrimaryButton(label: 'Next', onPressed: _next),
                               ],
                             ),
-                          ),
+                          )),
                         ),
                       ),
                     ),

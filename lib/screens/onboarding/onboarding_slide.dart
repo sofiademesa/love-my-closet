@@ -70,7 +70,8 @@ class OnboardingSlide extends StatelessWidget {
                         clipBehavior: Clip.none,
                         children: [
                           // Soft radial halo for depth behind the illustration.
-                          Container(
+                          RepaintBoundary(
+                            child: Container(
                             width: artWidth * 1.5,
                             height: artWidth * 1.5,
                             decoration: BoxDecoration(
@@ -82,7 +83,7 @@ class OnboardingSlide extends StatelessWidget {
                                 ],
                               ),
                             ),
-                          ),
+                          )),
                           illustration(artWidth, artHeight),
                         ],
                       ),
@@ -92,7 +93,10 @@ class OnboardingSlide extends StatelessWidget {
                       opacity: textOpacity.clamp(0.0, 1.0).toDouble(),
                       child: Transform.translate(
                         offset: Offset(0, textOffsetY),
-                        child: Column(
+                        // Cached, so fading/drifting the text is just moving
+                        // a ready-made layer instead of re-laying out glyphs.
+                        child: RepaintBoundary(
+                          child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
@@ -116,7 +120,7 @@ class OnboardingSlide extends StatelessWidget {
                               ),
                             ),
                           ],
-                        ),
+                        )),
                       ),
                     ),
                   ],

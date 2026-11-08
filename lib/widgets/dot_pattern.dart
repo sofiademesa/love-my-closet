@@ -35,8 +35,13 @@ class DotPattern extends StatelessWidget {
               : ColoredBox(color: backgroundColor!),
         ),
         Positioned.fill(
-          child: CustomPaint(
-            painter: _DotPainter(color: dotColor, spacing: spacing, radius: dotRadius),
+          // Its own layer, so the ~800 dots are painted once and reused
+          // instead of being redrawn on every frame of whatever animates
+          // on top of them.
+          child: RepaintBoundary(
+            child: CustomPaint(
+              painter: _DotPainter(color: dotColor, spacing: spacing, radius: dotRadius),
+            ),
           ),
         ),
         child,

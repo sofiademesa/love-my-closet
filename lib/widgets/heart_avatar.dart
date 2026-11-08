@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// The Love My Closet logo
+/// The Love My Closet logo (heart on a hanger, the same artwork as the app icon).
 class HeartAvatar extends StatelessWidget {
   const HeartAvatar({super.key, this.width = 150, this.small = false});
 
   final double width;
 
   /// Use the pre-shrunk, cleaned-up logo for small spots (under ~100px) so
-  /// the line art stays crisp instead of getting jagged when downscaled.
+  /// the artwork stays crisp instead of getting jagged when downscaled.
   final bool small;
 
   @override
@@ -20,7 +20,7 @@ class HeartAvatar extends StatelessWidget {
       fit: BoxFit.contain,
       filterQuality: FilterQuality.high,
       isAntiAlias: true,
-      semanticLabel: 'Love My Closet avatar',
+      semanticLabel: 'Love My Closet logo',
     );
   }
 }
