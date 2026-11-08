@@ -48,6 +48,9 @@ class ClothingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final cardRadius = BorderRadius.circular(AppRadius.card);
+    // Home's "More Hidden Gems" variant (shows how long it's been unworn).
+    // The Closet grid passes no daysUnworn and keeps its original look.
+    final isGem = daysUnworn != null;
 
     return PressableScale(
       enabled: onTap != null,
@@ -112,8 +115,13 @@ class ClothingCard extends StatelessWidget {
                   // the tile doesn't change; on Home every tile is the same
                   // height, whether its name is one line or two.
                   SizedBox(
-                    height: 28,
+                    height: isGem ? 34 : 28,
                     child: Row(
+                      // Gems: names start at the same line whether they take
+                      // one line or two. Closet keeps its centred row.
+                      crossAxisAlignment: isGem
+                          ? CrossAxisAlignment.start
+                          : CrossAxisAlignment.center,
                       children: [
                         Expanded(
                           child: Text(
@@ -122,7 +130,7 @@ class ClothingCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: textTheme.bodyMedium!.copyWith(
                               fontWeight: FontWeight.w600,
-                              fontSize: 12.5,
+                              fontSize: isGem ? 13.5 : 12.5,
                               height: 1.1,
                             ),
                           ),
@@ -142,12 +150,36 @@ class ClothingCard extends StatelessWidget {
                     ),
                   ),
                   if (daysUnworn != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      'Unworn ${daysUnworn}d',
-                      style: textTheme.labelSmall!.copyWith(
-                        color: AppColors.mutedBrown.withValues(alpha: 0.6),
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(height: 6),
+                    // A small pill, so how long it's been neglected is the
+                    // thing you notice, not grey fine print.
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.blush.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.schedule_rounded,
+                            size: 12,
+                            color: AppColors.hotPink,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Unworn ${daysUnworn}d',
+                            style: textTheme.labelSmall!.copyWith(
+                              color: AppColors.hotPink,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],

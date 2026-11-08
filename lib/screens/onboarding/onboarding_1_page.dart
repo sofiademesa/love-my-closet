@@ -269,7 +269,10 @@ class _DoorFace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    // RepaintBoundary: the gradient, handle and big blurred shadow are drawn
+    // once and cached. Without it they were re-rasterised every frame while
+    // the door rotated, which is what made the swing stutter.
+    return RepaintBoundary(child: DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: borderRadius,
         boxShadow: [
@@ -332,6 +335,6 @@ class _DoorFace extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }

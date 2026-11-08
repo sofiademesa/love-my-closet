@@ -44,7 +44,14 @@ class WearMeCard extends StatelessWidget {
         child: DotPattern(
           backgroundColor: AppColors.white,
           child: Padding(
-            padding: const EdgeInsets.all(Spacing.md),
+            // A bit more room under the Style Me button than on the other
+            // sides, so it doesn't sit tight against the card's bottom edge.
+            padding: const EdgeInsets.fromLTRB(
+              Spacing.md - 2,
+              Spacing.md - 2,
+              Spacing.md - 2,
+              Spacing.md + 6,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -52,13 +59,13 @@ class WearMeCard extends StatelessWidget {
                   'Hidden Gem of the Day',
                   style: textTheme.headlineSmall!.copyWith(fontSize: 16),
                 ),
-                const SizedBox(height: Spacing.md),
+                const SizedBox(height: Spacing.sm + 4),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     ClothingThumb(
                       icon: icon,
-                      size: 140,
+                      size: 112,
                       imageUrl: imageUrl,
                       backgroundColorName: backgroundColorName,
                     ),
@@ -74,10 +81,10 @@ class WearMeCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: textTheme.bodyMedium!.copyWith(
                               fontWeight: FontWeight.w600,
-                              fontSize: 17,
+                              fontSize: 16,
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 4),
                           Text(
                             'Unworn for $daysUnworn days',
                             style: textTheme.labelSmall!.copyWith(
@@ -87,17 +94,17 @@ class WearMeCard extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+                          const SizedBox(height: Spacing.sm + 4),
+                          PrimaryButton(
+                            label: 'Style Me',
+                            onPressed: onStyleThis,
+                            height: 38,
+                            fontSize: 15,
+                          ),
                         ],
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: Spacing.lg),
-                PrimaryButton(
-                  label: 'Style Me',
-                  onPressed: onStyleThis,
-                  height: 40,
-                  fontSize: 16,
                 ),
               ],
             ),

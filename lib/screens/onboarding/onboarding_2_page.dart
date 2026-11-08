@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../theme.dart';
-import '../../widgets/heart_avatar.dart';
 import 'onboarding_slide.dart';
 
-/// Onboarding 2: the avatar card in a carousel + "love your closet" headline.
+/// Onboarding 2: the logo card in a carousel + "love your closet" headline.
 class Onboarding2Page extends StatelessWidget {
   const Onboarding2Page({super.key, this.textOpacity = 1, this.textOffsetY = 0});
 
@@ -20,8 +19,11 @@ class Onboarding2Page extends StatelessWidget {
       headline: 'Maybe it\u2019s time to love your closet',
       textOpacity: textOpacity,
       textOffsetY: textOffsetY,
-      illustration: (width, height) =>
-          _AvatarCarousel(cardWidth: width, cardHeight: height),
+      // Static artwork: cached as one layer so the closet-opening
+      // transition only has to scale/fade it, not repaint it.
+      illustration: (width, height) => RepaintBoundary(
+        child: _AvatarCarousel(cardWidth: width, cardHeight: height),
+      ),
     );
   }
 }
@@ -63,7 +65,7 @@ class _AvatarCarousel extends StatelessWidget {
                 height: panelHeight,
                 child: const _SidePanel(outerOnLeft: false),
               ),
-              // Centre card with the avatar.
+              // Centre card with the logo.
               Container(
                 width: cardWidth,
                 height: cardHeight,
@@ -71,7 +73,7 @@ class _AvatarCarousel extends StatelessWidget {
                   gradient: const LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [AppColors.white, AppColors.cream],
+                    colors: [Color(0xFFFFE1EE), Color(0xFFFF93C2)],
                   ),
                   borderRadius: BorderRadius.circular(AppRadius.card),
                   border: Border.all(color: AppColors.blush, width: 3),
@@ -83,13 +85,14 @@ class _AvatarCarousel extends StatelessWidget {
                     ),
                   ],
                 ),
-                // A heart is visually top-heavy (wide lobes up top,
-                // tapering to a point below), so dead-center math reads as
-                // sitting slightly too high. Nudge it down a touch so it
-                // looks centered in the card.
                 child: Align(
-                  alignment: const Alignment(0, 0.12),
-                  child: HeartAvatar(width: cardWidth * 0.8),
+                  alignment: Alignment.center,
+                  child: Image.asset(
+                    'assets/images/logo_mark.png',
+                    width: cardWidth * 0.72,
+                    fit: BoxFit.contain,
+                    semanticLabel: 'Love My Closet logo',
+                  ),
                 ),
               ),
             ],
